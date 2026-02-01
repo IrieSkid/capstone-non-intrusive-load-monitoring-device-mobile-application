@@ -132,6 +132,7 @@ FIELDS:
   - period_end (DATE)
   - total_kwh (DECIMAL(10,4))
   - total_cost_php (DECIMAL(10,2))
+  - electricity_rate_id (INT, FK → electricity_rates) - Reference to rate used for calculation
   - reading_count (INT)
   - created_at (DATETIME)
 
@@ -139,7 +140,7 @@ RELATIONSHIPS:
   - N:1 → users
   - N:1 → devices (optional)
   - N:1 → appliances (optional)
-  - N:1 → electricity_rates
+  - N:1 → electricity_rates (via electricity_rate_id)
 
 ================================================================================
 TABLE: electricity_rates
