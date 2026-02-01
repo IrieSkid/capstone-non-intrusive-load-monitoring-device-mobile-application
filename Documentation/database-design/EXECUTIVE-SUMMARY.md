@@ -37,7 +37,9 @@ The database design follows a **streamlined, robust approach** suitable for a ca
 
 ### 4. Consumption & Billing (2 tables)
 - **tblconsumption_summaries** - Aggregated consumption data (daily/weekly/monthly)
+  - Includes foreign key reference to `tblelectricity_rates` for audit trail of cost calculations
 - **tblelectricity_rates** - Billing rates for cost calculation
+  - Linked to consumption summaries to track which rate was used for each calculation
 
 ### 5. Notifications & Alerts (2 tables)
 - **tblnotifications** - User notifications and alerts

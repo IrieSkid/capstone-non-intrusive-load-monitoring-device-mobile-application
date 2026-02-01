@@ -90,6 +90,7 @@ CREATE TABLE tblconsumption_summaries (
     consumption_summaries_user_id INT NOT NULL,
     consumption_summaries_device_id INT,
     consumption_summaries_appliance_id INT,
+    consumption_summaries_electricity_rate_id INT,
     consumption_summaries_period_type ENUM('daily', 'weekly', 'monthly') NOT NULL,
     consumption_summaries_period_start DATE NOT NULL,
     consumption_summaries_period_end DATE NOT NULL,
@@ -99,7 +100,9 @@ CREATE TABLE tblconsumption_summaries (
     consumption_summaries_created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (consumption_summaries_user_id) REFERENCES tblusers(users_id) ON DELETE CASCADE,
     FOREIGN KEY (consumption_summaries_device_id) REFERENCES tbldevices(devices_id) ON DELETE CASCADE,
-    FOREIGN KEY (consumption_summaries_appliance_id) REFERENCES tblappliances(appliances_id) ON DELETE CASCADE
+    FOREIGN KEY (consumption_summaries_appliance_id) REFERENCES tblappliances(appliances_id) ON DELETE CASCADE,
+    FOREIGN KEY (consumption_summaries_electricity_rate_id) REFERENCES tblelectricity_rates(electricity_rates_id) ON DELETE RESTRICT,
+    INDEX idx_consumption_rate (consumption_summaries_electricity_rate_id)
 );
 
 -- Electricity Rates Table

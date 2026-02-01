@@ -84,6 +84,7 @@ CREATE TABLE tblconsumption_summaries (
     consumption_summaries_user_id INT NOT NULL,
     consumption_summaries_device_id INT,
     consumption_summaries_appliance_id INT,
+    consumption_summaries_electricity_rate_id INT,
     consumption_summaries_period_type VARCHAR(20) NOT NULL,
     consumption_summaries_period_start DATE NOT NULL,
     consumption_summaries_period_end DATE NOT NULL,
@@ -93,7 +94,8 @@ CREATE TABLE tblconsumption_summaries (
     consumption_summaries_created_at DATETIME,
     FOREIGN KEY (consumption_summaries_user_id) REFERENCES tblusers(users_id),
     FOREIGN KEY (consumption_summaries_device_id) REFERENCES tbldevices(devices_id),
-    FOREIGN KEY (consumption_summaries_appliance_id) REFERENCES tblappliances(appliances_id)
+    FOREIGN KEY (consumption_summaries_appliance_id) REFERENCES tblappliances(appliances_id),
+    FOREIGN KEY (consumption_summaries_electricity_rate_id) REFERENCES tblelectricity_rates(electricity_rates_id)
 );
 
 -- Electricity Rates Table

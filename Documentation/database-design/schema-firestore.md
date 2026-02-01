@@ -162,11 +162,12 @@ For better querying, consider organizing by date:
   userId: "user123",
   deviceId: "device123", // Optional
   applianceId: "appliance456", // Optional
+  electricityRateId: "rate123", // Reference to electricity rate used for cost calculation
   periodType: "daily", // "daily" | "weekly" | "monthly"
   periodStart: Timestamp,
   periodEnd: Timestamp,
   totalKwh: 150.5,
-  totalCostPhp: 1881.25,
+  totalCostPhp: 1881.25, // Calculated using electricityRateId rate
   readingCount: 1000,
   createdAt: Timestamp
 }
@@ -176,6 +177,7 @@ For better querying, consider organizing by date:
 - `userId` (ascending), `periodType` (ascending), `periodStart` (descending)
 - `deviceId` (ascending), `periodType` (ascending), `periodStart` (descending)
 - `applianceId` (ascending), `periodType` (ascending), `periodStart` (descending)
+- `electricityRateId` (ascending) // For joining with electricity rates
 
 ---
 

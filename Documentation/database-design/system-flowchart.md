@@ -42,7 +42,8 @@ flowchart TD
     Reports --> SelectPeriod[Select Time Period]
     SelectPeriod --> SelectAppliance[Select Appliance/Device]
     SelectAppliance --> QuerySummary[Query consumption_summaries]
-    QuerySummary --> CalculateCost[Calculate Cost using Rates]
+    QuerySummary --> GetRate[Get electricity_rate_id from summary]
+    GetRate --> CalculateCost[Calculate Cost using Rate]
     CalculateCost --> GenerateChart[Generate Charts/Graphs]
     GenerateChart --> DisplayReport[Display Report]
     DisplayReport --> ExportOption{Export Report?}
@@ -194,8 +195,8 @@ flowchart TD
     CheckCache -->|No| AggregateData[Aggregate from real_time_readings]
     
     AggregateData --> GetRates[Get Current electricity_rates]
-    GetRates --> CalculateCost[Calculate Total Cost]
-    CalculateCost --> SaveSummary[Save to consumption_summaries]
+    GetRates --> CalculateCost[Calculate Total Cost<br/>using rate.peso_per_kwh]
+    CalculateCost --> SaveSummary[Save to consumption_summaries<br/>with electricity_rate_id reference]
     SaveSummary --> GenerateChart[Generate Chart Data]
     ReturnCache --> GenerateChart
     
