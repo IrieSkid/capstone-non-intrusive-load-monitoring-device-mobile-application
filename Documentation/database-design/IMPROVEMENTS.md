@@ -21,7 +21,7 @@ This document outlines the improvements made to the original database design, ex
 - Adds unnecessary complexity for a simple read/unread status
 - Can be tracked with a single field and timestamp
 
-**Replacement:** Using `is_read` boolean and `read_at` timestamp in `notifications` table
+**Replacement:** Using `notifications_is_read` boolean and `notifications_read_at` timestamp in `tblnotifications` table
 
 **Impact:** Simplified notification system, easier queries
 
@@ -63,7 +63,7 @@ This document outlines the improvements made to the original database design, ex
 - Device sync status can be tracked with `last_sync_at` in `devices` table
 - Error messages can be stored in device status or notifications
 
-**Replacement:** Using `last_sync_at` timestamp and `status` enum in `devices` table
+**Replacement:** Using `devices_last_sync_at` timestamp and `devices_status` enum in `tbldevices` table
 
 **Impact:** Cleaner device management
 
@@ -76,7 +76,7 @@ This document outlines the improvements made to the original database design, ex
 - Reduces join operations
 - Easier to query and maintain
 
-**Replacement:** Using `ENUM('admin', 'homeowner', 'tenant')` in `users` table
+**Replacement:** Using `ENUM('admin', 'homeowner', 'tenant')` in `tblusers` table (column: `users_role`)
 
 **Impact:** Faster queries, simpler code
 
@@ -84,12 +84,12 @@ This document outlines the improvements made to the original database design, ex
 
 ## Entities Simplified
 
-### 1. ✅ `users` (Simplified)
+### 1. ✅ `tblusers` (Simplified)
 **Changes:**
 - Removed separate `tbl_roles` relationship → Using enum
-- Added `phone_number` for mobile app contact
+- Added `users_phone_number` for mobile app contact
 - Simplified status management
-- Added `last_login_at` for tracking
+- Added `users_last_login_at` for tracking
 
 **Benefits:**
 - Fewer joins required

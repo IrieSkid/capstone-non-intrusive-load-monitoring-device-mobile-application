@@ -29,12 +29,12 @@ Complete database design documentation for the **Non-Intrusive Load Monitoring (
 
 | Category | Tables | Description |
 |----------|--------|-------------|
-| **User Management** | `users`, `user_sessions` | Authentication and session management |
-| **Device Management** | `devices`, `appliances` | IoT device and appliance configuration |
-| **Data Collection** | `real_time_readings` | Time-series electrical measurements |
-| **Consumption & Billing** | `consumption_summaries`, `electricity_rates` | Aggregated data and billing rates |
-| **Notifications** | `notifications`, `alert_rules` | Alert system and notifications |
-| **Audit & Config** | `audit_logs`, `system_settings` | Audit trail and system configuration |
+| **User Management** | `tblusers`, `tbluser_sessions` | Authentication and session management |
+| **Device Management** | `tbldevices`, `tblappliances` | IoT device and appliance configuration |
+| **Data Collection** | `tblreal_time_readings` | Time-series electrical measurements |
+| **Consumption & Billing** | `tblconsumption_summaries`, `tblelectricity_rates` | Aggregated data and billing rates |
+| **Notifications** | `tblnotifications`, `tblalert_rules` | Alert system and notifications |
+| **Audit & Config** | `tblaudit_logs`, `tblsystem_settings` | Audit trail and system configuration |
 
 ---
 
@@ -46,13 +46,13 @@ View the complete ERD: **[ERD.md](ERD.md)**
 
 ```mermaid
 erDiagram
-    users ||--o{ devices : "owns"
-    devices ||--o{ appliances : "contains"
-    devices ||--o{ real_time_readings : "generates"
-    appliances ||--o{ real_time_readings : "generates"
-    users ||--o{ consumption_summaries : "has"
-    users ||--o{ notifications : "receives"
-    users ||--o{ alert_rules : "creates"
+    tblusers ||--o{ tbldevices : "owns"
+    tbldevices ||--o{ tblappliances : "contains"
+    tbldevices ||--o{ tblreal_time_readings : "generates"
+    tblappliances ||--o{ tblreal_time_readings : "generates"
+    tblusers ||--o{ tblconsumption_summaries : "has"
+    tblusers ||--o{ tblnotifications : "receives"
+    tblusers ||--o{ tblalert_rules : "creates"
 ```
 
 ### Quick Start Schemas

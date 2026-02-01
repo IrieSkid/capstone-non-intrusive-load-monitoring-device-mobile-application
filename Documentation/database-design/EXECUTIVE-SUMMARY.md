@@ -24,30 +24,30 @@ The database design follows a **streamlined, robust approach** suitable for a ca
 ## Core Database Entities
 
 ### 1. User Management (2 tables)
-- **users** - User accounts, authentication, roles
-- **user_sessions** - Session management for mobile app
+- **tblusers** - User accounts, authentication, roles
+- **tbluser_sessions** - Session management for mobile app
 
 ### 2. Device Management (2 tables)
-- **devices** - IoT device registration and status
-- **appliances** - Appliance configuration per device
+- **tbldevices** - IoT device registration and status
+- **tblappliances** - Appliance configuration per device
 
 ### 3. Data Collection (1 table)
-- **real_time_readings** - Time-series electrical measurements
+- **tblreal_time_readings** - Time-series electrical measurements
   - Voltage RMS, Current RMS, Power (W), Apparent Power (VA), Power Factor, Energy (kWh)
 
 ### 4. Consumption & Billing (2 tables)
-- **consumption_summaries** - Aggregated consumption data (daily/weekly/monthly)
-- **electricity_rates** - Billing rates for cost calculation
+- **tblconsumption_summaries** - Aggregated consumption data (daily/weekly/monthly)
+- **tblelectricity_rates** - Billing rates for cost calculation
 
 ### 5. Notifications & Alerts (2 tables)
-- **notifications** - User notifications and alerts
-- **alert_rules** - Configurable alert thresholds
+- **tblnotifications** - User notifications and alerts
+- **tblalert_rules** - Configurable alert thresholds
 
 ### 6. Audit & Logging (1 table)
-- **audit_logs** - User action tracking and system audit trail
+- **tblaudit_logs** - User action tracking and system audit trail
 
 ### 7. System Configuration (1 table)
-- **system_settings** - System-wide configuration
+- **tblsystem_settings** - System-wide configuration
 
 ---
 
@@ -141,12 +141,12 @@ Mobile App (React Native + Expo)
 
 ## Data Flow
 
-1. **Device Registration:** User registers IoT device → `devices` table
-2. **Appliance Setup:** User configures appliances → `appliances` table
-3. **Data Collection:** Hardware sends readings → `real_time_readings` table
-4. **Consumption Calculation:** System aggregates data → `consumption_summaries` table
+1. **Device Registration:** User registers IoT device → `tbldevices` table
+2. **Appliance Setup:** User configures appliances → `tblappliances` table
+3. **Data Collection:** Hardware sends readings → `tblreal_time_readings` table
+4. **Consumption Calculation:** System aggregates data → `tblconsumption_summaries` table
 5. **Billing:** System calculates cost using rates → Display in mobile app
-6. **Alerts:** System checks thresholds → Creates `notifications` if exceeded
+6. **Alerts:** System checks thresholds → Creates `tblnotifications` if exceeded
 
 ---
 
