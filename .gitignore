@@ -1,0 +1,57 @@
+# Dependencies
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Expo
+.expo/
+.expo-shared/
+dist/
+web-build/
+
+# Mobile App
+mobile-app/node_modules/
+mobile-app/.expo/
+mobile-app/dist/
+mobile-app/*.log
+mobile-app/.env
+mobile-app/.env.local
+
+# Backend (if added)
+backend/node_modules/
+backend/.env
+backend/dist/
+
+# OS
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+
+# IDE
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# Build files
+*.apk
+*.aab
+*.ipa
+*.dmg
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# Logs
+logs/
+*.log
+
+# Temporary files
+tmp/
+temp/
+.cache/

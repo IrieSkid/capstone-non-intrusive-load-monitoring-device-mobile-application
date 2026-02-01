@@ -51,10 +51,16 @@ A comprehensive IoT-based energy monitoring system that enables real-time classi
 NILM-Planning/
 ├── Documentation/
 │   ├── database-design/          # Database schema, ERD, and documentation
-│   ├── thesis-documentation/      # Thesis chapters and research documentation
+│   ├── thesis-documentation/     # Thesis chapters and research documentation
 │   └── mobile-app-prototype/      # HTML/CSS prototype mockups
+├── mobile-app/                    # React Native + Expo mobile application (to be created)
+│   ├── src/                       # Source code
+│   ├── App.js                     # Main app component
+│   └── package.json               # Dependencies
 └── README.md                      # This file
 ```
+
+> **Note**: The `mobile-app/` folder will be created when you initialize the Expo project. See [Getting Started](#-getting-started) section.
 
 ## 📚 Documentation
 
@@ -110,10 +116,16 @@ See [Documentation/mobile-app-prototype/](Documentation/mobile-app-prototype/) f
 
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/nilm-system.git
+git clone https://github.com/IrieSkid/capstone-non-intrusive-load-monitoring-device-mobile-application.git
 
 # Navigate to project directory
-cd nilm-system
+cd capstone-non-intrusive-load-monitoring-device-mobile-application
+
+# Create Expo app (if not already created)
+npx create-expo-app mobile-app
+
+# Navigate to mobile app directory
+cd mobile-app
 
 # Install dependencies
 npm install
@@ -121,6 +133,32 @@ npm install
 # Start Expo development server
 npx expo start
 ```
+
+### Setting Up the Mobile App
+
+1. **Create the Expo app:**
+   ```bash
+   npx create-expo-app mobile-app
+   ```
+
+2. **Install required dependencies:**
+   ```bash
+   cd mobile-app
+   npm install @react-navigation/native @react-navigation/stack
+   npm install react-native-screens react-native-safe-area-context
+   npm install @react-native-async-storage/async-storage
+   npm install firebase
+   npm install react-native-chart-kit react-native-svg
+   ```
+
+3. **Configure Firebase:**
+   - Add your Firebase configuration to `mobile-app/src/config/firebase.js`
+   - See [Documentation/database-design/schema-firestore.md](Documentation/database-design/schema-firestore.md) for setup
+
+4. **Start Development:**
+   ```bash
+   npx expo start
+   ```
 
 ## 📖 Quick Links
 
