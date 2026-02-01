@@ -224,3 +224,10 @@ Fields: setting_id (PK), setting_key (UK), setting_value, description, category,
 **File to Use:** `ERD-drawio-import.sql`  
 **Last Updated:** 2026
 
+## Layout Guide
+
+For optimal table arrangement in Draw.io, see **[DRAWIO-LAYOUT-GUIDE.md](DRAWIO-LAYOUT-GUIDE.md)** for:
+- Recommended table positions
+- Visual grouping strategy
+- Step-by-step arrangement instructions
+- Connection line routing tips
