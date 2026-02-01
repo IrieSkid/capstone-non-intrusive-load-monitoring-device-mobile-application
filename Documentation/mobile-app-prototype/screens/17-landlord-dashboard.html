@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Landlord Dashboard - NILM Prototype</title>
+    <link rel="stylesheet" href="../styles.css">
+    <style>
+        .summary-cards {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+        
+        .summary-card-small {
+            background: var(--surface);
+            border-radius: 12px;
+            padding: 16px;
+            border-left: 4px solid var(--primary);
+        }
+        
+        .summary-card-small.success {
+            border-left-color: var(--success);
+        }
+        
+        .summary-card-small.warning {
+            border-left-color: var(--warning);
+        }
+        
+        .summary-label-small {
+            font-size: 11px;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            margin-bottom: 8px;
+        }
+        
+        .summary-value-small {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--primary);
+        }
+        
+        .summary-card-small.success .summary-value-small {
+            color: var(--success);
+        }
+        
+        .summary-card-small.warning .summary-value-small {
+            color: var(--warning);
+        }
+        
+        .unit-card {
+            background: var(--surface);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 12px;
+            box-shadow: 0 2px 8px var(--shadow);
+            border-left: 4px solid var(--primary);
+        }
+        
+        .unit-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+        
+        .unit-name {
+            font-size: 18px;
+            font-weight: 600;
+        }
+        
+        .unit-stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 12px;
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px solid var(--divider);
+        }
+        
+        .unit-stat {
+            text-align: center;
+        }
+        
+        .unit-stat-value {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--primary);
+            margin-bottom: 4px;
+        }
+        
+        .unit-stat-label {
+            font-size: 11px;
+            color: var(--text-secondary);
+        }
+    </style>
+</head>
+<body>
+    <div class="mobile-container">
+        <!-- Header -->
+        <div class="header">
+            <div class="header-left">
+                <button class="icon-btn">☰</button>
+            </div>
+            <h1>Landlord Dashboard</h1>
+            <div class="header-right">
+                <div class="badge-container">
+                    <button class="icon-btn">🔔</button>
+                    <span class="badge">5</span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Content -->
+        <div class="content">
+            <!-- Greeting -->
+            <div class="greeting">
+                <div class="greeting-text">Good Morning</div>
+                <div class="greeting-name">Property Manager</div>
+            </div>
+            
+            <!-- Summary Cards -->
+            <div class="summary-cards">
+                <div class="summary-card-small">
+                    <div class="summary-label-small">Total Units</div>
+                    <div class="summary-value-small">5</div>
+                </div>
+                <div class="summary-card-small success">
+                    <div class="summary-label-small">Active Units</div>
+                    <div class="summary-value-small">4</div>
+                </div>
+                <div class="summary-card-small">
+                    <div class="summary-label-small">Total Consumption</div>
+                    <div class="summary-value-small">752.5</div>
+                    <div style="font-size: 11px; color: var(--text-secondary);">kWh</div>
+                </div>
+                <div class="summary-card-small warning">
+                    <div class="summary-label-small">Total Cost</div>
+                    <div class="summary-value-small">₱9,406</div>
+                </div>
+            </div>
+            
+            <!-- Overall Consumption Chart -->
+            <div class="card">
+                <div class="card-title" style="margin-bottom: 12px;">Overall Consumption</div>
+                <div class="chart-container" style="min-height: 180px;">
+                    <div class="chart-placeholder">Bar Chart - All Units</div>
+                </div>
+            </div>
+            
+            <!-- Units List -->
+            <div style="margin-bottom: 16px;">
+                <div class="card-title" style="margin-bottom: 12px; padding: 0 16px;">Units (5)</div>
+                
+                <!-- Unit 1 -->
+                <div class="unit-card">
+                    <div class="unit-header">
+                        <div class="unit-name">Unit 1 - Main Meter</div>
+                        <span class="status online">
+                            <span class="status-indicator online"></span>
+                            Online
+                        </span>
+                    </div>
+                    <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 12px;">
+                        Tenant: John Doe
+                    </div>
+                    <div class="unit-stats">
+                        <div class="unit-stat">
+                            <div class="unit-stat-value">150.5</div>
+                            <div class="unit-stat-label">kWh This Month</div>
+                        </div>
+                        <div class="unit-stat">
+                            <div class="unit-stat-value">₱1,881</div>
+                            <div class="unit-stat-label">Cost</div>
+                        </div>
+                        <div class="unit-stat">
+                            <div class="unit-stat-value">5</div>
+                            <div class="unit-stat-label">Appliances</div>
+                        </div>
+                    </div>
+                    <a href="18-unit-details.html" class="btn btn-secondary" style="margin-top: 12px; text-align: center; text-decoration: none;">
+                        View Details →
+                    </a>
+                </div>
+                
+                <!-- Unit 2 -->
+                <div class="unit-card" style="border-left-color: var(--error);">
+                    <div class="unit-header">
+                        <div class="unit-name">Unit 2 - Meter</div>
+                        <span class="status offline">
+                            <span class="status-indicator offline"></span>
+                            Offline
+                        </span>
+                    </div>
+                    <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 12px;">
+                        Tenant: Jane Smith
+                    </div>
+                    <div class="unit-stats">
+                        <div class="unit-stat">
+                            <div class="unit-stat-value">120.3</div>
+                            <div class="unit-stat-label">kWh This Month</div>
+                        </div>
+                        <div class="unit-stat">
+                            <div class="unit-stat-value">₱1,504</div>
+                            <div class="unit-stat-label">Cost</div>
+                        </div>
+                        <div class="unit-stat">
+                            <div class="unit-stat-value">3</div>
+                            <div class="unit-stat-label">Appliances</div>
+                        </div>
+                    </div>
+                    <a href="18-unit-details.html" class="btn btn-secondary" style="margin-top: 12px; text-align: center; text-decoration: none;">
+                        View Details →
+                    </a>
+                </div>
+                
+                <!-- Unit 3 -->
+                <div class="unit-card" style="border-left-color: var(--success);">
+                    <div class="unit-header">
+                        <div class="unit-name">Unit 3 - Meter</div>
+                        <span class="status online">
+                            <span class="status-indicator online"></span>
+                            Online
+                        </span>
+                    </div>
+                    <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 12px;">
+                        Tenant: Mike Johnson
+                    </div>
+                    <div class="unit-stats">
+                        <div class="unit-stat">
+                            <div class="unit-stat-value">180.2</div>
+                            <div class="unit-stat-label">kWh This Month</div>
+                        </div>
+                        <div class="unit-stat">
+                            <div class="unit-stat-value">₱2,253</div>
+                            <div class="unit-stat-label">Cost</div>
+                        </div>
+                        <div class="unit-stat">
+                            <div class="unit-stat-value">4</div>
+                            <div class="unit-stat-label">Appliances</div>
+                        </div>
+                    </div>
+                    <a href="18-unit-details.html" class="btn btn-secondary" style="margin-top: 12px; text-align: center; text-decoration: none;">
+                        View Details →
+                    </a>
+                </div>
+                
+                <!-- Unit 4 -->
+                <div class="unit-card">
+                    <div class="unit-header">
+                        <div class="unit-name">Unit 4 - Meter</div>
+                        <span class="status online">
+                            <span class="status-indicator online"></span>
+                            Online
+                        </span>
+                    </div>
+                    <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 12px;">
+                        Tenant: Sarah Williams
+                    </div>
+                    <div class="unit-stats">
+                        <div class="unit-stat">
+                            <div class="unit-stat-value">165.8</div>
+                            <div class="unit-stat-label">kWh This Month</div>
+                        </div>
+                        <div class="unit-stat">
+                            <div class="unit-stat-value">₱2,073</div>
+                            <div class="unit-stat-label">Cost</div>
+                        </div>
+                        <div class="unit-stat">
+                            <div class="unit-stat-value">6</div>
+                            <div class="unit-stat-label">Appliances</div>
+                        </div>
+                    </div>
+                    <a href="18-unit-details.html" class="btn btn-secondary" style="margin-top: 12px; text-align: center; text-decoration: none;">
+                        View Details →
+                    </a>
+                </div>
+                
+                <!-- Unit 5 -->
+                <div class="unit-card" style="border-left-color: var(--warning);">
+                    <div class="unit-header">
+                        <div class="unit-name">Unit 5 - Meter</div>
+                        <span class="status online">
+                            <span class="status-indicator online"></span>
+                            Online
+                        </span>
+                    </div>
+                    <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 12px;">
+                        Tenant: David Brown
+                    </div>
+                    <div class="unit-stats">
+                        <div class="unit-stat">
+                            <div class="unit-stat-value">135.7</div>
+                            <div class="unit-stat-label">kWh This Month</div>
+                        </div>
+                        <div class="unit-stat">
+                            <div class="unit-stat-value">₱1,696</div>
+                            <div class="unit-stat-label">Cost</div>
+                        </div>
+                        <div class="unit-stat">
+                            <div class="unit-stat-value">4</div>
+                            <div class="unit-stat-label">Appliances</div>
+                        </div>
+                    </div>
+                    <a href="18-unit-details.html" class="btn btn-secondary" style="margin-top: 12px; text-align: center; text-decoration: none;">
+                        View Details →
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Bottom Navigation -->
+        <div class="bottom-nav">
+            <a href="17-landlord-dashboard.html" class="nav-item active">
+                <div class="nav-icon">🏠</div>
+                <div>Dashboard</div>
+            </a>
+            <a href="06-devices.html" class="nav-item">
+                <div class="nav-icon">📱</div>
+                <div>Devices</div>
+            </a>
+            <a href="12-reports.html" class="nav-item">
+                <div class="nav-icon">📊</div>
+                <div>Reports</div>
+            </a>
+            <a href="13-notifications.html" class="nav-item">
+                <div class="nav-icon">🔔</div>
+                <div>Alerts</div>
+            </a>
+            <a href="16-profile.html" class="nav-item">
+                <div class="nav-icon">👤</div>
+                <div>Profile</div>
+            </a>
+        </div>
+    </div>
+</body>
+</html>
+

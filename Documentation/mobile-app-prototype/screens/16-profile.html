@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profile - NILM Prototype</title>
+    <link rel="stylesheet" href="../styles.css">
+    <style>
+        .profile-header {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: white;
+            padding: 32px 24px;
+            text-align: center;
+            margin-bottom: 16px;
+        }
+        
+        .profile-avatar {
+            width: 100px;
+            height: 100px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 48px;
+            margin: 0 auto 16px;
+            border: 4px solid rgba(255,255,255,0.3);
+        }
+        
+        .profile-name {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+        
+        .profile-email {
+            font-size: 14px;
+            opacity: 0.9;
+            margin-bottom: 8px;
+        }
+        
+        .profile-role {
+            display: inline-block;
+            background: rgba(255,255,255,0.2);
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        
+        .profile-stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+            margin: 24px 0;
+            padding: 0 16px;
+        }
+        
+        .profile-stat {
+            text-align: center;
+        }
+        
+        .profile-stat-value {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 4px;
+        }
+        
+        .profile-stat-label {
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+        
+        .profile-section {
+            margin-bottom: 24px;
+        }
+        
+        .section-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 12px;
+            padding: 0 16px;
+        }
+        
+        .info-item {
+            background: var(--surface);
+            padding: 16px;
+            border-bottom: 1px solid var(--divider);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .info-item:first-child {
+            border-top-left-radius: 12px;
+            border-top-right-radius: 12px;
+        }
+        
+        .info-item:last-child {
+            border-bottom: none;
+            border-bottom-left-radius: 12px;
+            border-bottom-right-radius: 12px;
+        }
+        
+        .info-label {
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+        
+        .info-value {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+    </style>
+</head>
+<body>
+    <div class="mobile-container">
+        <!-- Header -->
+        <div class="header">
+            <div class="header-left">
+                <button class="icon-btn" onclick="history.back()">←</button>
+            </div>
+            <h1>Profile</h1>
+            <div class="header-right">
+                <a href="15-settings.html" style="color: white; font-size: 24px; text-decoration: none;">⚙️</a>
+            </div>
+        </div>
+        
+        <!-- Content -->
+        <div class="content">
+            <!-- Profile Header -->
+            <div class="profile-header">
+                <div class="profile-avatar">👤</div>
+                <div class="profile-name">John Doe</div>
+                <div class="profile-email">john.doe@example.com</div>
+                <div class="profile-role">Tenant</div>
+            </div>
+            
+            <!-- Profile Stats -->
+            <div class="profile-stats">
+                <div class="profile-stat">
+                    <div class="profile-stat-value">2</div>
+                    <div class="profile-stat-label">Devices</div>
+                </div>
+                <div class="profile-stat">
+                    <div class="profile-stat-value">5</div>
+                    <div class="profile-stat-label">Appliances</div>
+                </div>
+                <div class="profile-stat">
+                    <div class="profile-stat-value">150.5</div>
+                    <div class="profile-stat-label">kWh This Month</div>
+                </div>
+            </div>
+            
+            <!-- Personal Information -->
+            <div class="profile-section">
+                <div class="section-title">Personal Information</div>
+                <div class="card" style="padding: 0;">
+                    <div class="info-item">
+                        <span class="info-label">Full Name</span>
+                        <span class="info-value">John Doe</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Email</span>
+                        <span class="info-value">john.doe@example.com</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Phone Number</span>
+                        <span class="info-value">+63 912 345 6789</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Role</span>
+                        <span class="info-value">Tenant</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Account Information -->
+            <div class="profile-section">
+                <div class="section-title">Account Information</div>
+                <div class="card" style="padding: 0;">
+                    <div class="info-item">
+                        <span class="info-label">Member Since</span>
+                        <span class="info-value">January 2024</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Last Login</span>
+                        <span class="info-value">Today, 10:30 AM</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Account Status</span>
+                        <span class="info-value" style="color: var(--success);">Active</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Quick Actions -->
+            <div class="profile-section">
+                <div class="section-title">Quick Actions</div>
+                <div class="card" style="padding: 0;">
+                    <div class="settings-item">
+                        <div class="settings-item-content">
+                            <div class="settings-icon">✏️</div>
+                            <div class="settings-text">
+                                <div class="settings-label">Edit Profile</div>
+                            </div>
+                        </div>
+                        <span class="settings-arrow">›</span>
+                    </div>
+                    <div class="settings-item">
+                        <div class="settings-item-content">
+                            <div class="settings-icon">🔐</div>
+                            <div class="settings-text">
+                                <div class="settings-label">Change Password</div>
+                            </div>
+                        </div>
+                        <span class="settings-arrow">›</span>
+                    </div>
+                    <div class="settings-item">
+                        <div class="settings-item-content">
+                            <div class="settings-icon">⚙️</div>
+                            <div class="settings-text">
+                                <div class="settings-label">Settings</div>
+                            </div>
+                        </div>
+                        <span class="settings-arrow">›</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Bottom Navigation -->
+        <div class="bottom-nav">
+            <a href="05-dashboard.html" class="nav-item">
+                <div class="nav-icon">🏠</div>
+                <div>Dashboard</div>
+            </a>
+            <a href="06-devices.html" class="nav-item">
+                <div class="nav-icon">📱</div>
+                <div>Devices</div>
+            </a>
+            <a href="12-reports.html" class="nav-item">
+                <div class="nav-icon">📊</div>
+                <div>Reports</div>
+            </a>
+            <a href="13-notifications.html" class="nav-item">
+                <div class="nav-icon">🔔</div>
+                <div>Alerts</div>
+            </a>
+            <a href="16-profile.html" class="nav-item active">
+                <div class="nav-icon">👤</div>
+                <div>Profile</div>
+            </a>
+        </div>
+    </div>
+</body>
+</html>
+

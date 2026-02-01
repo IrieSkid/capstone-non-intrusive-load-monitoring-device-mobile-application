@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reports - NILM Prototype</title>
+    <link rel="stylesheet" href="../styles.css">
+    <style>
+        .summary-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+        
+        .summary-item {
+            background: var(--surface);
+            border-radius: 12px;
+            padding: 16px;
+            border-left: 4px solid var(--primary);
+        }
+        
+        .summary-label {
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+            text-transform: uppercase;
+        }
+        
+        .summary-value {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--primary);
+        }
+        
+        .top-appliances {
+            background: var(--surface);
+            border-radius: 12px;
+            padding: 16px;
+        }
+        
+        .appliance-rank {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 0;
+            border-bottom: 1px solid var(--divider);
+        }
+        
+        .appliance-rank:last-child {
+            border-bottom: none;
+        }
+        
+        .rank-number {
+            width: 32px;
+            height: 32px;
+            background: var(--primary);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 14px;
+        }
+        
+        .rank-info {
+            flex: 1;
+        }
+        
+        .rank-name {
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+        
+        .rank-value {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--primary);
+        }
+    </style>
+</head>
+<body>
+    <div class="mobile-container">
+        <!-- Header -->
+        <div class="header">
+            <div class="header-left">
+                <button class="icon-btn" onclick="history.back()">←</button>
+            </div>
+            <h1>Reports</h1>
+            <div class="header-right"></div>
+        </div>
+        
+        <!-- Content -->
+        <div class="content">
+            <!-- Period Selection -->
+            <div class="card">
+                <div class="tabs">
+                    <button class="tab active">Daily</button>
+                    <button class="tab">Weekly</button>
+                    <button class="tab">Monthly</button>
+                </div>
+                
+                <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 12px;">
+                    Date Range: Jan 1, 2024 to Jan 31, 2024
+                </div>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 12px;">
+                    <select class="input-field" style="padding: 8px;">
+                        <option>All Devices</option>
+                        <option>Main Meter</option>
+                        <option>Unit 2 Meter</option>
+                    </select>
+                    <select class="input-field" style="padding: 8px;">
+                        <option>All Appliances</option>
+                        <option>Refrigerator</option>
+                        <option>Air Conditioner</option>
+                    </select>
+                </div>
+            </div>
+            
+            <!-- Summary -->
+            <div class="summary-grid">
+                <div class="summary-item">
+                    <div class="summary-label">Total Consumption</div>
+                    <div class="summary-value">150.5</div>
+                    <div style="font-size: 12px; color: var(--text-secondary);">kWh</div>
+                </div>
+                <div class="summary-item" style="border-left-color: var(--success);">
+                    <div class="summary-label">Total Cost</div>
+                    <div class="summary-value" style="color: var(--success);">₱1,881</div>
+                    <div style="font-size: 12px; color: var(--text-secondary);">PHP</div>
+                </div>
+            </div>
+            
+            <div class="summary-grid">
+                <div class="summary-item" style="border-left-color: var(--warning);">
+                    <div class="summary-label">Average Daily</div>
+                    <div class="summary-value" style="color: var(--warning);">4.8</div>
+                    <div style="font-size: 12px; color: var(--text-secondary);">kWh</div>
+                </div>
+                <div class="summary-item" style="border-left-color: var(--error);">
+                    <div class="summary-label">Peak Day</div>
+                    <div class="summary-value" style="color: var(--error);">8.2</div>
+                    <div style="font-size: 12px; color: var(--text-secondary);">kWh</div>
+                </div>
+            </div>
+            
+            <!-- Consumption Chart -->
+            <div class="card">
+                <div class="card-title" style="margin-bottom: 12px;">Consumption Chart</div>
+                <div class="chart-container" style="min-height: 200px;">
+                    <div class="chart-placeholder">Bar Chart - Daily Consumption</div>
+                </div>
+            </div>
+            
+            <!-- Top Consuming Appliances -->
+            <div class="top-appliances">
+                <div class="card-title" style="margin-bottom: 16px;">Top Consuming Appliances</div>
+                
+                <div class="appliance-rank">
+                    <div class="rank-number">1</div>
+                    <div class="rank-info">
+                        <div class="rank-name">❄️ Air Conditioner</div>
+                    </div>
+                    <div class="rank-value">50.2 kWh</div>
+                </div>
+                
+                <div class="appliance-rank">
+                    <div class="rank-number">2</div>
+                    <div class="rank-info">
+                        <div class="rank-name">🧊 Refrigerator</div>
+                    </div>
+                    <div class="rank-value">40.1 kWh</div>
+                </div>
+                
+                <div class="appliance-rank">
+                    <div class="rank-number">3</div>
+                    <div class="rank-info">
+                        <div class="rank-name">📺 Television</div>
+                    </div>
+                    <div class="rank-value">25.3 kWh</div>
+                </div>
+                
+                <div class="appliance-rank">
+                    <div class="rank-number">4</div>
+                    <div class="rank-info">
+                        <div class="rank-name">💡 Lights</div>
+                    </div>
+                    <div class="rank-value">20.5 kWh</div>
+                </div>
+                
+                <div class="appliance-rank">
+                    <div class="rank-number">5</div>
+                    <div class="rank-info">
+                        <div class="rank-name">🌀 Fan</div>
+                    </div>
+                    <div class="rank-value">14.4 kWh</div>
+                </div>
+            </div>
+            
+            <!-- Export Button -->
+            <a href="#" class="btn btn-primary" style="margin-top: 16px; text-align: center; text-decoration: none;">
+                📄 EXPORT PDF REPORT
+            </a>
+        </div>
+        
+        <!-- Bottom Navigation -->
+        <div class="bottom-nav">
+            <a href="05-dashboard.html" class="nav-item">
+                <div class="nav-icon">🏠</div>
+                <div>Dashboard</div>
+            </a>
+            <a href="06-devices.html" class="nav-item">
+                <div class="nav-icon">📱</div>
+                <div>Devices</div>
+            </a>
+            <a href="12-reports.html" class="nav-item active">
+                <div class="nav-icon">📊</div>
+                <div>Reports</div>
+            </a>
+            <a href="13-notifications.html" class="nav-item">
+                <div class="nav-icon">🔔</div>
+                <div>Alerts</div>
+            </a>
+            <a href="16-profile.html" class="nav-item">
+                <div class="nav-icon">👤</div>
+                <div>Profile</div>
+            </a>
+        </div>
+    </div>
+</body>
+</html>
+

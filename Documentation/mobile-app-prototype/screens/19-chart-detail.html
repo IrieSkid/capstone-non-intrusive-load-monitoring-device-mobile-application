@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chart Detail - NILM Prototype</title>
+    <link rel="stylesheet" href="../styles.css">
+    <style>
+        .chart-header {
+            background: var(--surface);
+            padding: 16px;
+            border-bottom: 1px solid var(--divider);
+            position: sticky;
+            top: 60px;
+            z-index: 10;
+        }
+        
+        .chart-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+        
+        .chart-subtitle {
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+        
+        .chart-controls {
+            display: flex;
+            gap: 8px;
+            margin-top: 12px;
+        }
+        
+        .control-btn {
+            flex: 1;
+            padding: 8px;
+            border: 1px solid var(--divider);
+            border-radius: 8px;
+            background: var(--surface);
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .control-btn.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+        
+        .chart-fullscreen {
+            min-height: 400px;
+            background: var(--surface);
+            margin: 16px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px dashed var(--divider);
+        }
+        
+        .chart-legend {
+            background: var(--surface);
+            border-radius: 12px;
+            padding: 16px;
+            margin: 0 16px 16px;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 8px 0;
+        }
+        
+        .legend-color {
+            width: 16px;
+            height: 16px;
+            border-radius: 4px;
+        }
+        
+        .legend-label {
+            flex: 1;
+            font-size: 14px;
+        }
+        
+        .legend-value {
+            font-weight: 600;
+            color: var(--primary);
+        }
+        
+        .chart-stats {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            margin: 0 16px 16px;
+        }
+        
+        .stat-box {
+            background: var(--surface);
+            border-radius: 12px;
+            padding: 16px;
+            text-align: center;
+            border-left: 4px solid var(--primary);
+        }
+        
+        .stat-box-value {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 4px;
+        }
+        
+        .stat-box-label {
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+    </style>
+</head>
+<body>
+    <div class="mobile-container">
+        <!-- Header -->
+        <div class="header">
+            <div class="header-left">
+                <button class="icon-btn" onclick="history.back()">←</button>
+            </div>
+            <h1>Consumption Chart</h1>
+            <div class="header-right">
+                <button class="icon-btn">📤</button>
+            </div>
+        </div>
+        
+        <!-- Content -->
+        <div class="content">
+            <!-- Chart Header -->
+            <div class="chart-header">
+                <div class="chart-title">Energy Consumption</div>
+                <div class="chart-subtitle">January 1 - January 31, 2024</div>
+                
+                <div class="chart-controls">
+                    <button class="control-btn active">Daily</button>
+                    <button class="control-btn">Weekly</button>
+                    <button class="control-btn">Monthly</button>
+                </div>
+            </div>
+            
+            <!-- Full Screen Chart -->
+            <div class="chart-fullscreen">
+                <div class="chart-placeholder" style="font-size: 16px;">
+                    📊 Interactive Line Chart<br>
+                    <span style="font-size: 12px; color: var(--text-secondary);">Shows daily consumption trends</span>
+                </div>
+            </div>
+            
+            <!-- Chart Statistics -->
+            <div class="chart-stats">
+                <div class="stat-box">
+                    <div class="stat-box-value">150.5</div>
+                    <div class="stat-box-label">Total (kWh)</div>
+                </div>
+                <div class="stat-box" style="border-left-color: var(--success);">
+                    <div class="stat-box-value" style="color: var(--success);">4.8</div>
+                    <div class="stat-box-label">Average Daily (kWh)</div>
+                </div>
+                <div class="stat-box" style="border-left-color: var(--warning);">
+                    <div class="stat-box-value" style="color: var(--warning);">8.2</div>
+                    <div class="stat-box-label">Peak Day (kWh)</div>
+                </div>
+                <div class="stat-box" style="border-left-color: var(--error);">
+                    <div class="stat-box-value" style="color: var(--error);">3.1</div>
+                    <div class="stat-box-label">Lowest Day (kWh)</div>
+                </div>
+            </div>
+            
+            <!-- Chart Legend -->
+            <div class="chart-legend">
+                <div class="card-title" style="margin-bottom: 12px;">Breakdown by Appliance</div>
+                
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #2196F3;"></div>
+                    <div class="legend-label">Air Conditioner</div>
+                    <div class="legend-value">50.2 kWh</div>
+                </div>
+                
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #4CAF50;"></div>
+                    <div class="legend-label">Refrigerator</div>
+                    <div class="legend-value">40.1 kWh</div>
+                </div>
+                
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #FF9800;"></div>
+                    <div class="legend-label">Television</div>
+                    <div class="legend-value">25.3 kWh</div>
+                </div>
+                
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #9C27B0;"></div>
+                    <div class="legend-label">Lights</div>
+                    <div class="legend-value">20.5 kWh</div>
+                </div>
+                
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #F44336;"></div>
+                    <div class="legend-label">Fan</div>
+                    <div class="legend-value">14.4 kWh</div>
+                </div>
+            </div>
+            
+            <!-- Export Options -->
+            <div class="card" style="margin: 0 16px 16px;">
+                <div class="card-title" style="margin-bottom: 12px;">Export Chart</div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+                    <button class="btn btn-secondary" style="text-align: center; text-decoration: none; padding: 12px;">
+                        📷 Save Image
+                    </button>
+                    <button class="btn btn-secondary" style="text-align: center; text-decoration: none; padding: 12px;">
+                        📄 Export PDF
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
+

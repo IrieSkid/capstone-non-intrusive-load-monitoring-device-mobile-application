@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register - NILM Prototype</title>
+    <link rel="stylesheet" href="../styles.css">
+    <style>
+        .register-container {
+            padding: 24px;
+        }
+        
+        .register-title {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            text-align: center;
+        }
+        
+        .register-subtitle {
+            font-size: 14px;
+            color: var(--text-secondary);
+            margin-bottom: 32px;
+            text-align: center;
+        }
+        
+        .required {
+            color: var(--error);
+        }
+        
+        .select-field {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1px solid var(--divider);
+            border-radius: 8px;
+            font-size: 16px;
+            background: var(--surface);
+            color: var(--text-primary);
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23757575' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 12px center;
+            padding-right: 40px;
+        }
+        
+        .terms-checkbox {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            margin: 16px 0;
+        }
+        
+        .terms-checkbox input {
+            margin-top: 4px;
+        }
+        
+        .terms-text {
+            font-size: 14px;
+            color: var(--text-secondary);
+            line-height: 1.5;
+        }
+        
+        .terms-link {
+            color: var(--primary);
+            text-decoration: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="mobile-container">
+        <!-- Header -->
+        <div class="header">
+            <div class="header-left">
+                <button class="icon-btn" onclick="history.back()">←</button>
+            </div>
+            <h1>Create Account</h1>
+            <div class="header-right">
+                <button class="icon-btn" style="color: white; font-size: 16px; font-weight: 600;">Save</button>
+            </div>
+        </div>
+        
+        <!-- Content -->
+        <div class="content">
+            <div class="register-container">
+                <div class="register-title">Create Account</div>
+                <div class="register-subtitle">Join NILM Monitoring</div>
+                
+                <div class="input-group">
+                    <label class="input-label">Full Name <span class="required">*</span></label>
+                    <input type="text" class="input-field" placeholder="Enter your full name">
+                </div>
+                
+                <div class="input-group">
+                    <label class="input-label">Email Address <span class="required">*</span></label>
+                    <input type="email" class="input-field" placeholder="Enter your email">
+                </div>
+                
+                <div class="input-group">
+                    <label class="input-label">Phone Number (Optional)</label>
+                    <input type="tel" class="input-field" placeholder="+63 912 345 6789">
+                </div>
+                
+                <div class="input-group">
+                    <label class="input-label">Password <span class="required">*</span></label>
+                    <div class="input-with-icon">
+                        <input type="password" class="input-field" placeholder="Enter password">
+                        <button class="input-icon">👁</button>
+                    </div>
+                    <div class="input-hint">Minimum 6 characters</div>
+                </div>
+                
+                <div class="input-group">
+                    <label class="input-label">Confirm Password <span class="required">*</span></label>
+                    <div class="input-with-icon">
+                        <input type="password" class="input-field" placeholder="Confirm password">
+                        <button class="input-icon">👁</button>
+                    </div>
+                </div>
+                
+                <div class="input-group">
+                    <label class="input-label">Role <span class="required">*</span></label>
+                    <select class="select-field">
+                        <option>Tenant</option>
+                        <option>Landlord</option>
+                        <option>Admin</option>
+                    </select>
+                </div>
+                
+                <div class="terms-checkbox">
+                    <input type="checkbox" id="terms" required>
+                    <label for="terms" class="terms-text">
+                        I agree to the <a href="#" class="terms-link">Terms & Conditions</a> and <a href="#" class="terms-link">Privacy Policy</a>
+                    </label>
+                </div>
+                
+                <a href="05-dashboard.html" class="btn btn-primary" style="text-align: center; text-decoration: none;">
+                    CREATE ACCOUNT
+                </a>
+                
+                <div class="signup-link" style="margin-top: 24px;">
+                    Already have an account? <a href="02-login.html" class="link">Sign In</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
+

@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Settings - NILM Prototype</title>
+    <link rel="stylesheet" href="../styles.css">
+    <style>
+        .settings-section {
+            margin-bottom: 24px;
+        }
+        
+        .section-title {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 12px;
+            padding: 0 16px;
+        }
+        
+        .settings-item {
+            background: var(--surface);
+            padding: 16px;
+            border-bottom: 1px solid var(--divider);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        
+        .settings-item:hover {
+            background: var(--background);
+        }
+        
+        .settings-item:first-child {
+            border-top-left-radius: 12px;
+            border-top-right-radius: 12px;
+        }
+        
+        .settings-item:last-child {
+            border-bottom: none;
+            border-bottom-left-radius: 12px;
+            border-bottom-right-radius: 12px;
+        }
+        
+        .settings-item-content {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex: 1;
+        }
+        
+        .settings-icon {
+            font-size: 24px;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--primary-light);
+            border-radius: 8px;
+        }
+        
+        .settings-text {
+            flex: 1;
+        }
+        
+        .settings-label {
+            font-size: 16px;
+            font-weight: 500;
+            margin-bottom: 2px;
+        }
+        
+        .settings-description {
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+        
+        .settings-value {
+            font-size: 14px;
+            color: var(--text-secondary);
+            margin-right: 8px;
+        }
+        
+        .settings-arrow {
+            color: var(--text-secondary);
+            font-size: 18px;
+        }
+        
+        .logout-btn {
+            background: var(--error);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            padding: 16px;
+            width: 100%;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 24px;
+        }
+        
+        .logout-btn:hover {
+            background: #D32F2F;
+        }
+    </style>
+</head>
+<body>
+    <div class="mobile-container">
+        <!-- Header -->
+        <div class="header">
+            <div class="header-left">
+                <button class="icon-btn" onclick="history.back()">←</button>
+            </div>
+            <h1>Settings</h1>
+            <div class="header-right"></div>
+        </div>
+        
+        <!-- Content -->
+        <div class="content">
+            <!-- Account Settings -->
+            <div class="settings-section">
+                <div class="section-title">Account</div>
+                <div class="card" style="padding: 0;">
+                    <div class="settings-item">
+                        <div class="settings-item-content">
+                            <div class="settings-icon">👤</div>
+                            <div class="settings-text">
+                                <div class="settings-label">Profile</div>
+                                <div class="settings-description">Manage your account information</div>
+                            </div>
+                        </div>
+                        <span class="settings-arrow">›</span>
+                    </div>
+                    <div class="settings-item">
+                        <div class="settings-item-content">
+                            <div class="settings-icon">🔐</div>
+                            <div class="settings-text">
+                                <div class="settings-label">Change Password</div>
+                                <div class="settings-description">Update your password</div>
+                            </div>
+                        </div>
+                        <span class="settings-arrow">›</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Notification Settings -->
+            <div class="settings-section">
+                <div class="section-title">Notifications</div>
+                <div class="card" style="padding: 0;">
+                    <div class="settings-item">
+                        <div class="settings-item-content">
+                            <div class="settings-icon">🔔</div>
+                            <div class="settings-text">
+                                <div class="settings-label">Push Notifications</div>
+                                <div class="settings-description">Receive alerts and updates</div>
+                            </div>
+                        </div>
+                        <label class="toggle-switch">
+                            <input type="checkbox" checked>
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                    <div class="settings-item">
+                        <div class="settings-item-content">
+                            <div class="settings-icon">📧</div>
+                            <div class="settings-text">
+                                <div class="settings-label">Email Notifications</div>
+                                <div class="settings-description">Receive email alerts</div>
+                            </div>
+                        </div>
+                        <label class="toggle-switch">
+                            <input type="checkbox" checked>
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                    <div class="settings-item">
+                        <div class="settings-item-content">
+                            <div class="settings-icon">⚠️</div>
+                            <div class="settings-text">
+                                <div class="settings-label">Alert Rules</div>
+                                <div class="settings-description">Manage alert rules</div>
+                            </div>
+                        </div>
+                        <span class="settings-arrow">›</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- App Settings -->
+            <div class="settings-section">
+                <div class="section-title">App Settings</div>
+                <div class="card" style="padding: 0;">
+                    <div class="settings-item">
+                        <div class="settings-item-content">
+                            <div class="settings-icon">🌐</div>
+                            <div class="settings-text">
+                                <div class="settings-label">Language</div>
+                                <div class="settings-description">English</div>
+                            </div>
+                        </div>
+                        <span class="settings-value">English</span>
+                        <span class="settings-arrow">›</span>
+                    </div>
+                    <div class="settings-item">
+                        <div class="settings-item-content">
+                            <div class="settings-icon">📊</div>
+                            <div class="settings-text">
+                                <div class="settings-label">Default Report Period</div>
+                                <div class="settings-description">Daily</div>
+                            </div>
+                        </div>
+                        <span class="settings-value">Daily</span>
+                        <span class="settings-arrow">›</span>
+                    </div>
+                    <div class="settings-item">
+                        <div class="settings-item-content">
+                            <div class="settings-icon">💰</div>
+                            <div class="settings-text">
+                                <div class="settings-label">Electricity Rate</div>
+                                <div class="settings-description">₱12.50/kWh</div>
+                            </div>
+                        </div>
+                        <span class="settings-value">₱12.50</span>
+                        <span class="settings-arrow">›</span>
+                    </div>
+                    <div class="settings-item">
+                        <div class="settings-item-content">
+                            <div class="settings-icon">🔄</div>
+                            <div class="settings-text">
+                                <div class="settings-label">Auto Refresh</div>
+                                <div class="settings-description">Update data automatically</div>
+                            </div>
+                        </div>
+                        <label class="toggle-switch">
+                            <input type="checkbox" checked>
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Support -->
+            <div class="settings-section">
+                <div class="section-title">Support</div>
+                <div class="card" style="padding: 0;">
+                    <div class="settings-item">
+                        <div class="settings-item-content">
+                            <div class="settings-icon">❓</div>
+                            <div class="settings-text">
+                                <div class="settings-label">Help & Support</div>
+                                <div class="settings-description">FAQs and user guide</div>
+                            </div>
+                        </div>
+                        <span class="settings-arrow">›</span>
+                    </div>
+                    <div class="settings-item">
+                        <div class="settings-item-content">
+                            <div class="settings-icon">📝</div>
+                            <div class="settings-text">
+                                <div class="settings-label">Terms & Conditions</div>
+                                <div class="settings-description">View terms of service</div>
+                            </div>
+                        </div>
+                        <span class="settings-arrow">›</span>
+                    </div>
+                    <div class="settings-item">
+                        <div class="settings-item-content">
+                            <div class="settings-icon">ℹ️</div>
+                            <div class="settings-text">
+                                <div class="settings-label">About</div>
+                                <div class="settings-description">Version 1.0.0</div>
+                            </div>
+                        </div>
+                        <span class="settings-arrow">›</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Logout -->
+            <button class="logout-btn">LOGOUT</button>
+        </div>
+        
+        <!-- Bottom Navigation -->
+        <div class="bottom-nav">
+            <a href="05-dashboard.html" class="nav-item">
+                <div class="nav-icon">🏠</div>
+                <div>Dashboard</div>
+            </a>
+            <a href="06-devices.html" class="nav-item">
+                <div class="nav-icon">📱</div>
+                <div>Devices</div>
+            </a>
+            <a href="12-reports.html" class="nav-item">
+                <div class="nav-icon">📊</div>
+                <div>Reports</div>
+            </a>
+            <a href="13-notifications.html" class="nav-item">
+                <div class="nav-icon">🔔</div>
+                <div>Alerts</div>
+            </a>
+            <a href="16-profile.html" class="nav-item">
+                <div class="nav-icon">👤</div>
+                <div>Profile</div>
+            </a>
+        </div>
+    </div>
+</body>
+</html>
+

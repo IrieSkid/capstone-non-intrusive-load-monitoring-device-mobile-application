@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Notifications - NILM Prototype</title>
+    <link rel="stylesheet" href="../styles.css">
+    <style>
+        .notification-card {
+            background: var(--surface);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 12px;
+            box-shadow: 0 2px 8px var(--shadow);
+            border-left: 4px solid;
+            position: relative;
+        }
+        
+        .notification-card.alert {
+            border-left-color: var(--error);
+        }
+        
+        .notification-card.warning {
+            border-left-color: var(--warning);
+        }
+        
+        .notification-card.info {
+            border-left-color: var(--primary);
+        }
+        
+        .notification-header {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            margin-bottom: 8px;
+        }
+        
+        .notification-icon {
+            font-size: 24px;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+        }
+        
+        .notification-card.alert .notification-icon {
+            background: #FFEBEE;
+        }
+        
+        .notification-card.warning .notification-icon {
+            background: #FFF3E0;
+        }
+        
+        .notification-card.info .notification-icon {
+            background: var(--primary-light);
+        }
+        
+        .notification-content {
+            flex: 1;
+        }
+        
+        .notification-title {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+        
+        .notification-message {
+            font-size: 14px;
+            color: var(--text-secondary);
+            line-height: 1.5;
+        }
+        
+        .notification-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px solid var(--divider);
+        }
+        
+        .notification-time {
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+        
+        .notification-actions {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .btn-small {
+            padding: 6px 12px;
+            font-size: 12px;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+            background: var(--background);
+            color: var(--text-primary);
+        }
+        
+        .notification-card.read {
+            opacity: 0.7;
+        }
+        
+        .mark-all-btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            padding: 12px;
+            width: 100%;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 16px;
+        }
+    </style>
+</head>
+<body>
+    <div class="mobile-container">
+        <!-- Header -->
+        <div class="header">
+            <div class="header-left">
+                <button class="icon-btn" onclick="history.back()">←</button>
+            </div>
+            <h1>Notifications</h1>
+            <div class="header-right"></div>
+        </div>
+        
+        <!-- Content -->
+        <div class="content">
+            <!-- Filter Tabs -->
+            <div class="tabs">
+                <button class="tab active">All</button>
+                <button class="tab">Unread</button>
+                <button class="tab">Alerts</button>
+            </div>
+            
+            <!-- Notification 1 - Alert -->
+            <div class="notification-card alert">
+                <div class="notification-header">
+                    <div class="notification-icon">🔴</div>
+                    <div class="notification-content">
+                        <div class="notification-title">High Power Consumption</div>
+                        <div class="notification-message">
+                            Air Conditioner is consuming more than threshold (1500W). Current consumption: 1,200W.
+                        </div>
+                    </div>
+                </div>
+                <div class="notification-footer">
+                    <div class="notification-time">10:30 AM • Today</div>
+                    <div class="notification-actions">
+                        <button class="btn-small">Mark as Read</button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Notification 2 - Warning -->
+            <div class="notification-card warning">
+                <div class="notification-header">
+                    <div class="notification-icon">⚠️</div>
+                    <div class="notification-content">
+                        <div class="notification-title">Device Offline</div>
+                        <div class="notification-message">
+                            Unit 2 Meter has been offline for 15 minutes. Please check the device connection.
+                        </div>
+                    </div>
+                </div>
+                <div class="notification-footer">
+                    <div class="notification-time">9:45 AM • Today</div>
+                    <div class="notification-actions">
+                        <button class="btn-small">Mark as Read</button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Notification 3 - Info (Read) -->
+            <div class="notification-card info read">
+                <div class="notification-header">
+                    <div class="notification-icon">ℹ️</div>
+                    <div class="notification-content">
+                        <div class="notification-title">Weekly Report Ready</div>
+                        <div class="notification-message">
+                            Your weekly consumption report is ready. View it in the Reports section.
+                        </div>
+                    </div>
+                </div>
+                <div class="notification-footer">
+                    <div class="notification-time">8:00 AM • Today</div>
+                    <div class="notification-actions">
+                        <span style="font-size: 12px; color: var(--success);">✓ Read</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Notification 4 - Info (Read) -->
+            <div class="notification-card info read">
+                <div class="notification-header">
+                    <div class="notification-icon">📊</div>
+                    <div class="notification-content">
+                        <div class="notification-title">Monthly Summary</div>
+                        <div class="notification-message">
+                            January consumption: 150.5 kWh • ₱1,881.25. View detailed report.
+                        </div>
+                    </div>
+                </div>
+                <div class="notification-footer">
+                    <div class="notification-time">12:00 AM • Jan 31</div>
+                    <div class="notification-actions">
+                        <span style="font-size: 12px; color: var(--success);">✓ Read</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Mark All as Read Button -->
+            <button class="mark-all-btn">Mark All as Read</button>
+        </div>
+        
+        <!-- Bottom Navigation -->
+        <div class="bottom-nav">
+            <a href="05-dashboard.html" class="nav-item">
+                <div class="nav-icon">🏠</div>
+                <div>Dashboard</div>
+            </a>
+            <a href="06-devices.html" class="nav-item">
+                <div class="nav-icon">📱</div>
+                <div>Devices</div>
+            </a>
+            <a href="12-reports.html" class="nav-item">
+                <div class="nav-icon">📊</div>
+                <div>Reports</div>
+            </a>
+            <a href="13-notifications.html" class="nav-item active">
+                <div class="nav-icon">🔔</div>
+                <div>Alerts</div>
+            </a>
+            <a href="16-profile.html" class="nav-item">
+                <div class="nav-icon">👤</div>
+                <div>Profile</div>
+            </a>
+        </div>
+    </div>
+</body>
+</html>
+

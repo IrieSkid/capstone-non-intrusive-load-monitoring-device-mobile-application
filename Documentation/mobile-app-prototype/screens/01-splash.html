@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Splash - NILM Prototype</title>
+    <link rel="stylesheet" href="../styles.css">
+    <style>
+        .splash-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .splash-logo {
+            width: 120px;
+            height: 120px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 60px;
+            margin-bottom: 24px;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+        
+        .splash-title {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+        
+        .splash-subtitle {
+            font-size: 16px;
+            opacity: 0.9;
+            margin-bottom: 48px;
+        }
+        
+        .loading-spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 24px;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .version {
+            position: absolute;
+            bottom: 32px;
+            font-size: 12px;
+            opacity: 0.8;
+        }
+    </style>
+    <script>
+        setTimeout(function() {
+            window.location.href = '02-login.html';
+        }, 2500);
+    </script>
+</head>
+<body>
+    <div class="mobile-container" style="max-width: 100%; border-radius: 0;">
+        <div class="splash-container">
+            <div class="splash-logo">⚡</div>
+            <div class="splash-title">NILM Monitoring</div>
+            <div class="splash-subtitle">Energy Monitoring System</div>
+            <div class="loading-spinner"></div>
+            <div class="version">Version 1.0.0</div>
+        </div>
+    </div>
+</body>
+</html>
+

@@ -1,0 +1,272 @@
+================================================================================
+NILM SYSTEM - ENTITY RELATIONSHIP DIAGRAM (Text Representation)
+================================================================================
+
+Use this as a reference when creating the ERD manually in Draw.io
+
+================================================================================
+TABLE: users
+================================================================================
+PRIMARY KEY: user_id
+UNIQUE: email
+FIELDS:
+  - user_id (INT, PK)
+  - email (VARCHAR(255), UK)
+  - password_hash (VARCHAR(255))
+  - full_name (VARCHAR(255))
+  - phone_number (VARCHAR(20), nullable)
+  - role (ENUM: admin, homeowner, tenant)
+  - status (ENUM: active, inactive, suspended)
+  - created_at (DATETIME)
+  - updated_at (DATETIME)
+  - last_login_at (DATETIME, nullable)
+
+RELATIONSHIPS:
+  - 1:N → user_sessions
+  - 1:N → devices
+  - 1:N → consumption_summaries
+  - 1:N → notifications
+  - 1:N → alert_rules
+  - 1:N → audit_logs
+
+================================================================================
+TABLE: user_sessions
+================================================================================
+PRIMARY KEY: session_id
+FOREIGN KEY: user_id → users.user_id
+FIELDS:
+  - session_id (INT, PK)
+  - user_id (INT, FK → users)
+  - token (VARCHAR(500))
+  - device_info (VARCHAR(255), nullable)
+  - ip_address (VARCHAR(45), nullable)
+  - created_at (DATETIME)
+  - expires_at (DATETIME)
+  - is_active (BOOLEAN)
+
+RELATIONSHIPS:
+  - N:1 → users
+
+================================================================================
+TABLE: devices
+================================================================================
+PRIMARY KEY: device_id
+UNIQUE: device_serial_number, mac_address
+FOREIGN KEY: user_id → users.user_id
+FIELDS:
+  - device_id (INT, PK)
+  - user_id (INT, FK → users)
+  - device_name (VARCHAR(255))
+  - device_serial_number (VARCHAR(100), UK)
+  - mac_address (VARCHAR(17), UK)
+  - location (VARCHAR(255), nullable)
+  - wifi_ssid (VARCHAR(255), nullable)
+  - status (ENUM: online, offline, error)
+  - last_sync_at (DATETIME, nullable)
+  - created_at (DATETIME)
+  - updated_at (DATETIME)
+
+RELATIONSHIPS:
+  - N:1 → users
+  - 1:N → appliances
+  - 1:N → real_time_readings
+  - 1:N → consumption_summaries
+  - 1:N → alert_rules
+
+================================================================================
+TABLE: appliances
+================================================================================
+PRIMARY KEY: appliance_id
+FOREIGN KEY: device_id → devices.device_id
+FIELDS:
+  - appliance_id (INT, PK)
+  - device_id (INT, FK → devices)
+  - appliance_name (VARCHAR(255))
+  - appliance_type (ENUM: light, fan, refrigerator, ac, tv, other)
+  - port_number (INT)
+  - rated_watts (DECIMAL(10,2), nullable)
+  - status (ENUM: on, off, unknown)
+  - created_at (DATETIME)
+  - updated_at (DATETIME)
+
+RELATIONSHIPS:
+  - N:1 → devices
+  - 1:N → real_time_readings
+  - 1:N → consumption_summaries
+  - 1:N → alert_rules
+
+================================================================================
+TABLE: real_time_readings
+================================================================================
+PRIMARY KEY: reading_id
+FOREIGN KEYS: device_id → devices.device_id, appliance_id → appliances.appliance_id
+FIELDS:
+  - reading_id (INT, PK)
+  - device_id (INT, FK → devices)
+  - appliance_id (INT, FK → appliances, nullable)
+  - voltage_rms (DECIMAL(10,2))
+  - current_rms (DECIMAL(10,2))
+  - power_watts (DECIMAL(10,2))
+  - apparent_power_va (DECIMAL(10,2))
+  - power_factor (DECIMAL(5,4))
+  - energy_kwh (DECIMAL(10,6))
+  - recorded_at (DATETIME)
+
+RELATIONSHIPS:
+  - N:1 → devices
+  - N:1 → appliances (optional)
+
+================================================================================
+TABLE: consumption_summaries
+================================================================================
+PRIMARY KEY: summary_id
+FOREIGN KEYS: user_id → users.user_id, device_id → devices.device_id, 
+              appliance_id → appliances.appliance_id
+FIELDS:
+  - summary_id (INT, PK)
+  - user_id (INT, FK → users)
+  - device_id (INT, FK → devices, nullable)
+  - appliance_id (INT, FK → appliances, nullable)
+  - period_type (ENUM: daily, weekly, monthly)
+  - period_start (DATE)
+  - period_end (DATE)
+  - total_kwh (DECIMAL(10,4))
+  - total_cost_php (DECIMAL(10,2))
+  - reading_count (INT)
+  - created_at (DATETIME)
+
+RELATIONSHIPS:
+  - N:1 → users
+  - N:1 → devices (optional)
+  - N:1 → appliances (optional)
+  - N:1 → electricity_rates
+
+================================================================================
+TABLE: electricity_rates
+================================================================================
+PRIMARY KEY: rate_id
+FIELDS:
+  - rate_id (INT, PK)
+  - rate_name (VARCHAR(255))
+  - peso_per_kwh (DECIMAL(10,4))
+  - effective_from (DATE)
+  - effective_to (DATE, nullable)
+  - is_active (BOOLEAN)
+  - created_at (DATETIME)
+
+RELATIONSHIPS:
+  - 1:N → consumption_summaries
+
+================================================================================
+TABLE: notifications
+================================================================================
+PRIMARY KEY: notification_id
+FOREIGN KEY: user_id → users.user_id
+FIELDS:
+  - notification_id (INT, PK)
+  - user_id (INT, FK → users)
+  - title (VARCHAR(255))
+  - message (TEXT)
+  - type (ENUM: alert, info, warning, error)
+  - priority (ENUM: low, medium, high, critical)
+  - is_read (BOOLEAN)
+  - read_at (DATETIME, nullable)
+  - expires_at (DATETIME, nullable)
+  - created_at (DATETIME)
+
+RELATIONSHIPS:
+  - N:1 → users
+
+================================================================================
+TABLE: alert_rules
+================================================================================
+PRIMARY KEY: rule_id
+FOREIGN KEYS: user_id → users.user_id, appliance_id → appliances.appliance_id,
+              device_id → devices.device_id
+FIELDS:
+  - rule_id (INT, PK)
+  - user_id (INT, FK → users)
+  - appliance_id (INT, FK → appliances, nullable)
+  - device_id (INT, FK → devices, nullable)
+  - alert_type (ENUM: power_threshold, consumption_limit, device_offline)
+  - threshold_value (DECIMAL(10,2))
+  - condition (VARCHAR(10))
+  - severity (ENUM: low, medium, high, critical)
+  - is_active (BOOLEAN)
+  - created_at (DATETIME)
+  - updated_at (DATETIME)
+
+RELATIONSHIPS:
+  - N:1 → users
+  - N:1 → appliances (optional)
+  - N:1 → devices (optional)
+
+================================================================================
+TABLE: audit_logs
+================================================================================
+PRIMARY KEY: log_id
+FOREIGN KEY: user_id → users.user_id
+FIELDS:
+  - log_id (INT, PK)
+  - user_id (INT, FK → users)
+  - action (VARCHAR(50))
+  - entity_type (VARCHAR(50))
+  - entity_id (INT, nullable)
+  - old_value (JSON, nullable)
+  - new_value (JSON, nullable)
+  - ip_address (VARCHAR(45), nullable)
+  - description (TEXT, nullable)
+  - created_at (DATETIME)
+
+RELATIONSHIPS:
+  - N:1 → users
+
+================================================================================
+TABLE: system_settings
+================================================================================
+PRIMARY KEY: setting_id
+UNIQUE: setting_key
+FIELDS:
+  - setting_id (INT, PK)
+  - setting_key (VARCHAR(100), UK)
+  - setting_value (TEXT, nullable)
+  - description (TEXT, nullable)
+  - category (ENUM: general, billing, alerts, device)
+  - is_public (BOOLEAN)
+  - updated_at (DATETIME)
+
+RELATIONSHIPS:
+  - None (standalone table)
+
+================================================================================
+RELATIONSHIP SUMMARY
+================================================================================
+
+ONE-TO-MANY (1:N) Relationships:
+
+1. users (1) → user_sessions (N)
+2. users (1) → devices (N)
+3. users (1) → consumption_summaries (N)
+4. users (1) → notifications (N)
+5. users (1) → alert_rules (N)
+6. users (1) → audit_logs (N)
+7. devices (1) → appliances (N)
+8. devices (1) → real_time_readings (N)
+9. devices (1) → consumption_summaries (N)
+10. devices (1) → alert_rules (N)
+11. appliances (1) → real_time_readings (N)
+12. appliances (1) → consumption_summaries (N)
+13. appliances (1) → alert_rules (N)
+14. electricity_rates (1) → consumption_summaries (N)
+
+OPTIONAL RELATIONSHIPS (nullable foreign keys):
+- real_time_readings.appliance_id (can be NULL for aggregate readings)
+- consumption_summaries.device_id (can be NULL for user totals)
+- consumption_summaries.appliance_id (can be NULL for device totals)
+- alert_rules.appliance_id (can be NULL for device-level alerts)
+- alert_rules.device_id (can be NULL for user-level alerts)
+
+================================================================================
+TOTAL: 11 Tables, 14 Relationships
+================================================================================
+

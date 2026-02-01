@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Devices - NILM Prototype</title>
+    <link rel="stylesheet" href="../styles.css">
+    <style>
+        .device-card {
+            background: var(--surface);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 16px;
+            box-shadow: 0 2px 8px var(--shadow);
+            border-left: 4px solid var(--primary);
+        }
+        
+        .device-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+        
+        .device-icon {
+            font-size: 32px;
+            width: 48px;
+            height: 48px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--primary-light);
+            border-radius: 12px;
+        }
+        
+        .device-info {
+            flex: 1;
+        }
+        
+        .device-name {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+        
+        .device-status-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+        
+        .device-details {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px solid var(--divider);
+        }
+        
+        .device-detail-item {
+            font-size: 12px;
+        }
+        
+        .device-detail-label {
+            color: var(--text-secondary);
+            margin-bottom: 4px;
+        }
+        
+        .device-detail-value {
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+        
+        .add-device-btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            padding: 16px;
+            width: 100%;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            margin-top: 16px;
+        }
+        
+        .add-device-btn:hover {
+            background: var(--primary-dark);
+        }
+    </style>
+</head>
+<body>
+    <div class="mobile-container">
+        <!-- Header -->
+        <div class="header">
+            <div class="header-left">
+                <button class="icon-btn" onclick="history.back()">←</button>
+            </div>
+            <h1>My Devices</h1>
+            <div class="header-right">
+                <a href="08-add-device.html" style="color: white; font-size: 24px; text-decoration: none;">➕</a>
+            </div>
+        </div>
+        
+        <!-- Content -->
+        <div class="content">
+            <!-- Device 1 -->
+            <div class="device-card">
+                <div class="device-header">
+                    <div class="device-icon">🏠</div>
+                    <div class="device-info">
+                        <div class="device-name">Main Meter</div>
+                        <div class="device-status-row">
+                            <span class="status online">
+                                <span class="status-indicator online"></span>
+                                Online
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 12px;">
+                    Location: Living Room<br>
+                    Last Sync: 2 min ago
+                </div>
+                
+                <div class="device-details">
+                    <div class="device-detail-item">
+                        <div class="device-detail-label">Current Power</div>
+                        <div class="device-detail-value">1,250 W</div>
+                    </div>
+                    <div class="device-detail-item">
+                        <div class="device-detail-label">Today</div>
+                        <div class="device-detail-value">5.2 kWh</div>
+                    </div>
+                    <div class="device-detail-item">
+                        <div class="device-detail-label">Appliances</div>
+                        <div class="device-detail-value">5</div>
+                    </div>
+                    <div class="device-detail-item">
+                        <div class="device-detail-label">Status</div>
+                        <div class="device-detail-value" style="color: var(--success);">Active</div>
+                    </div>
+                </div>
+                
+                <a href="07-device-details.html" class="btn btn-secondary" style="margin-top: 12px; text-align: center; text-decoration: none;">
+                    View Details →
+                </a>
+            </div>
+            
+            <!-- Device 2 -->
+            <div class="device-card" style="border-left-color: var(--error);">
+                <div class="device-header">
+                    <div class="device-icon">🏢</div>
+                    <div class="device-info">
+                        <div class="device-name">Unit 2 Meter</div>
+                        <div class="device-status-row">
+                            <span class="status offline">
+                                <span class="status-indicator offline"></span>
+                                Offline
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 12px;">
+                    Location: Unit 2<br>
+                    Last Sync: 15 min ago
+                </div>
+                
+                <a href="07-device-details.html" class="btn btn-secondary" style="margin-top: 12px; text-align: center; text-decoration: none;">
+                    View Details →
+                </a>
+            </div>
+            
+            <!-- Add Device Button -->
+            <a href="08-add-device.html" class="add-device-btn">
+                <span>➕</span>
+                <span>Add New Device</span>
+            </a>
+        </div>
+        
+        <!-- Bottom Navigation -->
+        <div class="bottom-nav">
+            <a href="05-dashboard.html" class="nav-item">
+                <div class="nav-icon">🏠</div>
+                <div>Dashboard</div>
+            </a>
+            <a href="06-devices.html" class="nav-item active">
+                <div class="nav-icon">📱</div>
+                <div>Devices</div>
+            </a>
+            <a href="12-reports.html" class="nav-item">
+                <div class="nav-icon">📊</div>
+                <div>Reports</div>
+            </a>
+            <a href="13-notifications.html" class="nav-item">
+                <div class="nav-icon">🔔</div>
+                <div>Alerts</div>
+            </a>
+            <a href="16-profile.html" class="nav-item">
+                <div class="nav-icon">👤</div>
+                <div>Profile</div>
+            </a>
+        </div>
+    </div>
+</body>
+</html>
+
