@@ -258,20 +258,23 @@ ONE-TO-MANY (1:N) Relationships:
 4. users (1) → notifications (N)
 5. users (1) → alert_rules (N)
 6. users (1) → audit_logs (N)
-7. devices (1) → appliances (N)
-8. devices (1) → real_time_readings (N)
-9. devices (1) → consumption_summaries (N)
-10. devices (1) → alert_rules (N)
-11. appliances (1) → real_time_readings (N)
-12. appliances (1) → consumption_summaries (N)
-13. appliances (1) → alert_rules (N)
-14. electricity_rates (1) → consumption_summaries (N)
+7. users (1) → system_settings (N) - via created_by and updated_by
+8. devices (1) → appliances (N)
+9. devices (1) → real_time_readings (N)
+10. devices (1) → consumption_summaries (N)
+11. devices (1) → alert_rules (N)
+12. appliances (1) → real_time_readings (N)
+13. appliances (1) → consumption_summaries (N)
+14. appliances (1) → alert_rules (N)
+15. electricity_rates (1) → consumption_summaries (N)
 
 OPTIONAL RELATIONSHIPS (nullable foreign keys):
 - real_time_readings.appliance_id (can be NULL for aggregate readings)
 - consumption_summaries.device_id (can be NULL for user totals)
 - consumption_summaries.appliance_id (can be NULL for device totals)
 - alert_rules.appliance_id (can be NULL for device-level alerts)
+- system_settings.created_by (can be NULL for system-initialized settings)
+- system_settings.updated_by (can be NULL for system-updated settings)
 - alert_rules.device_id (can be NULL for user-level alerts)
 
 ================================================================================
