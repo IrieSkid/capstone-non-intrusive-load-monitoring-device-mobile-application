@@ -220,5 +220,5 @@ The database design follows a **streamlined, robust approach** suitable for a ca
 
 ---
 
-**Last Updated:** 2024  
+**Last Updated:** 2026  
 **Status:** ✅ Finalized

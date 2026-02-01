@@ -188,7 +188,7 @@ For better querying, consider organizing by date:
 **Document Structure:**
 ```javascript
 {
-  rateName: "Residential Rate 2024",
+  rateName: "Residential Rate 2026",
   pesoPerKwh: 12.50,
   effectiveFrom: Timestamp,
   effectiveTo: Timestamp | null,

@@ -300,6 +300,6 @@ For questions or modifications to the database design:
 ---
 
 **Prepared for:** BSIT Capstone Project - Initial Paper Submission  
-**Date:** 2024  
+**Date:** 2026  
 **Status:** Ready for Academic Review
 

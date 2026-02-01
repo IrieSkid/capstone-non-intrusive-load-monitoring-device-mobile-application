@@ -436,6 +436,6 @@ if (httpResponseCode != 200) {
 
 ---
 
-**Last Updated:** 2024  
+**Last Updated:** 2026  
 **For:** NILM Capstone Project - Hardware Team
 

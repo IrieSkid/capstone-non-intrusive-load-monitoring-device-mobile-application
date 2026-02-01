@@ -527,7 +527,7 @@ This combination of technologies has not been previously explored in NILM resear
 
 24. Krystalakos, O., Nalmpantis, C., & Vrakas, D. (2018). Sliding window approach for online energy disaggregation using artificial neural networks. *Proceedings of the 10th Hellenic Conference on Artificial Intelligence*, 1-6. https://doi.org/10.1145/3200947.3201011
 
-### Recent NILM Studies (2020-2024)
+### Recent NILM Studies (2020-2026)
 
 25. Kaselimi, M., Protopapadakis, E., Voulodimos, A., Doulamis, N., & Doulamis, A. (2021). Bayesian-optimized bidirectional LSTM regression model for non-intrusive load monitoring. *IEEE Transactions on Industrial Informatics*, 17(11), 7633-7643. https://doi.org/10.1109/TII.2021.3058872
 

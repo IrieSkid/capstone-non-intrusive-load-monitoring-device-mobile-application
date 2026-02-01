@@ -222,5 +222,5 @@ Fields: setting_id (PK), setting_key (UK), setting_value, description, category,
 ---
 
 **File to Use:** `ERD-drawio-import.sql`  
-**Last Updated:** 2024
+**Last Updated:** 2026
 

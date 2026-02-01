@@ -251,7 +251,7 @@ INSERT INTO tblusers (users_email, users_password_hash, users_full_name, users_r
 
 -- Insert default electricity rate
 INSERT INTO tblelectricity_rates (electricity_rates_name, electricity_rates_peso_per_kwh, electricity_rates_effective_from, electricity_rates_is_active) VALUES
-('Residential Rate 2024', 12.50, CURDATE(), TRUE);
+('Residential Rate 2026', 12.50, CURDATE(), TRUE);
 
 -- Insert default system settings
 INSERT INTO tblsystem_settings (system_settings_setting_key, system_settings_setting_value, system_settings_description, system_settings_category, system_settings_is_public) VALUES

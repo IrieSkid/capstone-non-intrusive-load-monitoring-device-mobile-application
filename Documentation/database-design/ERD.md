@@ -106,7 +106,7 @@ erDiagram
     
     tblelectricity_rates {
         int electricity_rates_id PK "Primary Key, Auto Increment"
-        varchar electricity_rates_name "Rate Name (e.g., 'Residential Rate 2024')"
+        varchar electricity_rates_name "Rate Name (e.g., 'Residential Rate 2026')"
         decimal electricity_rates_peso_per_kwh "Rate per kWh (PHP)"
         date electricity_rates_effective_from "Effective Start Date"
         date electricity_rates_effective_to "Effective End Date (nullable)"

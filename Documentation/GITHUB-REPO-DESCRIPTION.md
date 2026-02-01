@@ -29,7 +29,7 @@ A comprehensive IoT-based energy monitoring system that enables real-time classi
 
 - **Project Type**: BSIT Capstone/Thesis Project
 - **Collaboration**: Software Development (BSIT) + Hardware Development (Electrical Engineering)
-- **Academic Year**: 2024
+- **Academic Year**: 2026
 
 ## ✨ Features
 

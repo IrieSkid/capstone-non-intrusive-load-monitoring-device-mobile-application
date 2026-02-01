@@ -41,7 +41,7 @@
 ### 📝 Notes:
 - Your Chapter 1 is well-structured
 - Consider adding more specific statistics about energy consumption in the Philippines
-- Add recent data (2023-2024) if available
+- Add recent data (2025-2026) if available
 
 ---
 
@@ -59,7 +59,7 @@
 1. **Add Actual References**:
    - Replace placeholder references with real academic sources
    - Use your institution's citation format (APA, IEEE, etc.)
-   - Include recent studies (2020-2024)
+   - Include recent studies (2020-2026)
 
 2. **Expand Literature**:
    - Add more studies on NILM technology

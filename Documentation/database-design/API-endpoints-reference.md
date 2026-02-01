@@ -417,7 +417,7 @@ Get consumption summary.
     "total_cost_php": 1881.25,
     "electricity_rate_id": 1,
     "electricity_rate": {
-      "rate_name": "Residential Rate 2024",
+      "rate_name": "Residential Rate 2026",
       "peso_per_kwh": 12.50,
       "effective_from": "2024-01-01"
     },
