@@ -165,8 +165,19 @@ Mobile App (React Native + Expo)
 
 ## 👥 Contributors
 
-- **Software Team** - BSIT Students
-- **Hardware Team** - Electrical Engineering Students
+### Software Team (BSIT)
+- **ARGATE, KENT**
+- **BERSANO, RIZIEL**
+- **DALIT, REYMARK**
+- **EMBORGO, NEIL JOEBERT**
+- **GAROL, MIKHAELA**
+- **NOVECIO, GIL JOHN**
+
+### Hardware Team (Electrical Engineering)
+- **BOLAN, MARK ANTHONY R.**
+- **CAGAMPANG, MILJONN T.**
+- **GALINDEZ, SHANE RAY F.**
+- **OCTAVIANO, JEFF HENDRIX G.**
 
 ## 📄 License
 
