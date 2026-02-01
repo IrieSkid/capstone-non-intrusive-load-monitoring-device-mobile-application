@@ -225,19 +225,26 @@ RELATIONSHIPS:
 ================================================================================
 TABLE: system_settings
 ================================================================================
-PRIMARY KEY: setting_id
-UNIQUE: setting_key
+PRIMARY KEY: system_settings_id
+UNIQUE: system_settings_setting_key
+FOREIGN KEYS:
+  - system_settings_created_by → users.users_id (optional, tracks who created)
+  - system_settings_updated_by → users.users_id (optional, tracks who last updated)
 FIELDS:
-  - setting_id (INT, PK)
-  - setting_key (VARCHAR(100), UK)
-  - setting_value (TEXT, nullable)
-  - description (TEXT, nullable)
-  - category (ENUM: general, billing, alerts, device)
-  - is_public (BOOLEAN)
-  - updated_at (DATETIME)
+  - system_settings_id (INT, PK)
+  - system_settings_setting_key (VARCHAR(100), UK)
+  - system_settings_setting_value (TEXT, nullable)
+  - system_settings_description (TEXT, nullable)
+  - system_settings_category (ENUM: general, billing, alerts, device)
+  - system_settings_is_public (BOOLEAN)
+  - system_settings_created_at (DATETIME)
+  - system_settings_created_by (INT, FK → users, nullable)
+  - system_settings_updated_at (DATETIME)
+  - system_settings_updated_by (INT, FK → users, nullable)
 
 RELATIONSHIPS:
-  - None (standalone table)
+  - N:1 → users (via created_by, tracks who created setting)
+  - N:1 → users (via updated_by, tracks who last updated setting)
 
 ================================================================================
 RELATIONSHIP SUMMARY
