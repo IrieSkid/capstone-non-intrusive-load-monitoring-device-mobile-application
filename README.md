@@ -64,22 +64,27 @@ NILM-Planning/
 
 ## 📚 Documentation
 
-### Database Design
+**📖 [Complete Documentation Index](Documentation/DOCUMENTATION-INDEX.md)** - Navigate all documentation
+
+### Quick Links
+
+#### Database Design
 - **[Database Design README](Documentation/database-design/README.md)** - Complete database documentation
 - **[ERD](Documentation/database-design/ERD.md)** - Entity Relationship Diagram
+- **[Design Decisions](Documentation/database-design/DESIGN-DECISIONS.md)** - Design decisions and analysis
 - **[Database Schemas](Documentation/database-design/)** - MySQL, PostgreSQL, and Firestore schemas
 - **[API Documentation](Documentation/database-design/API-endpoints-reference.md)** - REST API endpoints
 - **[IoT Integration Guide](Documentation/database-design/IOT-COMMUNICATION-GUIDE.md)** - Hardware integration guide
 
-### Thesis Documentation
+#### Thesis Documentation
+- **[Thesis Structure Guide](Documentation/thesis-documentation/THESIS-STRUCTURE-GUIDE.md)** - Complete thesis guide
 - **[Chapter 1](Documentation/thesis-documentation/CHAPTER-1-IMPROVED.md)** - Problem and Introduction
 - **[Chapter 2](Documentation/thesis-documentation/CHAPTER-2-LITERATURE-REVIEW.md)** - Literature Review
 - **[Chapter 3](Documentation/thesis-documentation/CHAPTER-3-RESEARCH-DESIGN.md)** - Research Design and Methodology
 - **[Chapter 4](Documentation/thesis-documentation/CHAPTER-4-ANALYSIS-FRAMEWORK.md)** - Analysis Framework
 - **[Survey Questionnaires](Documentation/thesis-documentation/SURVEY-QUESTIONNAIRES.md)** - Research instruments
-- **[Thesis Structure Guide](Documentation/thesis-documentation/THESIS-STRUCTURE-GUIDE.md)** - Complete thesis guide
 
-### Mobile App
+#### Mobile App
 - **[UI Specification](Documentation/thesis-documentation/MOBILE-APP-UI-SPECIFICATION.md)** - Complete UI/UX specification
 - **[Prototype](Documentation/mobile-app-prototype/)** - HTML/CSS prototype mockups
 

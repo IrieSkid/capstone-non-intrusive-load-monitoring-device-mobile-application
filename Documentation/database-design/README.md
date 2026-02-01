@@ -104,7 +104,7 @@ erDiagram
 
 | File | Description |
 |------|-------------|
-| **[IMPROVEMENTS.md](IMPROVEMENTS.md)** | Design improvements and rationale |
+| **[DESIGN-DECISIONS.md](DESIGN-DECISIONS.md)** | Consolidated design decisions, improvements, and analysis ⭐ |
 | **[README.md](README.md)** | This file |
 
 ---
@@ -143,7 +143,7 @@ erDiagram
 
 1. **Start with ERD**: Read [ERD.md](ERD.md) to understand relationships
 2. **Review Flowcharts**: Check [system-flowchart.md](system-flowchart.md) for data flow
-3. **Understand Design**: Read [IMPROVEMENTS.md](IMPROVEMENTS.md) for design decisions
+3. **Understand Design**: Read [DESIGN-DECISIONS.md](DESIGN-DECISIONS.md) for design decisions and rationale
 
 ### 3. Set Up Database
 
@@ -292,7 +292,7 @@ The database was streamlined from an initial 15-table design to focus on core fu
 - ✅ **Professional Quality** - Follows database design best practices
 - ✅ **Easy Implementation** - Realistic scope for development
 
-See [IMPROVEMENTS.md](IMPROVEMENTS.md) for detailed rationale.
+See [DESIGN-DECISIONS.md](DESIGN-DECISIONS.md) for detailed rationale.
 
 ### Why Firestore?
 
@@ -332,7 +332,7 @@ The current design is sufficient for capstone requirements. Only add tables if:
 - Necessary for specific functionality
 - You have extra development time
 
-See [IMPROVEMENTS.md](IMPROVEMENTS.md) for design rationale.
+See [DESIGN-DECISIONS.md](DESIGN-DECISIONS.md) for design rationale.
 
 ---
 
@@ -340,7 +340,7 @@ See [IMPROVEMENTS.md](IMPROVEMENTS.md) for design rationale.
 
 For questions about the database design:
 1. Review the relevant documentation file
-2. Check [IMPROVEMENTS.md](IMPROVEMENTS.md) for design decisions
+2. Check [DESIGN-DECISIONS.md](DESIGN-DECISIONS.md) for design decisions and analysis
 3. See [CAPSTONE-ASSESSMENT.md](CAPSTONE-ASSESSMENT.md) for assessment
 
 ---
