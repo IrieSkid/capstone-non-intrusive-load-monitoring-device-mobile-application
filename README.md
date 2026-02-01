@@ -230,4 +230,4 @@ For questions or inquiries about this project, please contact the development te
 **Note**: This is an academic capstone/thesis project. The system is designed for educational and research purposes.
 
 **Status**: 🚧 In Development  
-**Last Updated**: 2024
+**Last Updated**: 2026
