@@ -165,5 +165,10 @@ CREATE TABLE tblsystem_settings (
     system_settings_description TEXT,
     system_settings_category VARCHAR(20),
     system_settings_is_public BOOLEAN,
-    system_settings_updated_at DATETIME
+    system_settings_created_at DATETIME,
+    system_settings_created_by INT,
+    system_settings_updated_at DATETIME,
+    system_settings_updated_by INT,
+    FOREIGN KEY (system_settings_created_by) REFERENCES tblusers(users_id),
+    FOREIGN KEY (system_settings_updated_by) REFERENCES tblusers(users_id)
 );

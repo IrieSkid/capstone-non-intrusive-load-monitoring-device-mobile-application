@@ -237,7 +237,12 @@ CREATE TABLE tblsystem_settings (
     system_settings_description TEXT,
     system_settings_category VARCHAR(20) CHECK (system_settings_category IN ('general', 'billing', 'alerts', 'device')) DEFAULT 'general',
     system_settings_is_public BOOLEAN DEFAULT FALSE,
-    system_settings_updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    system_settings_created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    system_settings_created_by INTEGER,
+    system_settings_updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    system_settings_updated_by INTEGER,
+    FOREIGN KEY (system_settings_created_by) REFERENCES tblusers(users_id) ON DELETE SET NULL,
+    FOREIGN KEY (system_settings_updated_by) REFERENCES tblusers(users_id) ON DELETE SET NULL
 );
 
 CREATE INDEX idx_system_settings_category ON tblsystem_settings(system_settings_category);

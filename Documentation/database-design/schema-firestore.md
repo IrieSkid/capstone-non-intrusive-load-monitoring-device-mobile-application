@@ -292,7 +292,10 @@ For better querying, consider organizing by date:
   description: "Application Name",
   category: "general", // "general" | "billing" | "alerts" | "device"
   isPublic: true,
-  updatedAt: Timestamp
+  createdAt: Timestamp,
+  createdBy: "user123", // Reference to users collection (optional)
+  updatedAt: Timestamp,
+  updatedBy: "user123" // Reference to users collection (optional)
 }
 ```
 

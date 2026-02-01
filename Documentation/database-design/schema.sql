@@ -235,7 +235,12 @@ CREATE TABLE tblsystem_settings (
     system_settings_description TEXT,
     system_settings_category ENUM('general', 'billing', 'alerts', 'device') DEFAULT 'general',
     system_settings_is_public BOOLEAN DEFAULT FALSE,
+    system_settings_created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    system_settings_created_by INT,
     system_settings_updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    system_settings_updated_by INT,
+    FOREIGN KEY (system_settings_created_by) REFERENCES tblusers(users_id) ON DELETE SET NULL,
+    FOREIGN KEY (system_settings_updated_by) REFERENCES tblusers(users_id) ON DELETE SET NULL,
     INDEX idx_system_settings_category (system_settings_category),
     INDEX idx_system_settings_key (system_settings_setting_key)
 );

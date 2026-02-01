@@ -177,7 +177,10 @@ erDiagram
         text system_settings_description "Setting Description"
         enum system_settings_category "Category: general, billing, alerts, device"
         boolean system_settings_is_public "Public Setting (accessible to all users)"
+        datetime system_settings_created_at "Creation Timestamp"
+        int system_settings_created_by FK "Foreign Key to tblusers (who created)"
         datetime system_settings_updated_at "Last Update Timestamp"
+        int system_settings_updated_by FK "Foreign Key to tblusers (who last updated)"
     }
     
     %% ========================================
@@ -191,6 +194,7 @@ erDiagram
     tblusers ||--o{ tblnotifications : "receives"
     tblusers ||--o{ tblalert_rules : "creates"
     tblusers ||--o{ tblaudit_logs : "performs"
+    tblusers ||--o{ tblsystem_settings : "creates_and_updates"
     
     %% Device and Appliance Relationships
     tbldevices ||--o{ tblappliances : "contains"
