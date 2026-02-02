@@ -488,7 +488,8 @@ const createStyles = (colors: any) =>
     },
     applianceHeader: {
       alignItems: 'center',
-      padding: 32,
+      paddingVertical: 16,
+      paddingHorizontal: 16,
       backgroundColor: colors.surface,
       borderBottomWidth: 1,
       borderBottomColor: colors.divider,
@@ -506,11 +507,12 @@ const createStyles = (colors: any) =>
       fontSize: 40,
     },
     iconSelector: {
-      marginBottom: 16,
+      marginBottom: 12,
+      maxHeight: 80,
     },
     iconOption: {
-      width: 60,
-      height: 60,
+      width: 50,
+      height: 50,
       backgroundColor: colors.background,
       borderRadius: 12,
       justifyContent: 'center',
@@ -524,15 +526,16 @@ const createStyles = (colors: any) =>
       backgroundColor: colors.primary + '10',
     },
     iconOptionText: {
-      fontSize: 32,
+      fontSize: 28,
     },
     statusBadgeLarge: {
       flexDirection: 'row',
       alignItems: 'center',
-      paddingHorizontal: 16,
-      paddingVertical: 8,
+      paddingHorizontal: 12,
+      paddingVertical: 6,
       borderRadius: 16,
       gap: 8,
+      marginTop: 8,
     },
     statusDot: {
       width: 10,
