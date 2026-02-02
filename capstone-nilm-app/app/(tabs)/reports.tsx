@@ -19,6 +19,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useRealtimeData } from '@/contexts/RealtimeDataContext';
+import { useAuth } from '@/hooks/useAuth';
 import { reportService } from '@/services/reportService';
 import { DailyReport, WeeklyReport, MonthlyReport, CostAnalysis } from '@/types/report';
 import { PeriodTabs } from '@/components/reports/PeriodTabs';
@@ -33,6 +34,7 @@ type Period = 'daily' | 'weekly' | 'monthly';
 export default function ReportsScreen() {
   const { colors, isDark } = useTheme();
   const { deviceId } = useRealtimeData();
+  const { user } = useAuth();
   const styles = createStyles(colors);
   const statusBarStyle = isDark ? 'light-content' : 'dark-content';
 
@@ -66,10 +68,10 @@ export default function ReportsScreen() {
       // If custom date range is set, fetch filtered data
       if (customDateRange) {
         const [daily, weekly, monthly, cost] = await Promise.all([
-          reportService.getDailyReportByDateRange(deviceId, customDateRange.start, customDateRange.end),
-          reportService.getWeeklyReportByDateRange(deviceId, customDateRange.start, customDateRange.end),
-          reportService.getMonthlyReportByDateRange(deviceId, customDateRange.start, customDateRange.end),
-          reportService.getCostAnalysisByDateRange(deviceId, customDateRange.start, customDateRange.end),
+          reportService.getDailyReportByDateRange(deviceId, customDateRange.start, customDateRange.end, user?.id),
+          reportService.getWeeklyReportByDateRange(deviceId, customDateRange.start, customDateRange.end, user?.id),
+          reportService.getMonthlyReportByDateRange(deviceId, customDateRange.start, customDateRange.end, user?.id),
+          reportService.getCostAnalysisByDateRange(deviceId, customDateRange.start, customDateRange.end, user?.id),
         ]);
         
         setDailyReport(daily);
@@ -79,10 +81,10 @@ export default function ReportsScreen() {
       } else {
         // Load standard reports (today/this week/this month)
         const [daily, weekly, monthly, cost] = await Promise.all([
-          reportService.getDailyReport(deviceId),
-          reportService.getWeeklyReport(deviceId),
-          reportService.getMonthlyReport(deviceId),
-          reportService.getCostAnalysis(deviceId, selectedPeriod),
+          reportService.getDailyReport(deviceId, user?.id),
+          reportService.getWeeklyReport(deviceId, user?.id),
+          reportService.getMonthlyReport(deviceId, user?.id),
+          reportService.getCostAnalysis(deviceId, selectedPeriod, user?.id),
         ]);
         
         setDailyReport(daily);

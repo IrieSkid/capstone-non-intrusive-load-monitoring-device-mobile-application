@@ -97,16 +97,17 @@ class ReportService {
         return this.getEmptyWeeklyReport();
       }
 
+      const costPerKwh = await this.getCostPerKwh(userId);
       const totalKwh = this.calculateTotalKwh(readings);
       const avgDailyKwh = totalKwh / 7;
-      const totalCost = totalKwh * this.costPerKwh;
+      const totalCost = totalKwh * costPerKwh;
       const peakPower = Math.max(...readings.map(r => r.power || 0), 0);
 
       // Calculate daily data
-      const dailyData = this.calculateDailyData(readings, startOfWeek);
+      const dailyData = this.calculateDailyData(readings, startOfWeek, costPerKwh);
 
       // Get appliance breakdown
-      const applianceBreakdown = await this.calculateApplianceBreakdown(readings, deviceId);
+      const applianceBreakdown = await this.calculateApplianceBreakdown(readings, deviceId, costPerKwh);
 
       return {
         weekStart: startOfWeek,
@@ -397,7 +398,7 @@ class ReportService {
   /**
    * Get cost analysis
    */
-  async getCostAnalysis(deviceId: string, period: 'daily' | 'weekly' | 'monthly'): Promise<CostAnalysis> {
+  async getCostAnalysis(deviceId: string, period: 'daily' | 'weekly' | 'monthly', userId?: string): Promise<CostAnalysis> {
     let currentKwh = 0;
     let previousKwh = 0;
     let readings: any[] = [];
@@ -405,7 +406,7 @@ class ReportService {
     try {
       switch (period) {
         case 'daily':
-          const dailyReport = await this.getDailyReport(deviceId);
+          const dailyReport = await this.getDailyReport(deviceId, userId);
           currentKwh = dailyReport.totalKwh;
           previousKwh = currentKwh * 0.95; // TODO: Get from previous day
           
@@ -416,7 +417,7 @@ class ReportService {
           readings = await readingService.getReadingsByDateRange(deviceId, startOfDay, endOfDay);
           break;
         case 'weekly':
-          const weeklyReport = await this.getWeeklyReport(deviceId);
+          const weeklyReport = await this.getWeeklyReport(deviceId, userId);
           currentKwh = weeklyReport.totalKwh;
           previousKwh = currentKwh * 0.90; // TODO: Get from previous week
           
@@ -427,7 +428,7 @@ class ReportService {
           readings = await readingService.getReadingsByDateRange(deviceId, startOfWeek, now);
           break;
         case 'monthly':
-          const monthlyReport = await this.getMonthlyReport(deviceId);
+          const monthlyReport = await this.getMonthlyReport(deviceId, userId);
           currentKwh = monthlyReport.totalKwh;
           previousKwh = currentKwh * 0.85; // TODO: Get from previous month
           
@@ -441,12 +442,15 @@ class ReportService {
       console.error('Error generating cost analysis:', error);
     }
     
-    const currentCost = currentKwh * this.costPerKwh;
-    const previousCost = previousKwh * this.costPerKwh;
+    // Get cost per kWh
+    const costPerKwh = await this.getCostPerKwh(userId);
+    
+    const currentCost = currentKwh * costPerKwh;
+    const previousCost = previousKwh * costPerKwh;
     const percentageChange = previousCost > 0 ? ((currentCost - previousCost) / previousCost) * 100 : 0;
 
     // Calculate cost by time of day
-    const costByTimeOfDay = this.calculateCostByTimeOfDay(readings);
+    const costByTimeOfDay = this.calculateCostByTimeOfDay(readings, costPerKwh);
 
     return {
       currentPeriodCost: this.fmt(currentCost),
@@ -558,7 +562,7 @@ class ReportService {
   /**
    * Get daily report for a custom date range
    */
-  async getDailyReportByDateRange(deviceId: string, startDate: Date, endDate: Date): Promise<DailyReport> {
+  async getDailyReportByDateRange(deviceId: string, startDate: Date, endDate: Date, userId?: string): Promise<DailyReport> {
     try {
       const readings = await readingService.getReadingsByDateRange(deviceId, startDate, endDate);
       
@@ -566,12 +570,13 @@ class ReportService {
         return this.getEmptyDailyReport();
       }
 
+      const costPerKwh = await this.getCostPerKwh(userId);
       const totalKwh = this.calculateTotalKwh(readings);
       const avgPower = this.calculateAveragePower(readings);
       const peakPower = Math.max(...readings.map(r => r.power || 0), 0);
-      const totalCost = totalKwh * this.costPerKwh;
-      const hourlyData = this.calculateHourlyData(readings);
-      const applianceBreakdown = await this.calculateApplianceBreakdown(readings, deviceId);
+      const totalCost = totalKwh * costPerKwh;
+      const hourlyData = this.calculateHourlyData(readings, costPerKwh);
+      const applianceBreakdown = await this.calculateApplianceBreakdown(readings, deviceId, costPerKwh);
 
       return {
         date: startDate,
@@ -592,7 +597,7 @@ class ReportService {
   /**
    * Get weekly report for a custom date range
    */
-  async getWeeklyReportByDateRange(deviceId: string, startDate: Date, endDate: Date): Promise<WeeklyReport> {
+  async getWeeklyReportByDateRange(deviceId: string, startDate: Date, endDate: Date, userId?: string): Promise<WeeklyReport> {
     try {
       const readings = await readingService.getReadingsByDateRange(deviceId, startDate, endDate);
       
@@ -600,12 +605,13 @@ class ReportService {
         return this.getEmptyWeeklyReport();
       }
 
+      const costPerKwh = await this.getCostPerKwh(userId);
       const totalKwh = this.calculateTotalKwh(readings);
-      const totalCost = totalKwh * this.costPerKwh;
+      const totalCost = totalKwh * costPerKwh;
       const days = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
       const averageDaily = totalKwh / days;
-      const dailyData = this.calculateDailyData(readings);
-      const applianceBreakdown = await this.calculateApplianceBreakdown(readings, deviceId);
+      const dailyData = this.calculateDailyData(readings, startDate, costPerKwh);
+      const applianceBreakdown = await this.calculateApplianceBreakdown(readings, deviceId, costPerKwh);
 
       return {
         weekStart: startDate,
@@ -626,7 +632,7 @@ class ReportService {
   /**
    * Get monthly report for a custom date range
    */
-  async getMonthlyReportByDateRange(deviceId: string, startDate: Date, endDate: Date): Promise<MonthlyReport> {
+  async getMonthlyReportByDateRange(deviceId: string, startDate: Date, endDate: Date, userId?: string): Promise<MonthlyReport> {
     try {
       const readings = await readingService.getReadingsByDateRange(deviceId, startDate, endDate);
       
@@ -634,13 +640,14 @@ class ReportService {
         return this.getEmptyMonthlyReport();
       }
 
+      const costPerKwh = await this.getCostPerKwh(userId);
       const totalKwh = this.calculateTotalKwh(readings);
-      const totalCost = totalKwh * this.costPerKwh;
+      const totalCost = totalKwh * costPerKwh;
       const days = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
       const averageDaily = totalKwh / days;
-      const dailyData = this.calculateDailyData(readings);
-      const applianceBreakdown = await this.calculateApplianceBreakdown(readings, deviceId);
-      const projectedBill = (totalKwh / days) * 30 * this.costPerKwh;
+      const dailyData = this.calculateDailyData(readings, startDate, costPerKwh);
+      const applianceBreakdown = await this.calculateApplianceBreakdown(readings, deviceId, costPerKwh);
+      const projectedBill = (totalKwh / days) * 30 * costPerKwh;
 
       return {
         month: startDate.toLocaleDateString('en-US', { month: 'long' }),
@@ -663,7 +670,7 @@ class ReportService {
   /**
    * Get cost analysis for a custom date range
    */
-  async getCostAnalysisByDateRange(deviceId: string, startDate: Date, endDate: Date): Promise<CostAnalysis> {
+  async getCostAnalysisByDateRange(deviceId: string, startDate: Date, endDate: Date, userId?: string): Promise<CostAnalysis> {
     try {
       const readings = await readingService.getReadingsByDateRange(deviceId, startDate, endDate);
       
@@ -683,9 +690,10 @@ class ReportService {
         };
       }
 
+      const costPerKwh = await this.getCostPerKwh(userId);
       const totalKwh = this.calculateTotalKwh(readings);
-      const currentPeriodCost = totalKwh * this.costPerKwh;
-      const costByTimeOfDay = this.calculateCostByTimeOfDay(readings);
+      const currentPeriodCost = totalKwh * costPerKwh;
+      const costByTimeOfDay = this.calculateCostByTimeOfDay(readings, costPerKwh);
       const days = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
       const estimatedNextBill = (totalKwh / days) * 30 * this.costPerKwh;
 

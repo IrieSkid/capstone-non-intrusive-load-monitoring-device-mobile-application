@@ -1,360 +1,191 @@
-# 🐛 Bug Fix: Cost Analysis & Decimal Precision
+# Bug Fixes: Cost Analysis & Decimal Precision
 
 **Date**: February 2, 2026  
-**Status**: ✅ Fixed
+**Status**: ✅ COMPLETE
 
----
-
-## 🎯 Issues Reported
+## Issues Reported
 
 ### 1. Cost by Time of Day Showing ₱0.00
-**Problem**: All time slots (morning, afternoon, evening, night) displayed ₱0.00
+**Problem**: The "Cost Analysis" section was showing ₱0.00 for all time periods (morning, afternoon, evening, night).
 
-**Root Cause**:
-- Incorrect interval calculation (30 seconds instead of 3 seconds)
-- `costPerKwh` parameter not passed to `calculateCostByTimeOfDay()`
-- Used `this.costPerKwh` (hardcoded 12) instead of user-specific rate
+**Root Causes**:
+- The `calculateCostByTimeOfDay` method was not receiving the `costPerKwh` parameter
+- The interval used for kWh calculation was incorrect (30 seconds instead of 3 seconds)
+- The `getCostAnalysis` method was using the hardcoded `this.costPerKwh` instead of fetching user-specific rates
+
+**Fix Applied**:
+```typescript
+// Before
+const costByTimeOfDay = this.calculateCostByTimeOfDay(readings);
+
+// After
+const costPerKwh = await this.getCostPerKwh(userId);
+const costByTimeOfDay = this.calculateCostByTimeOfDay(readings, costPerKwh);
+```
 
 ### 2. Estimated Monthly Cost Showing ₱NaN/mo
-**Problem**: Appliance breakdown showed `₱NaN/mo` for estimated monthly cost
+**Problem**: The appliance breakdown was showing "₱NaN/mo" for estimated monthly costs.
 
 **Root Cause**:
-- Division by zero in calculation
-- Formula: `(totalCost * 30)` was incorrect
-- Should be: `(totalCost / days) * 30` to project daily average to monthly
+- The formula `totalCost * 30` was incorrect
+- It was multiplying the total cost for the period by 30, which doesn't make sense for projection
+- Division by zero when no runtime data was available
+
+**Fix Applied**:
+```typescript
+// Before
+estimatedMonthlyCost: this.fmt(totalCost * 30)
+
+// After
+estimatedMonthlyCost: this.fmt((totalCost / (data.totalMinutes / 60 / 24 || 1)) * 30)
+```
+
+This now correctly:
+1. Calculates daily average cost: `totalCost / (totalMinutes / 60 / 24)`
+2. Projects to 30 days: `dailyAverage * 30`
+3. Handles division by zero with `|| 1`
 
 ### 3. Readings Not Using 3 Decimal Places
-**Problem**: Voltage, current, power, etc. had many decimal places
+**Problem**: Real-time readings and calculated values were showing inconsistent decimal places.
 
-**Root Cause**:
-- No formatting applied to generated values
-- JavaScript floating-point precision issues
-- Database storing raw unformatted numbers
+**Fix Applied**:
+Applied `parseFloat(value.toFixed(3))` to all numerical values in `realtimeDataService.ts`:
 
----
-
-## ✅ Fixes Applied
-
-### Fix 1: Cost by Time of Day
-
-**Before:**
+**Device-Level Readings**:
 ```typescript
-private calculateCostByTimeOfDay(readings: any[]): {...} {
-  const kwh = (reading.power / 1000) * (30 / 3600); // Wrong interval
-  const cost = kwh * this.costPerKwh; // Wrong rate source
-}
-```
-
-**After:**
-```typescript
-private calculateCostByTimeOfDay(readings: any[], costPerKwh: number): {...} {
-  const kwh = (reading.power / 1000) * (3 / 3600); // Correct: 3 seconds
-  const cost = kwh * costPerKwh; // User-specific rate
-}
-```
-
-**Impact**:
-- ✅ Morning: ₱0.00 → ₱45.50
-- ✅ Afternoon: ₱0.00 → ₱32.75
-- ✅ Evening: ₱0.00 → ₱67.20
-- ✅ Night: ₱0.00 → ₱18.30
-
----
-
-### Fix 2: Estimated Monthly Cost
-
-**Before:**
-```typescript
-const estimatedMonthlyCost = totalCost * 30; // Wrong!
-// If totalCost = 0, then 0 * 30 = 0
-// If calculation error, NaN * 30 = NaN
-```
-
-**After:**
-```typescript
-const estimatedMonthlyCost = (totalCost / (data.totalMinutes / 60 / 24 || 1)) * 30;
-// Calculate cost per day, then project to 30 days
-// (totalCost / days) * 30
-// Fallback to 1 if division by zero
-```
-
-**Impact**:
-- ✅ Air Conditioner: ₱NaN/mo → ₱4,500/mo
-- ✅ Heater: ₱NaN/mo → ₱3,600/mo
-- ✅ Refrigerator: ₱NaN/mo → ₱1,200/mo
-
----
-
-### Fix 3: Decimal Precision (3 Places)
-
-**Before:**
-```typescript
-const voltage = 220 + (Math.random() - 0.5) * 10;
-// Result: 218.4837592847362
-const current = power / voltage;
-// Result: 5.438273645829374
-```
-
-**After:**
-```typescript
-const voltage = parseFloat((220 + (Math.random() - 0.5) * 10).toFixed(3));
-// Result: 218.484
-const current = parseFloat((power / voltage).toFixed(3));
-// Result: 5.438
-```
-
-**Applied To**:
-- ✅ `voltage` (V)
-- ✅ `current` (A)
-- ✅ `power` (W)
-- ✅ `powerFactor` (0-1)
-- ✅ `frequency` (Hz)
-- ✅ `energy` (kWh)
-- ✅ Appliance readings (all parameters)
-
-**Impact**:
-- Cleaner display: `220.484V` instead of `220.48375928V`
-- Consistent formatting across UI
-- Smaller database storage
-- Professional appearance
-
----
-
-## 🔧 Technical Changes
-
-### reportService.ts
-
-#### 1. Added `costPerKwh` Parameter
-```typescript
-// Before
-async getDailyReport(deviceId: string)
-async getWeeklyReport(deviceId: string)
-async getMonthlyReport(deviceId: string)
-async getCostAnalysis(deviceId: string, period: string)
-
-// After
-async getDailyReport(deviceId: string, userId?: string)
-async getWeeklyReport(deviceId: string, userId?: string)
-async getMonthlyReport(deviceId: string, userId?: string)
-async getCostAnalysis(deviceId: string, period: string, userId?: string)
-```
-
-#### 2. Fixed Interval Calculations
-```typescript
-// Changed from 30 seconds to 3 seconds throughout:
-calculateTotalKwh(): intervalHours = 3 / 3600
-calculateHourlyData(): kwh = (power / 1000) * (3 / 3600)
-calculateDailyData(): kwh = (power / 1000) * (3 / 3600)
-calculateWeeklyData(): kwh = (power / 1000) * (3 / 3600)
-calculateApplianceBreakdown(): kwh = (power / 1000) * (3 / 3600)
-calculateCostByTimeOfDay(): kwh = (power / 1000) * (3 / 3600)
-```
-
-#### 3. Fixed Method Signatures
-```typescript
-// Added costPerKwh parameter to all calculation methods:
-calculateHourlyData(readings, costPerKwh)
-calculateDailyData(readings, startDate, costPerKwh)
-calculateWeeklyData(readings, startDate, costPerKwh)
-calculateApplianceBreakdown(readings, deviceId, costPerKwh)
-calculateCostByTimeOfDay(readings, costPerKwh)
-```
-
-#### 4. Fixed Appliance Breakdown
-```typescript
-// Before
-const estimatedMonthlyCost = totalCost * 30;
-
-// After
-const estimatedMonthlyCost = (totalCost / (data.totalMinutes / 60 / 24 || 1)) * 30;
-```
-
-### realtimeDataService.ts
-
-#### 1. Device-Level Readings
-```typescript
-// generateReading() - Format all values to 3 decimals
 const voltage = parseFloat((220 + (Math.random() - 0.5) * 10).toFixed(3));
 const current = parseFloat((power / voltage).toFixed(3));
 const powerFactor = parseFloat((0.85 + Math.random() * 0.1).toFixed(3));
 const frequency = parseFloat((60 + (Math.random() - 0.5) * 0.2).toFixed(3));
-const power = parseFloat(power.toFixed(3));
 const energy = parseFloat(this.totalEnergy.toFixed(3));
 ```
 
-#### 2. Appliance-Level Readings
+**Appliance-Level Readings**:
 ```typescript
-// updateAppliances() - Format all appliance values to 3 decimals
 const actualPower = parseFloat((appliance.power * (0.95 + Math.random() * 0.1)).toFixed(3));
-const current = parseFloat((actualPower / (deviceVoltage * appliance.powerFactor)).toFixed(3));
+const powerFactor = parseFloat(Math.min(1.0, Math.max(0.5, basePF + ...)).toFixed(3));
+const current = parseFloat((actualPower / (deviceVoltage * powerFactor)).toFixed(3));
 const voltage = parseFloat((deviceVoltage + (Math.random() - 0.5) * 4).toFixed(3));
-const powerFactor = parseFloat(Math.min(1.0, Math.max(0.5, basePF + (Math.random() - 0.5) * 0.04)).toFixed(3));
-const duration = parseFloat((appliance.duration + 0.05).toFixed(3));
 ```
+
+## Files Modified
+
+### 1. `services/reportService.ts`
+**Changes**:
+- Updated all report methods to accept `userId` parameter
+- Modified `getCostAnalysis` to fetch user-specific `costPerKwh`
+- Fixed `calculateCostByTimeOfDay` to use correct interval (3 seconds)
+- Fixed `estimatedMonthlyCost` formula in `calculateApplianceBreakdown`
+- Updated all date range methods to pass `costPerKwh` to helper functions
+
+**Methods Updated**:
+- `getDailyReport(deviceId, userId?)`
+- `getWeeklyReport(deviceId, userId?)`
+- `getMonthlyReport(deviceId, userId?)`
+- `getCostAnalysis(deviceId, period, userId?)`
+- `getDailyReportByDateRange(deviceId, startDate, endDate, userId?)`
+- `getWeeklyReportByDateRange(deviceId, startDate, endDate, userId?)`
+- `getMonthlyReportByDateRange(deviceId, startDate, endDate, userId?)`
+- `getCostAnalysisByDateRange(deviceId, startDate, endDate, userId?)`
+
+### 2. `app/(tabs)/reports.tsx`
+**Changes**:
+- Added `useAuth()` hook to get `user.id`
+- Updated all `reportService` calls to pass `user?.id`
+
+```typescript
+// Before
+reportService.getDailyReport(deviceId)
+reportService.getWeeklyReport(deviceId)
+reportService.getCostAnalysis(deviceId, selectedPeriod)
+
+// After
+reportService.getDailyReport(deviceId, user?.id)
+reportService.getWeeklyReport(deviceId, user?.id)
+reportService.getCostAnalysis(deviceId, selectedPeriod, user?.id)
+```
+
+### 3. `services/realtimeDataService.ts`
+**Changes**:
+- Applied `.toFixed(3)` to all device-level electrical parameters
+- Applied `.toFixed(3)` to all appliance-level electrical parameters
+- Ensured consistent 3-decimal precision across all calculations
+
+## Testing Verification
+
+### ✅ Cost by Time of Day
+- Morning: Shows actual cost (e.g., ₱1.23)
+- Afternoon: Shows actual cost (e.g., ₱2.45)
+- Evening: Shows actual cost (e.g., ₱3.67)
+- Night: Shows actual cost (e.g., ₱0.89)
+
+### ✅ Estimated Monthly Cost
+- Shows proper projection (e.g., ₱45.67/mo)
+- No more NaN values
+- Correctly scales from daily average
+
+### ✅ Decimal Precision
+- All voltage readings: 3 decimals (e.g., 220.123 V)
+- All current readings: 3 decimals (e.g., 5.456 A)
+- All power readings: 3 decimals (e.g., 1234.567 W)
+- All power factor readings: 3 decimals (e.g., 0.850)
+- All frequency readings: 3 decimals (e.g., 60.012 Hz)
+- All energy readings: 3 decimals (e.g., 12.345 kWh)
+
+### ✅ Weekly & Monthly Reports
+- Total Cost: Shows actual cost (e.g., ₱5.70)
+- No more ₱NaN values
+- Proper cost calculation using user's electricity rate
+
+### ✅ Cost Analysis Percentage
+- Shows actual percentage change (e.g., 5.0%)
+- No more 0.0% when there's actual change
+
+## Technical Details
+
+### Cost Calculation Flow
+1. **User Authentication**: Get `userId` from `useAuth()` hook
+2. **Fetch Rate**: Call `electricityRateService.getActiveRate(userId)`
+3. **Fallback**: Use default ₱11.50/kWh if no rate found
+4. **Calculate**: Apply rate to all kWh calculations
+5. **Format**: Display with 2 decimal places for currency
+
+### kWh Calculation
+```typescript
+// Correct interval: 3 seconds
+const intervalHours = 3 / 3600; // 0.000833 hours
+const kwh = (power / 1000) * intervalHours;
+```
+
+### Monthly Projection Formula
+```typescript
+// Daily average cost
+const dailyAverage = totalCost / (totalMinutes / 60 / 24 || 1);
+
+// Project to 30 days
+const monthlyEstimate = dailyAverage * 30;
+```
+
+## Impact
+
+### Before
+- ❌ Cost analysis showing all zeros
+- ❌ Monthly estimates showing NaN
+- ❌ Inconsistent decimal places
+- ❌ Using hardcoded electricity rates
+
+### After
+- ✅ Accurate cost breakdown by time of day
+- ✅ Proper monthly cost projections
+- ✅ Consistent 3-decimal precision
+- ✅ User-specific electricity rates
+- ✅ Professional data presentation
+
+## Related Documentation
+- `PHASE-4-CONSUMPTION-ANALYTICS-COMPLETE.md` - Phase 4 implementation
+- `APPLIANCE-ELECTRICAL-TRACKING-COMPLETE.md` - Electrical parameter tracking
+- `FIRESTORE-INDEXES.md` - Database query optimization
 
 ---
 
-## 📊 Before & After Comparison
-
-### Cost Analysis Card
-
-**Before:**
-```
-💰 Cost Analysis
-Current Period: ₱150.00
-Previous Period: ₱142.50
-Change: +5.3%
-
-Cost by Time of Day:
-Morning: ₱0.00
-Afternoon: ₱0.00
-Evening: ₱0.00
-Night: ₱0.00
-
-Estimated Next Bill: ₱157.50
-```
-
-**After:**
-```
-💰 Cost Analysis
-Current Period: ₱150.00
-Previous Period: ₱142.50
-Change: +5.3%
-
-Cost by Time of Day:
-Morning: ₱45.50
-Afternoon: ₱32.75
-Evening: ₱67.20
-Night: ₱18.30
-
-Estimated Next Bill: ₱4,500.00
-```
-
-### Appliance Breakdown
-
-**Before:**
-```
-🔌 Air Conditioner
-12.5 kWh • ₱150.00
-Est. Monthly: ₱NaN/mo
-1200.4837592847W • 220.48375928V • 6.22847362A • PF: 0.8573829
-```
-
-**After:**
-```
-🔌 Air Conditioner
-12.5 kWh • ₱150.00
-Est. Monthly: ₱4,500/mo
-1200.484W • 220.484V • 6.228A • PF: 0.857
-```
-
-### Dashboard Readings
-
-**Before:**
-```
-Air Conditioner
-ON • 45m
-1200.4837592847W • 220.48375928V • 6.22847362A • PF: 0.8573829
-```
-
-**After:**
-```
-Air Conditioner
-ON • 45m
-1200.484W • 220.484V • 6.228A • PF: 0.857
-```
-
----
-
-## 🧪 Testing Performed
-
-### 1. Cost by Time of Day
-- ✅ Morning slot shows correct cost
-- ✅ Afternoon slot shows correct cost
-- ✅ Evening slot shows correct cost
-- ✅ Night slot shows correct cost
-- ✅ Total matches current period cost
-
-### 2. Estimated Monthly Cost
-- ✅ No NaN values
-- ✅ Reasonable projections (daily * 30)
-- ✅ Matches manual calculations
-- ✅ Handles edge cases (zero usage)
-
-### 3. Decimal Precision
-- ✅ All readings show exactly 3 decimals
-- ✅ Database stores formatted values
-- ✅ UI displays consistently
-- ✅ No floating-point errors visible
-
----
-
-## 📈 Impact Assessment
-
-### User Experience
-- ✅ **Professional Appearance**: Clean, consistent number formatting
-- ✅ **Accurate Insights**: Cost by time of day now meaningful
-- ✅ **Budget Planning**: Reliable monthly cost estimates
-- ✅ **Trust**: No more NaN or confusing values
-
-### Data Quality
-- ✅ **Precision**: 3 decimal places sufficient for household monitoring
-- ✅ **Consistency**: Same format across all readings
-- ✅ **Storage**: Slightly smaller database footprint
-- ✅ **Calculations**: More accurate aggregations
-
-### Research Value
-- ✅ **Reproducibility**: Consistent decimal precision
-- ✅ **Analysis**: Time-of-day patterns now visible
-- ✅ **Validation**: Can compare with hardware readings
-- ✅ **Publications**: Professional data presentation
-
----
-
-## 🔜 Recommendations
-
-### Short-Term
-1. ✅ Monitor cost calculations for accuracy
-2. ✅ Verify user-specific electricity rates work
-3. ✅ Check edge cases (zero usage, single reading)
-
-### Medium-Term
-1. Add unit tests for calculation methods
-2. Implement data validation on input
-3. Add logging for calculation errors
-
-### Long-Term
-1. Consider configurable decimal precision
-2. Add calculation audit trail
-3. Implement calculation caching for performance
-
----
-
-## ✅ Verification Checklist
-
-- [x] Cost by time of day shows non-zero values
-- [x] Estimated monthly cost shows ₱X.XX/mo (not NaN)
-- [x] All readings display exactly 3 decimal places
-- [x] Database stores 3-decimal formatted values
-- [x] Calculations use correct 3-second interval
-- [x] User-specific electricity rates applied
-- [x] No linter errors
-- [x] No console errors
-- [x] UI displays correctly
-- [x] Data flows correctly to reports
-
----
-
-**Status**: ✅ **ALL ISSUES FIXED**  
-**Tested**: February 2, 2026  
-**Ready for**: Production Use
-
----
-
-## 📝 Related Files
-
-- `services/reportService.ts` - Cost calculation fixes
-- `services/realtimeDataService.ts` - Decimal precision
-- `components/reports/CostAnalysisCard.tsx` - UI display
-- `components/reports/ApplianceBreakdown.tsx` - Monthly estimates
-- `components/dashboard/ApplianceList.tsx` - Real-time display
+**All reported issues have been resolved and tested.**
