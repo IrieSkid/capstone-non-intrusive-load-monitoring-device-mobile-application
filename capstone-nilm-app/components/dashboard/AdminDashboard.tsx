@@ -17,7 +17,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useAuth } from '@/hooks/useAuth';
 import { collection, getDocs, query, where } from 'firebase/firestore';
-import { db } from '@/config/firebase.config';
+import { db } from '@/config/firebase';
 
 interface SystemStats {
   totalUsers: number;
