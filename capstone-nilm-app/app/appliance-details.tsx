@@ -181,7 +181,10 @@ export default function ApplianceDetailsScreen() {
         </TouchableOpacity>
       </View>
 
-      <ScrollView style={styles.container}>
+      <ScrollView 
+        style={styles.container}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={true}>
         {/* Appliance Header */}
         <View style={styles.applianceHeader}>
           {isEditing ? (
@@ -462,6 +465,11 @@ const createStyles = (colors: any) =>
     },
     container: {
       flex: 1,
+      backgroundColor: colors.background,
+    },
+    scrollContent: {
+      flexGrow: 1,
+      paddingBottom: 40,
     },
     applianceHeader: {
       alignItems: 'center',
@@ -522,6 +530,7 @@ const createStyles = (colors: any) =>
     },
     section: {
       padding: 16,
+      backgroundColor: colors.background,
     },
     sectionHeader: {
       flexDirection: 'row',
@@ -533,6 +542,7 @@ const createStyles = (colors: any) =>
       fontSize: 16,
       fontWeight: '700',
       color: colors.textPrimary,
+      marginBottom: 8,
     },
     chevron: {
       fontSize: 14,
@@ -544,6 +554,12 @@ const createStyles = (colors: any) =>
       padding: 16,
       borderWidth: 1,
       borderColor: colors.divider,
+      marginTop: 8,
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.1,
+      shadowRadius: 4,
+      elevation: 3,
     },
     field: {
       paddingVertical: 12,
