@@ -102,7 +102,8 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     marginBottom: 16,
     borderWidth: 1,
-    borderColor: '#e0e0e0',
+    borderColor: '#D0D0D0',
+    backgroundColor: '#FFFFFF',
   },
   title: {
     fontSize: 18,
@@ -125,17 +126,19 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: 12,
-    color: '#666666',
+    color: '#555555',
+    fontWeight: '600',
     marginBottom: 4,
   },
   value: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#007AFF',
+    color: '#000000',
   },
   unit: {
     fontSize: 14,
-    color: '#666666',
+    color: '#555555',
+    fontWeight: '500',
     marginTop: 2,
   },
   timestamp: {

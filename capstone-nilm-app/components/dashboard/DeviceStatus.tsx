@@ -95,7 +95,8 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     marginBottom: 16,
     borderWidth: 1,
-    borderColor: '#e0e0e0',
+    borderColor: '#D0D0D0',
+    backgroundColor: '#FFFFFF',
   },
   header: {
     flexDirection: 'row',
@@ -132,11 +133,12 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: 14,
-    color: '#666666',
+    color: '#555555',
+    fontWeight: '500',
   },
   value: {
     fontSize: 14,
-    fontWeight: '500',
-    color: '#333333',
+    fontWeight: '600',
+    color: '#000000',
   },
 });

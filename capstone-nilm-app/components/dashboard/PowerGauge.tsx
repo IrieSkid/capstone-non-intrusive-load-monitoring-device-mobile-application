@@ -75,7 +75,8 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     marginBottom: 16,
     borderWidth: 1,
-    borderColor: '#e0e0e0',
+    borderColor: '#D0D0D0',
+    backgroundColor: '#FFFFFF',
     alignItems: 'center',
   },
   title: {
@@ -119,16 +120,18 @@ const styles = StyleSheet.create({
   mainValue: {
     fontSize: 32,
     fontWeight: 'bold',
-    color: '#007AFF',
+    color: '#000000',
   },
   unit: {
-    fontSize: 14,
-    color: '#666666',
+    fontSize: 16,
+    color: '#555555',
+    fontWeight: '600',
   },
   percentage: {
     fontSize: 12,
-    color: '#999999',
+    color: '#666666',
     marginTop: 4,
+    fontWeight: '500',
   },
   labels: {
     flexDirection: 'row',
@@ -138,7 +141,8 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: 12,
-    color: '#666666',
+    color: '#555555',
+    fontWeight: '500',
   },
   status: {
     flexDirection: 'row',
@@ -153,6 +157,7 @@ const styles = StyleSheet.create({
   },
   statusText: {
     fontSize: 14,
-    fontWeight: '500',
+    fontWeight: '600',
+    color: '#333333',
   },
 });

@@ -64,7 +64,8 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     marginBottom: 12,
     borderWidth: 1,
-    borderColor: '#e0e0e0',
+    borderColor: '#D0D0D0',
+    backgroundColor: '#FFFFFF',
   },
   header: {
     flexDirection: 'row',
@@ -102,7 +103,8 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 14,
-    color: '#666666',
+    color: '#555555',
+    fontWeight: '600',
     marginBottom: 8,
   },
   valueContainer: {
@@ -112,10 +114,12 @@ const styles = StyleSheet.create({
   value: {
     fontSize: 28,
     fontWeight: 'bold',
+    color: '#000000',
   },
   unit: {
     fontSize: 16,
-    color: '#666666',
+    color: '#555555',
+    fontWeight: '500',
   },
   subtitle: {
     fontSize: 12,

@@ -70,7 +70,8 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     marginBottom: 16,
     borderWidth: 1,
-    borderColor: '#e0e0e0',
+    borderColor: '#D0D0D0',
+    backgroundColor: '#FFFFFF',
   },
   title: {
     fontSize: 18,
@@ -130,12 +131,13 @@ const styles = StyleSheet.create({
   },
   summaryLabel: {
     fontSize: 12,
-    color: '#666666',
+    color: '#555555',
+    fontWeight: '500',
     marginBottom: 4,
   },
   summaryValue: {
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: 'bold',
-    color: '#007AFF',
+    color: '#000000',
   },
 });
