@@ -281,6 +281,33 @@ export default function DeviceDetailsScreen() {
           </View>
         </View>
 
+        {/* Appliances */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Appliances</Text>
+
+          <View style={styles.card}>
+            <TouchableOpacity
+              style={styles.actionButton}
+              onPress={() =>
+                router.push({
+                  pathname: '/device-appliances',
+                  params: { deviceId: device.id },
+                })
+              }>
+              <View style={styles.actionButtonContent}>
+                <Text style={styles.actionButtonIcon}>🔌</Text>
+                <View style={styles.actionButtonText}>
+                  <Text style={styles.actionButtonTitle}>Manage Appliances</Text>
+                  <Text style={styles.actionButtonDescription}>
+                    View and configure monitored appliances
+                  </Text>
+                </View>
+              </View>
+              <Text style={styles.chevron}>›</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+
         {/* Connection Management */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Connection Management</Text>
