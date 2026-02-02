@@ -5,15 +5,16 @@
 
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { ThemedView } from '@/components/themed-view';
 import { calculateTodayStats } from '@/utils/mockData';
-import Colors from '@/constants/Colors';
+import { useTheme } from '@/contexts/ThemeContext';
 
 export function ConsumptionChart() {
   const todayStats = calculateTodayStats();
+  const { colors } = useTheme();
+  const styles = createStyles(colors);
 
   return (
-    <ThemedView style={styles.card}>
+    <View style={styles.card}>
       <View style={styles.header}>
         <Text style={styles.title}>Today's Consumption</Text>
       </View>
@@ -39,18 +40,18 @@ export function ConsumptionChart() {
           <Text style={styles.summaryLabel}>Cost</Text>
         </View>
       </View>
-    </ThemedView>
+    </View>
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors: any) => StyleSheet.create({
   card: {
-    backgroundColor: Colors.surface,
+    backgroundColor: colors.surface,
     borderRadius: 12,
     padding: 16,
     marginBottom: 16,
     borderWidth: 1,
-    borderColor: Colors.divider,
+    borderColor: colors.divider,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.1,
@@ -63,7 +64,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 16,
     fontWeight: '600',
-    color: Colors.textPrimary,
+    color: colors.textPrimary,
   },
   chartContainer: {
     minHeight: 150,
@@ -73,38 +74,38 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: Colors.background,
+    backgroundColor: colors.background,
     borderRadius: 8,
     borderWidth: 2,
-    borderColor: Colors.divider,
+    borderColor: colors.divider,
     borderStyle: 'dashed',
     padding: 32,
   },
   chartText: {
     fontSize: 16,
     fontWeight: '600',
-    color: Colors.textSecondary,
+    color: colors.textSecondary,
     marginBottom: 4,
   },
   chartSubtext: {
     fontSize: 12,
-    color: Colors.textSecondary,
+    color: colors.textSecondary,
   },
   summary: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     paddingTop: 12,
     borderTopWidth: 1,
-    borderTopColor: Colors.divider,
+    borderTopColor: colors.divider,
   },
   summaryValue: {
     fontSize: 24,
     fontWeight: '700',
-    color: Colors.primary,
+    color: colors.primary,
   },
   summaryLabel: {
     fontSize: 14,
-    color: Colors.textSecondary,
+    color: colors.textSecondary,
     marginTop: 4,
   },
 });

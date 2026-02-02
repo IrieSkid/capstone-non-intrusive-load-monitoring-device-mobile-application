@@ -3,58 +3,64 @@
  */
 
 import React from 'react';
-import { View, StyleSheet, ScrollView, StatusBar } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, StatusBar } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import Colors from '@/constants/Colors';
+import { useTheme } from '@/contexts/ThemeContext';
 
 export default function AlertsScreen() {
+  const { colors, isDark } = useTheme();
+  const styles = createStyles(colors);
+
   return (
     <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
-      <StatusBar barStyle="dark-content" backgroundColor={Colors.surface} />
+      <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} backgroundColor={colors.surface} />
       <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: 100 }}>
-        <ThemedView style={styles.header}>
-          <ThemedText type="title">Alerts & Notifications</ThemedText>
-        </ThemedView>
+        <View style={styles.header}>
+          <Text style={styles.headerText}>Alerts & Notifications</Text>
+        </View>
 
-      <View style={styles.content}>
-        <ThemedView style={styles.placeholder}>
-          <ThemedText style={styles.icon}>🔔</ThemedText>
-          <ThemedText style={styles.title}>Alerts Coming Soon</ThemedText>
-          <ThemedText style={styles.subtitle}>
-            Custom alerts and notifications will be available in Phase 5
-          </ThemedText>
-        </ThemedView>
+        <View style={styles.content}>
+          <View style={styles.placeholder}>
+            <Text style={styles.icon}>🔔</Text>
+            <Text style={styles.title}>Alerts Coming Soon</Text>
+            <Text style={styles.subtitle}>
+              Custom alerts and notifications will be available in Phase 5
+            </Text>
+          </View>
         </View>
       </ScrollView>
     </SafeAreaView>
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors: any) => StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: Colors.surface,
+    backgroundColor: colors.surface,
   },
   container: {
     flex: 1,
-    backgroundColor: Colors.background,
+    backgroundColor: colors.background,
   },
   header: {
     padding: 16,
-    backgroundColor: Colors.surface,
+    backgroundColor: colors.surface,
+  },
+  headerText: {
+    fontSize: 28,
+    fontWeight: '700',
+    color: colors.textPrimary,
   },
   content: {
     padding: 16,
   },
   placeholder: {
-    backgroundColor: Colors.surface,
+    backgroundColor: colors.surface,
     borderRadius: 12,
     padding: 48,
     alignItems: 'center',
     borderWidth: 2,
-    borderColor: Colors.divider,
+    borderColor: colors.divider,
     borderStyle: 'dashed',
   },
   icon: {
@@ -66,10 +72,11 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     marginBottom: 8,
     textAlign: 'center',
+    color: colors.textPrimary,
   },
   subtitle: {
     fontSize: 14,
-    color: Colors.textSecondary,
+    color: colors.textSecondary,
     textAlign: 'center',
   },
 });

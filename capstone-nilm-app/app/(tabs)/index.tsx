@@ -6,11 +6,11 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { useAuth } from '@/hooks/useAuth';
+import { useTheme } from '@/contexts/ThemeContext';
 import { GradientPowerCard } from '@/components/dashboard/GradientPowerCard';
 import { ParametersGrid } from '@/components/dashboard/ParametersGrid';
 import { ConsumptionChart } from '@/components/dashboard/ConsumptionChart';
 import { ApplianceList } from '@/components/dashboard/ApplianceList';
-import Colors from '@/constants/Colors';
 import {
   generateMockDevice,
   calculateTodayStats,
@@ -18,6 +18,7 @@ import {
 
 export default function HomeScreen() {
   const { user, isLoading } = useAuth();
+  const { colors, isDark } = useTheme();
   const [refreshing, setRefreshing] = useState(false);
   const [mockDevice] = useState(generateMockDevice(user?.id || 'mock-user'));
   const [todayStats, setTodayStats] = useState(calculateTodayStats());
@@ -39,19 +40,6 @@ export default function HomeScreen() {
     }, 1000);
   }, []);
 
-  if (isLoading) {
-    return (
-      <ThemedView style={styles.loadingContainer}>
-        <ActivityIndicator size="large" />
-        <ThemedText style={styles.loadingText}>Loading...</ThemedText>
-      </ThemedView>
-    );
-  }
-
-  if (!user) {
-    return null; // Will redirect to login
-  }
-
   const getGreeting = () => {
     const hour = new Date().getHours();
     if (hour < 12) return 'Good Morning';
@@ -59,9 +47,24 @@ export default function HomeScreen() {
     return 'Good Evening';
   };
 
+  const styles = createStyles(colors);
+
+  if (isLoading) {
+    return (
+      <View style={[styles.loadingContainer, { backgroundColor: colors.background }]}>
+        <ActivityIndicator size="large" color={colors.primary} />
+        <Text style={[styles.loadingText, { color: colors.textSecondary }]}>Loading...</Text>
+      </View>
+    );
+  }
+
+  if (!user) {
+    return null; // Will redirect to login
+  }
+
   return (
     <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
-      <StatusBar barStyle="dark-content" backgroundColor={Colors.surface} />
+      <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} backgroundColor={colors.surface} />
       <ScrollView
         style={styles.container}
         contentContainerStyle={styles.scrollContent}
@@ -104,14 +107,14 @@ export default function HomeScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors: any) => StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: Colors.surface,
+    backgroundColor: colors.surface,
   },
   container: {
     flex: 1,
-    backgroundColor: Colors.background,
+    backgroundColor: colors.background,
   },
   scrollContent: {
     paddingBottom: 100, // Extra space for tab bar
@@ -120,25 +123,23 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: Colors.background,
   },
   loadingText: {
     marginTop: 10,
-    color: Colors.textSecondary,
   },
   greeting: {
     padding: 16,
-    backgroundColor: Colors.surface,
+    backgroundColor: colors.surface,
   },
   greetingText: {
     fontSize: 14,
-    color: Colors.textSecondary,
+    color: colors.textSecondary,
     marginBottom: 4,
   },
   greetingName: {
     fontSize: 20,
     fontWeight: '600',
-    color: Colors.textPrimary,
+    color: colors.textPrimary,
   },
   section: {
     paddingHorizontal: 16,
@@ -149,13 +150,13 @@ const styles = StyleSheet.create({
     marginTop: 24,
     padding: 16,
     borderRadius: 12,
-    backgroundColor: '#E3F2FD',
+    backgroundColor: colors.primaryLight + '30',
     borderLeftWidth: 4,
-    borderLeftColor: Colors.primary,
+    borderLeftColor: colors.primary,
   },
   infoText: {
     fontSize: 13,
-    color: Colors.primaryDark,
+    color: colors.textPrimary,
     lineHeight: 20,
   },
 });

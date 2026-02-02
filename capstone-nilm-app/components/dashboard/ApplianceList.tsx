@@ -5,7 +5,7 @@
 
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
-import Colors from '@/constants/Colors';
+import { useTheme } from '@/contexts/ThemeContext';
 
 interface Appliance {
   id: string;
@@ -44,6 +44,9 @@ const mockAppliances: Appliance[] = [
 ];
 
 export function ApplianceList() {
+  const { colors } = useTheme();
+  const styles = createStyles(colors);
+
   return (
     <View style={styles.container}>
       <View style={styles.header}>
@@ -73,7 +76,7 @@ export function ApplianceList() {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors: any) => StyleSheet.create({
   container: {
     marginBottom: 16,
     backgroundColor: 'transparent',
@@ -88,22 +91,22 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 16,
     fontWeight: '600',
-    color: Colors.textPrimary,
+    color: colors.textPrimary,
   },
   viewAll: {
     fontSize: 12,
-    color: Colors.primary,
+    color: colors.primary,
     fontWeight: '500',
   },
   applianceItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFFFFF', // Explicit white background
+    backgroundColor: colors.surface,
     borderRadius: 8,
     padding: 12,
     marginBottom: 8,
     borderWidth: 1,
-    borderColor: Colors.divider,
+    borderColor: colors.divider,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.05,
@@ -113,7 +116,7 @@ const styles = StyleSheet.create({
   applianceIcon: {
     width: 48,
     height: 48,
-    backgroundColor: Colors.primaryLight,
+    backgroundColor: colors.primaryLight,
     borderRadius: 12,
     justifyContent: 'center',
     alignItems: 'center',
@@ -128,16 +131,16 @@ const styles = StyleSheet.create({
   applianceName: {
     fontSize: 16,
     fontWeight: '600',
-    color: Colors.textPrimary,
+    color: colors.textPrimary,
     marginBottom: 4,
   },
   applianceStatus: {
     fontSize: 12,
-    color: Colors.textSecondary,
+    color: colors.textSecondary,
   },
   appliancePower: {
     fontSize: 16,
     fontWeight: '600',
-    color: Colors.primary,
+    color: colors.primary,
   },
 });

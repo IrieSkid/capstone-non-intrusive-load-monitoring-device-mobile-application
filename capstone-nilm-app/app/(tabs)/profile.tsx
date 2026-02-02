@@ -179,40 +179,20 @@ export default function ProfileScreen() {
 
           <View style={styles.themeOption}>
             <View style={styles.themeInfo}>
-              <IconSymbol name="sun.max.fill" size={24} color={colors.textPrimary} />
-              <Text style={styles.themeLabel}>Light Mode</Text>
+              <IconSymbol name={isDark ? 'moon.fill' : 'sun.max.fill'} size={28} color={isDark ? '#FFD700' : '#FF9500'} />
+              <View style={styles.themeLabelContainer}>
+                <Text style={styles.themeLabel}>{isDark ? 'Dark Mode' : 'Light Mode'}</Text>
+                <Text style={styles.themeSubtext}>
+                  {isDark ? 'Easy on the eyes' : 'Classic bright theme'}
+                </Text>
+              </View>
             </View>
             <Switch
-              value={themeMode === 'light'}
-              onValueChange={(value) => setThemeMode(value ? 'light' : 'dark')}
-              trackColor={{ false: colors.divider, true: colors.primary }}
-              thumbColor={colors.surface}
-            />
-          </View>
-
-          <View style={styles.themeOption}>
-            <View style={styles.themeInfo}>
-              <IconSymbol name="moon.fill" size={24} color={colors.textPrimary} />
-              <Text style={styles.themeLabel}>Dark Mode</Text>
-            </View>
-            <Switch
-              value={themeMode === 'dark'}
+              value={isDark}
               onValueChange={(value) => setThemeMode(value ? 'dark' : 'light')}
-              trackColor={{ false: colors.divider, true: colors.primary }}
-              thumbColor={colors.surface}
-            />
-          </View>
-
-          <View style={styles.themeOption}>
-            <View style={styles.themeInfo}>
-              <IconSymbol name="gear" size={24} color={colors.textPrimary} />
-              <Text style={styles.themeLabel}>Auto (System)</Text>
-            </View>
-            <Switch
-              value={themeMode === 'auto'}
-              onValueChange={(value) => setThemeMode(value ? 'auto' : 'light')}
-              trackColor={{ false: colors.divider, true: colors.primary }}
-              thumbColor={colors.surface}
+              trackColor={{ false: '#E0E0E0', true: colors.primary }}
+              thumbColor="#FFFFFF"
+              ios_backgroundColor="#E0E0E0"
             />
           </View>
         </View>
@@ -374,19 +354,26 @@ const createStyles = (colors: any) =>
       flexDirection: 'row',
       justifyContent: 'space-between',
       alignItems: 'center',
-      paddingVertical: 12,
-      borderBottomWidth: 1,
-      borderBottomColor: colors.divider,
+      paddingVertical: 16,
     },
     themeInfo: {
       flexDirection: 'row',
       alignItems: 'center',
+      flex: 1,
+    },
+    themeLabelContainer: {
+      marginLeft: 16,
+      flex: 1,
     },
     themeLabel: {
-      fontSize: 16,
+      fontSize: 18,
       color: colors.textPrimary,
-      marginLeft: 12,
-      fontWeight: '500',
+      fontWeight: '600',
+      marginBottom: 2,
+    },
+    themeSubtext: {
+      fontSize: 13,
+      color: colors.textSecondary,
     },
     actions: {
       padding: 16,
