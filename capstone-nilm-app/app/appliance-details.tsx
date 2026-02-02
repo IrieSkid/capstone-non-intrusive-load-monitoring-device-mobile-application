@@ -250,6 +250,9 @@ export default function ApplianceDetailsScreen() {
                   onChangeText={setName}
                   placeholder="Appliance name"
                   placeholderTextColor={colors.textSecondary}
+                  editable={true}
+                  autoCorrect={false}
+                  autoCapitalize="words"
                 />
               ) : (
                 <Text style={styles.fieldValue}>{appliance.name}</Text>
@@ -272,6 +275,8 @@ export default function ApplianceDetailsScreen() {
                   placeholderTextColor={colors.textSecondary}
                   keyboardType="numeric"
                   maxLength={1}
+                  editable={true}
+                  autoCorrect={false}
                 />
               ) : (
                 <Text style={styles.fieldValue}>Port {appliance.portNumber}</Text>
@@ -288,6 +293,8 @@ export default function ApplianceDetailsScreen() {
                   placeholder="Watts"
                   placeholderTextColor={colors.textSecondary}
                   keyboardType="numeric"
+                  editable={true}
+                  autoCorrect={false}
                 />
               ) : (
                 <Text style={styles.fieldValue}>{appliance.ratedPower} W</Text>
@@ -554,10 +561,12 @@ const createStyles = (colors: any) =>
       color: colors.textPrimary,
       fontWeight: '500',
       backgroundColor: colors.background,
-      padding: 8,
+      padding: 12,
+      paddingHorizontal: 12,
       borderRadius: 6,
       borderWidth: 1,
       borderColor: colors.divider,
+      minHeight: 44,
     },
     classificationDescription: {
       fontSize: 13,
