@@ -106,9 +106,7 @@ export function ExportMenu({ visible, onClose, reportData }: ExportMenuProps) {
       const fileUri = `${FileSystem.cacheDirectory}${filename}`;
 
       // Write CSV to file
-      await FileSystem.writeAsStringAsync(fileUri, csv, {
-        encoding: FileSystem.EncodingType.UTF8,
-      });
+      await FileSystem.writeAsStringAsync(fileUri, csv);
 
       // Check if sharing is available
       if (await Sharing.isAvailableAsync()) {
