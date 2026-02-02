@@ -23,6 +23,8 @@ import { PeriodTabs } from '@/components/reports/PeriodTabs';
 import { ConsumptionChartComponent } from '@/components/reports/ConsumptionChart';
 import { CostAnalysisCard } from '@/components/reports/CostAnalysisCard';
 import { ApplianceBreakdown } from '@/components/reports/ApplianceBreakdown';
+import { DateRangePicker } from '@/components/reports/DateRangePicker';
+import { ExportMenu } from '@/components/reports/ExportMenu';
 
 type Period = 'daily' | 'weekly' | 'monthly';
 
@@ -39,6 +41,10 @@ export default function ReportsScreen() {
   const [weeklyReport, setWeeklyReport] = useState<WeeklyReport | null>(null);
   const [monthlyReport, setMonthlyReport] = useState<MonthlyReport | null>(null);
   const [costAnalysis, setCostAnalysis] = useState<CostAnalysis | null>(null);
+  
+  // Modal states
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [showExportMenu, setShowExportMenu] = useState(false);
 
   // Load reports
   const loadReports = async () => {
@@ -133,8 +139,24 @@ export default function ReportsScreen() {
         
         {/* Header */}
         <View style={styles.header}>
-          <Text style={styles.title}>📊 Reports</Text>
-          <Text style={styles.dateRange}>{getDateRange()}</Text>
+          <View>
+            <Text style={styles.title}>📊 Reports</Text>
+            <Text style={styles.dateRange}>{getDateRange()}</Text>
+          </View>
+          
+          {/* Action Buttons */}
+          <View style={styles.headerActions}>
+            <TouchableOpacity
+              style={styles.headerButton}
+              onPress={() => setShowDatePicker(true)}>
+              <Text style={styles.headerButtonIcon}>📅</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.headerButton}
+              onPress={() => setShowExportMenu(true)}>
+              <Text style={styles.headerButtonIcon}>📤</Text>
+            </TouchableOpacity>
+          </View>
         </View>
 
         {/* Period Tabs */}
@@ -182,13 +204,6 @@ export default function ReportsScreen() {
           <ApplianceBreakdown appliances={currentReport.applianceBreakdown} />
         )}
 
-        {/* Export Button (Placeholder) */}
-        <TouchableOpacity
-          style={styles.exportButton}
-          onPress={() => alert('Export functionality coming soon!')}>
-          <Text style={styles.exportButtonText}>📄 Export Report</Text>
-        </TouchableOpacity>
-
         {/* Info Note */}
         <View style={styles.infoNote}>
           <Text style={styles.infoText}>
@@ -197,6 +212,35 @@ export default function ReportsScreen() {
           </Text>
         </View>
       </ScrollView>
+
+      {/* Date Range Picker Modal */}
+      <DateRangePicker
+        visible={showDatePicker}
+        onClose={() => setShowDatePicker(false)}
+        onApply={(startDate, endDate) => {
+          // TODO: Filter reports by date range
+          console.log('Date range selected:', startDate, endDate);
+        }}
+      />
+
+      {/* Export Menu Modal */}
+      {currentReport && (
+        <ExportMenu
+          visible={showExportMenu}
+          onClose={() => setShowExportMenu(false)}
+          reportData={{
+            period: selectedPeriod,
+            dateRange: getDateRange(),
+            totalKwh: currentReport.totalKwh,
+            totalCost: currentReport.totalCost,
+            appliances: currentReport.applianceBreakdown.map(a => ({
+              name: a.name,
+              kwh: a.totalKwh,
+              cost: a.totalCost,
+            })),
+          }}
+        />
+      )}
     </SafeAreaView>
   );
 }
@@ -226,6 +270,9 @@ const createStyles = (colors: any) =>
       paddingBottom: 100,
     },
     header: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'flex-start',
       marginBottom: 16,
     },
     title: {
@@ -237,6 +284,23 @@ const createStyles = (colors: any) =>
     dateRange: {
       fontSize: 14,
       color: colors.textSecondary,
+    },
+    headerActions: {
+      flexDirection: 'row',
+      gap: 8,
+    },
+    headerButton: {
+      width: 44,
+      height: 44,
+      borderRadius: 22,
+      backgroundColor: colors.surface,
+      borderWidth: 1,
+      borderColor: colors.divider,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    headerButtonIcon: {
+      fontSize: 20,
     },
     tabsContainer: {
       marginBottom: 16,
@@ -263,18 +327,6 @@ const createStyles = (colors: any) =>
       fontSize: 20,
       fontWeight: '700',
       color: colors.primary,
-    },
-    exportButton: {
-      backgroundColor: colors.primary,
-      borderRadius: 12,
-      padding: 16,
-      alignItems: 'center',
-      marginBottom: 16,
-    },
-    exportButtonText: {
-      fontSize: 16,
-      fontWeight: '600',
-      color: '#FFFFFF',
     },
     infoNote: {
       backgroundColor: colors.surface,
