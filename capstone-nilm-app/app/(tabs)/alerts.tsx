@@ -298,6 +298,9 @@ const createStyles = (colors: any) =>
     header: {
       padding: 16,
       paddingBottom: 12,
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
     },
     title: {
       fontSize: 28,
@@ -479,5 +482,16 @@ const createStyles = (colors: any) =>
       color: colors.textSecondary,
       textAlign: 'center',
       lineHeight: 18,
+    },
+    seedButton: {
+      backgroundColor: colors.primary,
+      paddingHorizontal: 16,
+      paddingVertical: 8,
+      borderRadius: 8,
+    },
+    seedButtonText: {
+      color: '#fff',
+      fontSize: 14,
+      fontWeight: '600',
     },
   });

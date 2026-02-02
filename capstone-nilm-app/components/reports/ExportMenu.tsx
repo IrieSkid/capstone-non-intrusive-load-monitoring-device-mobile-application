@@ -4,8 +4,10 @@
  */
 
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Modal, Alert, Share } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Modal, Alert, Share, Platform } from 'react-native';
 import * as Sharing from 'expo-sharing';
+import * as FileSystem from 'expo-file-system';
+import Clipboard from '@react-native-clipboard/clipboard';
 import { useTheme } from '@/contexts/ThemeContext';
 
 interface ExportMenuProps {
@@ -79,26 +81,55 @@ export function ExportMenu({ visible, onClose, reportData }: ExportMenuProps) {
   };
 
   const handleCopyToClipboard = () => {
-    const text = generateTextReport();
-    // Note: Clipboard API would go here
-    // For now, just show success message
-    Alert.alert(
-      'Copied!',
-      'Report data has been copied to clipboard',
-      [{ text: 'OK', onPress: onClose }]
-    );
+    try {
+      const text = generateTextReport();
+      Clipboard.setString(text);
+      Alert.alert(
+        'Copied!',
+        'Report data has been copied to clipboard',
+        [{ text: 'OK', onPress: onClose }]
+      );
+    } catch (error) {
+      console.error('Error copying to clipboard:', error);
+      Alert.alert('Error', 'Failed to copy to clipboard');
+    }
   };
 
-  const handleExportCSV = () => {
-    // For now, just show info
-    Alert.alert(
-      'CSV Export',
-      'CSV export will be available when connected to real device. For now, you can share as text.',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        { text: 'Share as Text', onPress: handleShareText },
-      ]
-    );
+  const handleExportCSV = async () => {
+    try {
+      const csv = generateCSV();
+      const { period, dateRange } = reportData;
+      
+      // Generate filename
+      const timestamp = new Date().toISOString().split('T')[0];
+      const filename = `energy-report-${period}-${timestamp}.csv`;
+      const fileUri = `${FileSystem.cacheDirectory}${filename}`;
+
+      // Write CSV to file
+      await FileSystem.writeAsStringAsync(fileUri, csv, {
+        encoding: FileSystem.EncodingType.UTF8,
+      });
+
+      // Check if sharing is available
+      if (await Sharing.isAvailableAsync()) {
+        await Sharing.shareAsync(fileUri, {
+          mimeType: 'text/csv',
+          dialogTitle: 'Export Energy Report',
+          UTI: 'public.comma-separated-values-text',
+        });
+        onClose();
+      } else {
+        // Fallback to native share
+        await Share.share({
+          message: csv,
+          title: 'Energy Report CSV',
+        });
+        onClose();
+      }
+    } catch (error) {
+      console.error('Error exporting CSV:', error);
+      Alert.alert('Error', 'Failed to export CSV. Please try sharing as text instead.');
+    }
   };
 
   const handleExportPDF = () => {
@@ -158,7 +189,7 @@ export function ExportMenu({ visible, onClose, reportData }: ExportMenuProps) {
                   Download data for Excel/Sheets
                 </Text>
               </View>
-              <Text style={styles.optionBadge}>Coming Soon</Text>
+              <Text style={styles.optionArrow}>→</Text>
             </TouchableOpacity>
 
             <TouchableOpacity style={styles.option} onPress={handleExportPDF}>

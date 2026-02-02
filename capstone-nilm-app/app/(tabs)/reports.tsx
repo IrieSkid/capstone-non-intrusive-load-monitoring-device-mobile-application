@@ -14,6 +14,7 @@ import {
   ActivityIndicator,
   RefreshControl,
   TouchableOpacity,
+  Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTheme } from '@/contexts/ThemeContext';
@@ -45,6 +46,9 @@ export default function ReportsScreen() {
   // Modal states
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showExportMenu, setShowExportMenu] = useState(false);
+  
+  // Date range filter
+  const [customDateRange, setCustomDateRange] = useState<{ start: Date; end: Date } | null>(null);
 
   // Load reports
   const loadReports = async () => {
@@ -97,6 +101,11 @@ export default function ReportsScreen() {
 
   // Format date range
   const getDateRange = () => {
+    // If custom date range is set, show that
+    if (customDateRange) {
+      return `${customDateRange.start.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - ${customDateRange.end.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`;
+    }
+    
     if (!currentReport) return '';
     
     switch (selectedPeriod) {
@@ -114,6 +123,28 @@ export default function ReportsScreen() {
         const monthReport = currentReport as MonthlyReport;
         return `${monthReport.month} ${monthReport.year}`;
     }
+  };
+
+  // Handle date range filter
+  const handleDateRangeApply = (startDate: Date, endDate: Date) => {
+    setCustomDateRange({ start: startDate, end: endDate });
+    setShowDatePicker(false);
+    
+    // In a real app, this would fetch filtered data from Firestore
+    // For now, just show a message
+    Alert.alert(
+      'Date Range Applied',
+      `Filtering reports from ${startDate.toLocaleDateString()} to ${endDate.toLocaleDateString()}. 
+      
+Note: This will fetch actual data from Firestore when connected to real hardware.`,
+      [{ text: 'OK' }]
+    );
+  };
+
+  // Clear custom date range
+  const handleClearDateRange = () => {
+    setCustomDateRange(null);
+    loadReports();
   };
 
   if (isLoading && !currentReport) {
@@ -139,15 +170,20 @@ export default function ReportsScreen() {
         
         {/* Header */}
         <View style={styles.header}>
-          <View>
+          <View style={{ flex: 1 }}>
             <Text style={styles.title}>📊 Reports</Text>
             <Text style={styles.dateRange}>{getDateRange()}</Text>
+            {customDateRange && (
+              <TouchableOpacity onPress={handleClearDateRange} style={styles.clearFilterButton}>
+                <Text style={styles.clearFilterText}>✕ Clear Filter</Text>
+              </TouchableOpacity>
+            )}
           </View>
           
           {/* Action Buttons */}
           <View style={styles.headerActions}>
             <TouchableOpacity
-              style={styles.headerButton}
+              style={[styles.headerButton, customDateRange && styles.headerButtonActive]}
               onPress={() => setShowDatePicker(true)}>
               <Text style={styles.headerButtonIcon}>📅</Text>
             </TouchableOpacity>
@@ -217,10 +253,7 @@ export default function ReportsScreen() {
       <DateRangePicker
         visible={showDatePicker}
         onClose={() => setShowDatePicker(false)}
-        onApply={(startDate, endDate) => {
-          // TODO: Filter reports by date range
-          console.log('Date range selected:', startDate, endDate);
-        }}
+        onApply={handleDateRangeApply}
       />
 
       {/* Export Menu Modal */}
@@ -301,6 +334,18 @@ const createStyles = (colors: any) =>
     },
     headerButtonIcon: {
       fontSize: 20,
+    },
+    headerButtonActive: {
+      backgroundColor: colors.primary + '20',
+      borderColor: colors.primary,
+    },
+    clearFilterButton: {
+      marginTop: 4,
+    },
+    clearFilterText: {
+      fontSize: 12,
+      color: colors.primary,
+      fontWeight: '600',
     },
     tabsContainer: {
       marginBottom: 16,
