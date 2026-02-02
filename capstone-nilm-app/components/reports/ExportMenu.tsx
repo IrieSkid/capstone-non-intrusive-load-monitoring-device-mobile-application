@@ -7,7 +7,7 @@ import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Modal, Alert, Share, Platform } from 'react-native';
 import * as Sharing from 'expo-sharing';
 import * as FileSystem from 'expo-file-system';
-import Clipboard from '@react-native-clipboard/clipboard';
+import * as Clipboard from 'expo-clipboard';
 import { useTheme } from '@/contexts/ThemeContext';
 
 interface ExportMenuProps {
@@ -80,10 +80,10 @@ export function ExportMenu({ visible, onClose, reportData }: ExportMenuProps) {
     }
   };
 
-  const handleCopyToClipboard = () => {
+  const handleCopyToClipboard = async () => {
     try {
       const text = generateTextReport();
-      Clipboard.setString(text);
+      await Clipboard.setStringAsync(text);
       Alert.alert(
         'Copied!',
         'Report data has been copied to clipboard',
