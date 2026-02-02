@@ -1,5 +1,26 @@
 # Firestore Indexes Guide 🔍
 
+## ⚠️ CRITICAL INDEX NEEDED FOR REPORTS!
+
+### **realTimeReadings** - Date Range Queries
+**Status**: 🔴 **REQUIRED NOW** - Reports will not work without this!
+
+**Direct Link to Create**: https://console.firebase.google.com/v1/r/project/capstone-nilm-app/firestore/indexes?create_composite=Clpwcm9qZWN0cy9jYXBzdG9uZS1uaWxtLWFwcC9kYXRhYmFzZXMvKGRlZmF1bHQpL2NvbGxlY3Rpb25Hcm91cHMvcmVhbFRpbWVSZWFkaW5ncy9pbmRleGVzL18QARoMCghkZXZpY2VJZBABGg0KCXRpbWVzdGFtcBABGgwKCF9fbmFtZV9fEAE
+
+**Fields**:
+- `deviceId` (Ascending)
+- `timestamp` (Ascending)
+
+**Why**: Reports screen queries readings by deviceId and date range. Without this index, reports will show errors.
+
+**How to Create**:
+1. Click the link above
+2. Click "Create Index" button
+3. Wait 1-2 minutes for it to build
+4. Refresh your app
+
+---
+
 ## Why Indexes Are Needed
 
 Firestore requires composite indexes when you:
@@ -21,21 +42,14 @@ OR use the direct link from error message.
 
 ---
 
-### 2. `realTimeReadings` Collection
-**Query:** `where('deviceId', '==', deviceId)` + `orderBy('timestamp', 'desc')`
+### 2. `realTimeReadings` Collection (ALREADY COVERED ABOVE)
+**Query:** `where('deviceId', '==', deviceId)` + `where('timestamp', '>=', start)` + `where('timestamp', '<=', end)`
 
 **Index Fields:**
 - `deviceId` (Ascending)
-- `timestamp` (Descending)
+- `timestamp` (Ascending)
 
-**Manual Creation:**
-1. Go to Firebase Console → Firestore → Indexes
-2. Click "Create Index"
-3. Collection ID: `realTimeReadings`
-4. Add fields:
-   - Field: `deviceId`, Order: Ascending
-   - Field: `timestamp`, Order: Descending
-5. Click "Create"
+**Status**: 🔴 See critical index section above
 
 ---
 
@@ -143,7 +157,7 @@ firebase login
       "queryScope": "COLLECTION",
       "fields": [
         { "fieldPath": "deviceId", "order": "ASCENDING" },
-        { "fieldPath": "timestamp", "order": "DESCENDING" }
+        { "fieldPath": "timestamp", "order": "ASCENDING" }
       ]
     },
     {
@@ -251,15 +265,15 @@ Don't worry! Indexes don't cost money in the free tier, only slightly slower wri
 
 ## Current Status
 
-| Collection | Index Status | Notes |
-|------------|--------------|-------|
-| `notifications` | ⏳ Pending | Click link from error to create |
-| `realTimeReadings` | ⏳ Not Yet | Will trigger when querying |
-| `appliances` | ⏳ Not Yet | Will trigger when filtering |
-| `alertRules` | ⏳ Not Yet | Will trigger when querying |
-| `devices` | ⏳ Not Yet | Will trigger when filtering |
-| `consumptionSummaries` | ⏳ Not Yet | Will trigger when needed |
-| `electricityRates` | ⏳ Not Yet | Will trigger when needed |
+| Collection | Index Status | Priority | Notes |
+|------------|--------------|----------|-------|
+| `realTimeReadings` | 🔴 **CRITICAL** | **HIGH** | **Required for Reports - Create NOW!** |
+| `notifications` | ⏳ Pending | Medium | Click link from error to create |
+| `appliances` | ⏳ Not Yet | Low | Will trigger when filtering |
+| `alertRules` | ⏳ Not Yet | Low | Will trigger when querying |
+| `devices` | ⏳ Not Yet | Low | Will trigger when filtering |
+| `consumptionSummaries` | ⏳ Not Yet | Low | Will trigger when needed |
+| `electricityRates` | ⏳ Not Yet | Low | Will trigger when needed |
 
 As you use the app, Firestore will tell you which indexes to create! 🎯
 
