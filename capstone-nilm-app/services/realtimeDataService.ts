@@ -97,11 +97,12 @@ class RealtimeDataService {
         name: app.name,
         icon: app.icon,
         isOn: app.isActive || false, // Use isActive from database
-        power: app.ratedPower,
-        duration: app.usageMinutes || 0,
+        power: app.currentPower || app.ratedPower, // Use current or rated power
+        duration: app.usageMinutes || 0, // Load existing usage time
       }));
 
       console.log(`✅ Loaded ${this.appliances.length} appliances from database`);
+      console.log(`   Active: ${this.appliances.filter(a => a.isOn).map(a => `${a.name} (${a.duration}min)`).join(', ') || 'None'}`);
       
       // Notify appliance callbacks
       this.applianceCallbacks.forEach(callback => callback([...this.appliances]));
@@ -141,6 +142,7 @@ class RealtimeDataService {
     if (!appliance) return;
 
     const newIsOn = !appliance.isOn;
+    const now = new Date();
     
     // Update local state
     this.appliances = this.appliances.map(a => {
@@ -156,10 +158,24 @@ class RealtimeDataService {
 
     // Update in Firestore
     try {
-      await firestoreApplianceService.updateAppliance(applianceId, {
+      const updateData: any = {
         isActive: newIsOn,
         currentPower: newIsOn ? appliance.power : 0,
-      });
+        updatedAt: now,
+      };
+
+      // If turning ON, reset usage timer but keep lastDetected
+      // If turning OFF, save final usage time
+      if (!newIsOn && appliance.duration > 0) {
+        updateData.usageMinutes = Math.round(appliance.duration);
+      }
+      
+      // Always update lastDetected when turning ON
+      if (newIsOn) {
+        updateData.lastDetected = now;
+      }
+
+      await firestoreApplianceService.updateAppliance(applianceId, updateData);
       console.log(`🔄 Toggled ${appliance.name}: ${newIsOn ? 'ON' : 'OFF'}`);
     } catch (error) {
       console.error('Failed to update appliance in Firestore:', error);
@@ -217,8 +233,13 @@ class RealtimeDataService {
       // Save to Firestore every 10 cycles (30 seconds)
       this.saveInterval++;
       if (this.saveInterval >= 10 && this.deviceId) {
-        this.saveToFirestore();
+        this.saveToFirestore(); // This now also updates appliance usage
         this.saveInterval = 0;
+      }
+      
+      // Also update appliance usage more frequently (every 20 cycles = 60 seconds)
+      if (this.saveInterval % 20 === 0 && this.deviceId) {
+        this.updateApplianceUsageInFirestore();
       }
     }, 3000); // Every 3 seconds
   }
@@ -230,12 +251,40 @@ class RealtimeDataService {
     if (!this.deviceId) return;
 
     try {
+      // Save reading with appliance snapshot
       await readingService.saveReading(this.deviceId, this.currentReading, this.appliances);
+      
+      // Update appliance usage data in Firestore
+      await this.updateApplianceUsageInFirestore();
+      
       console.log('💾 Saved reading with', this.appliances.length, 'appliances to Firestore');
     } catch (error) {
       console.error('Failed to save reading:', error);
       // Don't throw - we don't want to break the simulation
     }
+  }
+
+  /**
+   * Update appliance usage data in Firestore (usageMinutes, lastDetected)
+   */
+  private async updateApplianceUsageInFirestore(): Promise<void> {
+    const now = new Date();
+    const updatePromises = this.appliances.map(async (appliance) => {
+      if (appliance.isOn) {
+        // Update usage time and last detected for active appliances
+        try {
+          await firestoreApplianceService.updateAppliance(appliance.id, {
+            usageMinutes: Math.round(appliance.duration), // Round to nearest minute
+            lastDetected: now,
+            currentPower: appliance.power,
+          });
+        } catch (error) {
+          console.error(`Failed to update usage for ${appliance.name}:`, error);
+        }
+      }
+    });
+
+    await Promise.all(updatePromises);
   }
 
   /**
