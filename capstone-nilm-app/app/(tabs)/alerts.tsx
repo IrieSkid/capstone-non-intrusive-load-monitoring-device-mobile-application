@@ -18,35 +18,34 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useAuth } from '@/hooks/useAuth';
-import { firestoreAlertService } from '@/services/firestoreAlertService';
-import { Alert as AlertType } from '@/types/alert';
-import { getAlertIcon, getAlertColor, getStatusColor, getTimeAgo } from '@/utils/mockAlertData';
+import { notificationService, Notification } from '@/services/notificationService';
+import { getAlertIcon, getAlertColor, getTimeAgo } from '@/utils/mockAlertData';
 
-type FilterType = 'all' | 'active' | 'acknowledged' | 'resolved';
+type FilterType = 'all' | 'alert' | 'warning' | 'info';
 
 export default function AlertsScreen() {
   const { colors, isDark } = useTheme();
   const { user } = useAuth();
   const styles = createStyles(colors);
 
-  const [alerts, setAlerts] = useState<AlertType[]>([]);
-  const [filteredAlerts, setFilteredAlerts] = useState<AlertType[]>([]);
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [filteredNotifications, setFilteredNotifications] = useState<Notification[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [filter, setFilter] = useState<FilterType>('all');
 
-  // Load alerts
-  const loadAlerts = async () => {
+  // Load notifications
+  const loadNotifications = async () => {
     if (!user) return;
     
     try {
       setIsLoading(true);
-      const data = await firestoreAlertService.getAlerts(user.uid);
-      setAlerts(data);
-      filterAlerts(data, filter);
+      const data = await notificationService.getNotifications(user.uid);
+      setNotifications(data);
+      filterNotifications(data, filter);
     } catch (error) {
-      console.error('Error loading alerts:', error);
-      Alert.alert('Error', 'Failed to load alerts. Please try again.');
+      console.error('Error loading notifications:', error);
+      Alert.alert('Error', 'Failed to load notifications. Please try again.');
     } finally {
       setIsLoading(false);
       setRefreshing(false);
@@ -54,39 +53,39 @@ export default function AlertsScreen() {
   };
 
   useEffect(() => {
-    loadAlerts();
+    loadNotifications();
   }, [user]);
 
-  const filterAlerts = (alertsList: AlertType[], filterType: FilterType) => {
+  const filterNotifications = (notificationsList: Notification[], filterType: FilterType) => {
     if (filterType === 'all') {
-      setFilteredAlerts(alertsList);
+      setFilteredNotifications(notificationsList);
     } else {
-      setFilteredAlerts(alertsList.filter(a => a.status === filterType));
+      setFilteredNotifications(notificationsList.filter(n => n.type === filterType));
     }
   };
 
   const handleFilterChange = (newFilter: FilterType) => {
     setFilter(newFilter);
-    filterAlerts(alerts, newFilter);
+    filterNotifications(notifications, newFilter);
   };
 
   const onRefresh = useCallback(() => {
     setRefreshing(true);
-    loadAlerts();
+    loadNotifications();
   }, [user]);
 
-  const handleAlertAction = async (alertId: string, action: 'acknowledge' | 'dismiss') => {
+  const handleNotificationAction = async (notificationId: string, action: 'markRead' | 'delete') => {
     try {
-      if (action === 'acknowledge') {
-        await firestoreAlertService.acknowledgeAlert(alertId);
+      if (action === 'markRead') {
+        await notificationService.markAsRead(notificationId);
       } else {
-        await firestoreAlertService.dismissAlert(alertId);
+        await notificationService.deleteNotification(notificationId);
       }
-      loadAlerts(); // Reload after action
-      Alert.alert('Success', `Alert ${action}d successfully`);
+      loadNotifications(); // Reload after action
+      Alert.alert('Success', `Notification ${action === 'markRead' ? 'marked as read' : 'deleted'} successfully`);
     } catch (error) {
-      console.error('Error handling alert action:', error);
-      Alert.alert('Error', `Failed to ${action} alert. Please try again.`);
+      console.error('Error handling notification action:', error);
+      Alert.alert('Error', `Failed to ${action} notification. Please try again.`);
     }
   };
 

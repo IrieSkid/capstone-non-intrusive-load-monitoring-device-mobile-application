@@ -21,6 +21,7 @@ const app = initializeApp(firebaseConfig);
 
 // Initialize Firebase services
 export const db = getFirestore(app);
+export const firestore = db; // Alias for compatibility
 
 // Initialize Auth with AsyncStorage persistence for React Native
 export const auth = initializeAuth(app, {

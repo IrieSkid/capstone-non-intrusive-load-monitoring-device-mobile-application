@@ -1,189 +1,206 @@
 /**
  * Notification Service
- * Handles push notifications setup and triggering
+ * Manages notifications (actual notification instances sent to users)
+ * Based on schema: notifications collection
  */
 
-import * as Notifications from 'expo-notifications';
-import * as Device from 'expo-device';
-import { Platform, Alert } from 'react-native';
-import Constants from 'expo-constants';
+import { firestore } from '@/config/firebase';
+import { 
+  collection, 
+  doc, 
+  setDoc,
+  getDoc,
+  getDocs, 
+  updateDoc,
+  query,
+  where,
+  orderBy,
+  limit,
+  Timestamp 
+} from 'firebase/firestore';
 
-// Configure notification handler
-Notifications.setNotificationHandler({
-  handleNotification: async () => ({
-    shouldShowAlert: true,
-    shouldPlaySound: true,
-    shouldSetBadge: true,
-  }),
-});
+export interface Notification {
+  id: string;
+  userId: string;
+  title: string;
+  message: string;
+  type: 'alert' | 'info' | 'warning' | 'error';
+  priority: 'low' | 'medium' | 'high' | 'critical';
+  isRead: boolean;
+  readAt?: Date;
+  expiresAt?: Date;
+  createdAt: Date;
+  // Optional metadata
+  deviceId?: string;
+  applianceId?: string;
+  ruleId?: string; // Reference to alertRule that triggered this
+}
 
 class NotificationService {
-  private pushToken: string | null = null;
+  private collectionName = 'notifications';
 
   /**
-   * Request notification permissions
+   * Create a new notification
    */
-  async requestPermissions(): Promise<boolean> {
-    if (!Device.isDevice) {
-      Alert.alert(
-        'Physical Device Required',
-        'Push notifications only work on physical devices, not emulators.'
-      );
-      return false;
-    }
-
-    const { status: existingStatus } = await Notifications.getPermissionsAsync();
-    let finalStatus = existingStatus;
-
-    if (existingStatus !== 'granted') {
-      const { status } = await Notifications.requestPermissionsAsync();
-      finalStatus = status;
-    }
-
-    if (finalStatus !== 'granted') {
-      Alert.alert(
-        'Permission Denied',
-        'Please enable notifications in your device settings to receive alerts.'
-      );
-      return false;
-    }
-
-    return true;
-  }
-
-  /**
-   * Get push notification token
-   */
-  async getPushToken(): Promise<string | null> {
-    if (this.pushToken) return this.pushToken;
-
+  async createNotification(notification: Omit<Notification, 'id'>): Promise<Notification> {
     try {
-      if (!Device.isDevice) {
-        console.log('Push notifications only work on physical devices');
-        return null;
-      }
-
-      const hasPermission = await this.requestPermissions();
-      if (!hasPermission) return null;
-
-      // Get the token
-      const token = (
-        await Notifications.getExpoPushTokenAsync({
-          projectId: Constants.expoConfig?.extra?.eas?.projectId,
-        })
-      ).data;
-
-      this.pushToken = token;
+      const notificationRef = doc(collection(firestore, this.collectionName));
       
-      // Configure Android channel
-      if (Platform.OS === 'android') {
-        await Notifications.setNotificationChannelAsync('default', {
-          name: 'default',
-          importance: Notifications.AndroidImportance.MAX,
-          vibrationPattern: [0, 250, 250, 250],
-          lightColor: '#2196F3',
-        });
-      }
+      const newNotification: Notification = {
+        ...notification,
+        id: notificationRef.id,
+      };
 
-      return token;
-    } catch (error) {
-      console.error('Error getting push token:', error);
-      return null;
-    }
-  }
-
-  /**
-   * Send local notification (for testing without server)
-   */
-  async sendLocalNotification(title: string, body: string, data?: any): Promise<void> {
-    try {
-      await Notifications.scheduleNotificationAsync({
-        content: {
-          title,
-          body,
-          data,
-          sound: true,
-          priority: Notifications.AndroidNotificationPriority.HIGH,
-        },
-        trigger: null, // Send immediately
+      await setDoc(notificationRef, {
+        ...newNotification,
+        createdAt: Timestamp.fromDate(notification.createdAt),
+        readAt: notification.readAt ? Timestamp.fromDate(notification.readAt) : null,
+        expiresAt: notification.expiresAt ? Timestamp.fromDate(notification.expiresAt) : null,
       });
-    } catch (error) {
-      console.error('Error sending local notification:', error);
-    }
-  }
 
-  /**
-   * Schedule notification
-   */
-  async scheduleNotification(
-    title: string,
-    body: string,
-    seconds: number,
-    data?: any
-  ): Promise<string> {
-    try {
-      const id = await Notifications.scheduleNotificationAsync({
-        content: {
-          title,
-          body,
-          data,
-          sound: true,
-        },
-        trigger: {
-          seconds,
-        },
-      });
-      return id;
+      return newNotification;
     } catch (error) {
-      console.error('Error scheduling notification:', error);
+      console.error('Error creating notification:', error);
       throw error;
     }
   }
 
   /**
-   * Cancel notification
+   * Get all notifications for user
    */
-  async cancelNotification(notificationId: string): Promise<void> {
-    await Notifications.cancelScheduledNotificationAsync(notificationId);
+  async getNotifications(userId: string, limitCount: number = 50): Promise<Notification[]> {
+    try {
+      const q = query(
+        collection(firestore, this.collectionName),
+        where('userId', '==', userId),
+        orderBy('createdAt', 'desc'),
+        limit(limitCount)
+      );
+
+      const snapshot = await getDocs(q);
+      return snapshot.docs.map(doc => {
+        const data = doc.data();
+        return {
+          ...data,
+          id: doc.id,
+          createdAt: data.createdAt?.toDate() || new Date(),
+          readAt: data.readAt?.toDate(),
+          expiresAt: data.expiresAt?.toDate(),
+        } as Notification;
+      });
+    } catch (error) {
+      console.error('Error getting notifications:', error);
+      throw error;
+    }
   }
 
   /**
-   * Cancel all notifications
+   * Get unread notification count
    */
-  async cancelAllNotifications(): Promise<void> {
-    await Notifications.cancelAllScheduledNotificationsAsync();
+  async getUnreadCount(userId: string): Promise<number> {
+    try {
+      const q = query(
+        collection(firestore, this.collectionName),
+        where('userId', '==', userId),
+        where('isRead', '==', false)
+      );
+
+      const snapshot = await getDocs(q);
+      return snapshot.size;
+    } catch (error) {
+      console.error('Error getting unread count:', error);
+      return 0;
+    }
   }
 
   /**
-   * Get badge count
+   * Mark notification as read
    */
-  async getBadgeCount(): Promise<number> {
-    return await Notifications.getBadgeCountAsync();
+  async markAsRead(notificationId: string): Promise<void> {
+    try {
+      const notificationRef = doc(firestore, this.collectionName, notificationId);
+      await updateDoc(notificationRef, {
+        isRead: true,
+        readAt: Timestamp.fromDate(new Date()),
+      });
+    } catch (error) {
+      console.error('Error marking notification as read:', error);
+      throw error;
+    }
   }
 
   /**
-   * Set badge count
+   * Mark all notifications as read for user
    */
-  async setBadgeCount(count: number): Promise<void> {
-    await Notifications.setBadgeCountAsync(count);
+  async markAllAsRead(userId: string): Promise<void> {
+    try {
+      const q = query(
+        collection(firestore, this.collectionName),
+        where('userId', '==', userId),
+        where('isRead', '==', false)
+      );
+
+      const snapshot = await getDocs(q);
+      const updates = snapshot.docs.map(doc => 
+        updateDoc(doc.ref, {
+          isRead: true,
+          readAt: Timestamp.fromDate(new Date()),
+        })
+      );
+
+      await Promise.all(updates);
+    } catch (error) {
+      console.error('Error marking all as read:', error);
+      throw error;
+    }
   }
 
   /**
-   * Add notification received listener
+   * Delete a notification
    */
-  addNotificationReceivedListener(
-    callback: (notification: Notifications.Notification) => void
-  ): Notifications.Subscription {
-    return Notifications.addNotificationReceivedListener(callback);
+  async deleteNotification(notificationId: string): Promise<void> {
+    try {
+      const notificationRef = doc(firestore, this.collectionName, notificationId);
+      await updateDoc(notificationRef, {
+        isRead: true,
+        readAt: Timestamp.fromDate(new Date()),
+      });
+    } catch (error) {
+      console.error('Error deleting notification:', error);
+      throw error;
+    }
   }
 
   /**
-   * Add notification response listener (when user taps notification)
+   * Get notifications by type
    */
-  addNotificationResponseListener(
-    callback: (response: Notifications.NotificationResponse) => void
-  ): Notifications.Subscription {
-    return Notifications.addNotificationResponseReceivedListener(callback);
+  async getNotificationsByType(
+    userId: string, 
+    type: 'alert' | 'info' | 'warning' | 'error'
+  ): Promise<Notification[]> {
+    try {
+      const q = query(
+        collection(firestore, this.collectionName),
+        where('userId', '==', userId),
+        where('type', '==', type),
+        orderBy('createdAt', 'desc')
+      );
+
+      const snapshot = await getDocs(q);
+      return snapshot.docs.map(doc => {
+        const data = doc.data();
+        return {
+          ...data,
+          id: doc.id,
+          createdAt: data.createdAt?.toDate() || new Date(),
+          readAt: data.readAt?.toDate(),
+          expiresAt: data.expiresAt?.toDate(),
+        } as Notification;
+      });
+    } catch (error) {
+      console.error('Error getting notifications by type:', error);
+      return [];
+    }
   }
 }
 

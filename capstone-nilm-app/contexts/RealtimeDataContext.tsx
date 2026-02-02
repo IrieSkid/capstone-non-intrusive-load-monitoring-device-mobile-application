@@ -8,6 +8,7 @@ import React, { createContext, useContext, useState, useEffect, ReactNode } from
 import { realtimeDataService, RealtimeReading, ApplianceStatus } from '@/services/realtimeDataService';
 import { deviceService } from '@/services/deviceService';
 import { firestoreApplianceService } from '@/services/firestoreApplianceService';
+import { alertRuleService } from '@/services/alertRuleService';
 import { useAuth } from '@/hooks/useAuth';
 
 interface RealtimeDataContextType {
@@ -60,6 +61,13 @@ export function RealtimeDataProvider({ children }: { children: ReactNode }) {
       // Use the first device
       const device = devices[0];
       setDeviceId(device.id);
+
+      // Create default alert rules if none exist
+      const existingRules = await alertRuleService.getUserRules(user.uid);
+      if (existingRules.length === 0) {
+        console.log('⚡ Creating default alert rules...');
+        await alertRuleService.createDefaultRules(user.uid, device.id);
+      }
 
       // Start monitoring with this device
       startMonitoring(device.id);
