@@ -48,7 +48,7 @@ export default function TabLayout() {
         name="explore"
         options={{
           title: 'Devices',
-          tabBarIcon: ({ color }) => <IconSymbol size={26} name="bolt.fill" color={color} />,
+          tabBarIcon: ({ color }) => <IconSymbol size={26} name="antenna.radiowaves.left.and.right" color={color} />,
         }}
       />
       <Tabs.Screen
