@@ -244,16 +244,18 @@ export default function ApplianceDetailsScreen() {
             <View style={styles.field}>
               <Text style={styles.fieldLabel}>Name</Text>
               {isEditing ? (
-                <TextInput
-                  style={styles.fieldInput}
-                  value={name}
-                  onChangeText={setName}
-                  placeholder="Appliance name"
-                  placeholderTextColor={colors.textSecondary}
-                  editable={true}
-                  autoCorrect={false}
-                  autoCapitalize="words"
-                />
+                <View>
+                  <TextInput
+                    style={styles.fieldInput}
+                    value={name}
+                    onChangeText={setName}
+                    placeholder="Appliance name"
+                    placeholderTextColor={colors.textSecondary}
+                    editable={true}
+                    autoCorrect={false}
+                    autoCapitalize="words"
+                  />
+                </View>
               ) : (
                 <Text style={styles.fieldValue}>{appliance.name}</Text>
               )}
@@ -267,17 +269,19 @@ export default function ApplianceDetailsScreen() {
             <View style={styles.field}>
               <Text style={styles.fieldLabel}>Port Number</Text>
               {isEditing ? (
-                <TextInput
-                  style={styles.fieldInput}
-                  value={portNumber}
-                  onChangeText={setPortNumber}
-                  placeholder="1-8"
-                  placeholderTextColor={colors.textSecondary}
-                  keyboardType="numeric"
-                  maxLength={1}
-                  editable={true}
-                  autoCorrect={false}
-                />
+                <View>
+                  <TextInput
+                    style={styles.fieldInput}
+                    value={portNumber}
+                    onChangeText={setPortNumber}
+                    placeholder="1-8"
+                    placeholderTextColor={colors.textSecondary}
+                    keyboardType="numeric"
+                    maxLength={1}
+                    editable={true}
+                    autoCorrect={false}
+                  />
+                </View>
               ) : (
                 <Text style={styles.fieldValue}>Port {appliance.portNumber}</Text>
               )}
@@ -286,16 +290,18 @@ export default function ApplianceDetailsScreen() {
             <View style={styles.field}>
               <Text style={styles.fieldLabel}>Rated Power</Text>
               {isEditing ? (
-                <TextInput
-                  style={styles.fieldInput}
-                  value={ratedPower}
-                  onChangeText={setRatedPower}
-                  placeholder="Watts"
-                  placeholderTextColor={colors.textSecondary}
-                  keyboardType="numeric"
-                  editable={true}
-                  autoCorrect={false}
-                />
+                <View>
+                  <TextInput
+                    style={styles.fieldInput}
+                    value={ratedPower}
+                    onChangeText={setRatedPower}
+                    placeholder="Watts"
+                    placeholderTextColor={colors.textSecondary}
+                    keyboardType="numeric"
+                    editable={true}
+                    autoCorrect={false}
+                  />
+                </View>
               ) : (
                 <Text style={styles.fieldValue}>{appliance.ratedPower} W</Text>
               )}
@@ -543,6 +549,7 @@ const createStyles = (colors: any) =>
       paddingVertical: 12,
       borderBottomWidth: 1,
       borderBottomColor: colors.divider,
+      minHeight: 60,
     },
     fieldLabel: {
       fontSize: 12,
@@ -563,10 +570,11 @@ const createStyles = (colors: any) =>
       backgroundColor: colors.background,
       padding: 12,
       paddingHorizontal: 12,
-      borderRadius: 6,
-      borderWidth: 1,
-      borderColor: colors.divider,
+      borderRadius: 8,
+      borderWidth: 2,
+      borderColor: colors.primary + '40',
       minHeight: 44,
+      marginTop: 4,
     },
     classificationDescription: {
       fontSize: 13,
