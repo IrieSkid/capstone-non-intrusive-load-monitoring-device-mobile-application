@@ -25,7 +25,7 @@ export interface Appliance {
   category: string;
   ratedPower: number;
   icon: string;
-  portNumber: number; // Hardware port (1-8)
+  portNumber?: number; // Hardware port (1-8) - optional for backward compatibility
   isActive: boolean;
   currentPower?: number;
   usageMinutes?: number;

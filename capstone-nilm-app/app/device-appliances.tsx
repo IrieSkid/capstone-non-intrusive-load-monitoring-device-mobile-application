@@ -169,7 +169,7 @@ export default function DeviceAppliancesScreen() {
                         <Text style={styles.applianceCategory}>{appliance.category}</Text>
                       <View style={styles.applianceMeta}>
                         <Text style={styles.applianceMetaText}>
-                          Port {appliance.portNumber} • Rated: {appliance.ratedPower}W
+                          Port {appliance.portNumber || 1} • Rated: {appliance.ratedPower}W
                         </Text>
                         {appliance.currentPower && (
                           <Text
@@ -214,7 +214,7 @@ export default function DeviceAppliancesScreen() {
                         <Text style={styles.applianceName}>{appliance.name}</Text>
                         <Text style={styles.applianceCategory}>{appliance.category}</Text>
                         <Text style={styles.applianceMetaText}>
-                          Port {appliance.portNumber} • Rated: {appliance.ratedPower}W
+                          Port {appliance.portNumber || 1} • Rated: {appliance.ratedPower}W
                         </Text>
                       </View>
 

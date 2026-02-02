@@ -63,8 +63,8 @@ export default function ApplianceDetailsScreen() {
         setAppliance(found);
         setName(found.name);
         setIcon(found.icon);
-        setRatedPower(found.ratedPower.toString());
-        setPortNumber(found.portNumber.toString());
+        setRatedPower(found.ratedPower?.toString() || '0');
+        setPortNumber(found.portNumber?.toString() || '1');
         setCategory(found.category);
       } else {
         Alert.alert('Error', 'Appliance not found');
@@ -286,7 +286,7 @@ export default function ApplianceDetailsScreen() {
                   />
                 </View>
               ) : (
-                <Text style={styles.fieldValue}>Port {appliance.portNumber}</Text>
+                <Text style={styles.fieldValue}>Port {appliance.portNumber || 1}</Text>
               )}
             </View>
 
