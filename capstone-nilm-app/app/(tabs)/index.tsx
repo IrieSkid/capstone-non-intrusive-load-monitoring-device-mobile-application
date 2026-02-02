@@ -1,13 +1,39 @@
+import React, { useEffect } from 'react';
 import { Image } from 'expo-image';
-import { Platform, StyleSheet } from 'react-native';
+import { Platform, StyleSheet, ActivityIndicator } from 'react-native';
+import { router } from 'expo-router';
 
 import { HelloWave } from '@/components/hello-wave';
 import ParallaxScrollView from '@/components/parallax-scroll-view';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Link } from 'expo-router';
+import { FirebaseTest } from '@/components/firebase-test';
+import { useAuth } from '@/hooks/useAuth';
 
 export default function HomeScreen() {
+  const { user, isLoading } = useAuth();
+
+  useEffect(() => {
+    // Redirect to login if not authenticated
+    if (!isLoading && !user) {
+      router.replace('/(auth)/login');
+    }
+  }, [isLoading, user]);
+
+  if (isLoading) {
+    return (
+      <ThemedView style={styles.loadingContainer}>
+        <ActivityIndicator size="large" />
+        <ThemedText style={styles.loadingText}>Loading...</ThemedText>
+      </ThemedView>
+    );
+  }
+
+  if (!user) {
+    return null; // Will redirect to login
+  }
+
   return (
     <ParallaxScrollView
       headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
@@ -18,9 +44,23 @@ export default function HomeScreen() {
         />
       }>
       <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Welcome!</ThemedText>
+        <ThemedText type="title">Welcome, {user.firstName}!</ThemedText>
         <HelloWave />
       </ThemedView>
+      
+      {/* Firebase Connection Test - Remove this after testing */}
+      <ThemedView style={styles.stepContainer}>
+        <ThemedText type="subtitle">🔥 Firebase Connection Test</ThemedText>
+        <FirebaseTest />
+      </ThemedView>
+
+      <ThemedView style={styles.stepContainer}>
+        <ThemedText type="subtitle">User Info</ThemedText>
+        <ThemedText>Email: {user.email}</ThemedText>
+        <ThemedText>Role: {user.role}</ThemedText>
+        <ThemedText>Status: {user.isActive ? 'Active' : 'Inactive'}</ThemedText>
+      </ThemedView>
+
       <ThemedView style={styles.stepContainer}>
         <ThemedText type="subtitle">Step 1: Try it</ThemedText>
         <ThemedText>
@@ -79,6 +119,14 @@ export default function HomeScreen() {
 }
 
 const styles = StyleSheet.create({
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loadingText: {
+    marginTop: 10,
+  },
   titleContainer: {
     flexDirection: 'row',
     alignItems: 'center',
