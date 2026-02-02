@@ -14,6 +14,7 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { router } from 'expo-router';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useAuth } from '@/hooks/useAuth';
 import { collection, getDocs, query, where } from 'firebase/firestore';
@@ -239,7 +240,11 @@ export function AdminDashboard() {
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Quick Actions</Text>
         
-        <TouchableOpacity style={styles.actionCard} activeOpacity={0.7}>
+        <TouchableOpacity 
+          style={styles.actionCard} 
+          activeOpacity={0.7}
+          onPress={() => router.push('/admin/users')}
+        >
           <View style={styles.actionIcon}>
             <Ionicons name="people-outline" size={24} color={colors.primary} />
           </View>
@@ -250,18 +255,29 @@ export function AdminDashboard() {
           <Ionicons name="chevron-forward" size={24} color={colors.textSecondary} />
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.actionCard} activeOpacity={0.7}>
+        <TouchableOpacity 
+          style={styles.actionCard} 
+          activeOpacity={0.7}
+          onPress={() => router.push('/admin/devices')}
+        >
           <View style={styles.actionIcon}>
             <Ionicons name="hardware-chip-outline" size={24} color={colors.primary} />
           </View>
           <View style={styles.actionContent}>
             <Text style={styles.actionTitle}>Manage Devices</Text>
-            <Text style={styles.actionSubtitle}>Configure system devices</Text>
+            <Text style={styles.actionSubtitle}>Configure and reassign devices</Text>
           </View>
           <Ionicons name="chevron-forward" size={24} color={colors.textSecondary} />
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.actionCard} activeOpacity={0.7}>
+        <TouchableOpacity 
+          style={styles.actionCard} 
+          activeOpacity={0.7}
+          onPress={() => {
+            // TODO: Navigate to system reports
+            alert('System Reports - Coming Soon');
+          }}
+        >
           <View style={styles.actionIcon}>
             <Ionicons name="stats-chart-outline" size={24} color={colors.primary} />
           </View>
@@ -272,7 +288,14 @@ export function AdminDashboard() {
           <Ionicons name="chevron-forward" size={24} color={colors.textSecondary} />
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.actionCard} activeOpacity={0.7}>
+        <TouchableOpacity 
+          style={styles.actionCard} 
+          activeOpacity={0.7}
+          onPress={() => {
+            // TODO: Navigate to system settings
+            alert('System Settings - Coming Soon');
+          }}
+        >
           <View style={styles.actionIcon}>
             <Ionicons name="settings-outline" size={24} color={colors.primary} />
           </View>
