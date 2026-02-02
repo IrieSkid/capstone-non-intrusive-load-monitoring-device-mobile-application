@@ -212,10 +212,17 @@ export async function getAllDevices(): Promise<AdminDeviceData[]> {
     for (const docSnap of snapshot.docs) {
       const deviceData = docSnap.data() as Device;
 
-      // Get owner information
-      const userRef = doc(db, 'users', deviceData.userId);
-      const userSnap = await getDoc(userRef);
-      const userData = userSnap.exists() ? userSnap.data() : null;
+      // Get owner information - handle missing userId
+      let userData = null;
+      if (deviceData.userId) {
+        try {
+          const userRef = doc(db, 'users', deviceData.userId);
+          const userSnap = await getDoc(userRef);
+          userData = userSnap.exists() ? userSnap.data() : null;
+        } catch (error) {
+          console.error(`Error getting user for device ${docSnap.id}:`, error);
+        }
+      }
 
       // Count appliances
       const appliancesRef = collection(db, 'appliances');
@@ -268,10 +275,17 @@ export async function getDeviceById(deviceId: string): Promise<AdminDeviceData |
 
     const deviceData = deviceSnap.data() as Device;
 
-    // Get owner information
-    const userRef = doc(db, 'users', deviceData.userId);
-    const userSnap = await getDoc(userRef);
-    const userData = userSnap.exists() ? userSnap.data() : null;
+    // Get owner information - handle missing userId
+    let userData = null;
+    if (deviceData.userId) {
+      try {
+        const userRef = doc(db, 'users', deviceData.userId);
+        const userSnap = await getDoc(userRef);
+        userData = userSnap.exists() ? userSnap.data() : null;
+      } catch (error) {
+        console.error(`Error getting user for device ${deviceId}:`, error);
+      }
+    }
 
     // Count appliances
     const appliancesRef = collection(db, 'appliances');
