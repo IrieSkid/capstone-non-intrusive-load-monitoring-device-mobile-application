@@ -70,20 +70,20 @@ class RealtimeDataService {
     const variation = basePower * 0.15;
     const power = basePower + (Math.random() - 0.5) * 2 * variation;
 
-    // Calculate other values based on power
-    const voltage = 220 + (Math.random() - 0.5) * 10; // 220V ± 5V
-    const current = power / voltage;
-    const powerFactor = 0.85 + Math.random() * 0.1; // 0.85-0.95
-    const frequency = 60 + (Math.random() - 0.5) * 0.2; // 60Hz ± 0.1Hz
+    // Calculate other values based on power (3 decimal places)
+    const voltage = parseFloat((220 + (Math.random() - 0.5) * 10).toFixed(3)); // 220V ± 5V
+    const current = parseFloat((power / voltage).toFixed(3));
+    const powerFactor = parseFloat((0.85 + Math.random() * 0.1).toFixed(3)); // 0.85-0.95
+    const frequency = parseFloat((60 + (Math.random() - 0.5) * 0.2).toFixed(3)); // 60Hz ± 0.1Hz
 
     return {
       timestamp: new Date(),
       voltage,
       current,
-      power,
+      power: parseFloat(power.toFixed(3)),
       powerFactor,
       frequency,
-      energy: this.totalEnergy,
+      energy: parseFloat(this.totalEnergy.toFixed(3)),
     };
   }
 
@@ -148,22 +148,22 @@ class RealtimeDataService {
     // Increment duration for appliances that are on
     this.appliances = this.appliances.map(appliance => {
       if (appliance.isOn) {
-        // Add slight power variation (±5%) for realism
-        const actualPower = appliance.power * (0.95 + Math.random() * 0.1);
+        // Add slight power variation (±5%) for realism (3 decimal places)
+        const actualPower = parseFloat((appliance.power * (0.95 + Math.random() * 0.1)).toFixed(3));
         
-        // Calculate current: I = P / (V * PF)
-        const current = actualPower / (deviceVoltage * appliance.powerFactor);
+        // Calculate current: I = P / (V * PF) (3 decimal places)
+        const current = parseFloat((actualPower / (deviceVoltage * appliance.powerFactor)).toFixed(3));
         
-        // Add slight voltage variation (±2V)
-        const voltage = deviceVoltage + (Math.random() - 0.5) * 4;
+        // Add slight voltage variation (±2V) (3 decimal places)
+        const voltage = parseFloat((deviceVoltage + (Math.random() - 0.5) * 4).toFixed(3));
         
-        // Add slight power factor variation (±0.02)
+        // Add slight power factor variation (±0.02) (3 decimal places)
         const basePF = this.getDefaultPowerFactor(appliance.category);
-        const powerFactor = Math.min(1.0, Math.max(0.5, basePF + (Math.random() - 0.5) * 0.04));
+        const powerFactor = parseFloat(Math.min(1.0, Math.max(0.5, basePF + (Math.random() - 0.5) * 0.04)).toFixed(3));
         
         return {
           ...appliance,
-          duration: appliance.duration + 0.05, // Add 3 seconds = 0.05 minutes
+          duration: parseFloat((appliance.duration + 0.05).toFixed(3)), // Add 3 seconds = 0.05 minutes
           power: actualPower,
           voltage,
           current,
