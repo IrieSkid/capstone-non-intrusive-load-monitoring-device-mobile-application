@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { StyleSheet, ActivityIndicator, ScrollView, RefreshControl, View, Text, StatusBar } from 'react-native';
 import { router } from 'expo-router';
-import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
@@ -18,7 +18,6 @@ import {
 
 export default function HomeScreen() {
   const { user, isLoading } = useAuth();
-  const insets = useSafeAreaInsets();
   const [refreshing, setRefreshing] = useState(false);
   const [mockDevice] = useState(generateMockDevice(user?.id || 'mock-user'));
   const [todayStats, setTodayStats] = useState(calculateTodayStats());
@@ -61,11 +60,11 @@ export default function HomeScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.safeArea} edges={['top']}>
+    <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
       <StatusBar barStyle="dark-content" backgroundColor={Colors.surface} />
       <ScrollView
         style={styles.container}
-        contentContainerStyle={[styles.scrollContent, { paddingBottom: insets.bottom + 80 }]}
+        contentContainerStyle={styles.scrollContent}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}>
         {/* Greeting Section */}
         <View style={styles.greeting}>
@@ -115,7 +114,7 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.background,
   },
   scrollContent: {
-    // paddingBottom is set dynamically in the component
+    paddingBottom: 100, // Extra space for tab bar
   },
   loadingContainer: {
     flex: 1,

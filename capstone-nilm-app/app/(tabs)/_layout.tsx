@@ -1,15 +1,12 @@
 import { Tabs } from 'expo-router';
 import React from 'react';
 import { Platform, StatusBar } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { HapticTab } from '@/components/haptic-tab';
 import { IconSymbol } from '@/components/ui/icon-symbol';
 import Colors from '@/constants/Colors';
 
 export default function TabLayout() {
-  const insets = useSafeAreaInsets();
-  
   // Set status bar to dark content (visible on light background)
   React.useEffect(() => {
     StatusBar.setBarStyle('dark-content');
@@ -29,11 +26,8 @@ export default function TabLayout() {
           backgroundColor: Colors.surface,
           borderTopColor: Colors.divider,
           borderTopWidth: 1,
-          paddingBottom: 8,
           paddingTop: 8,
-          height: 60,
-          position: 'absolute',
-          bottom: 0,
+          paddingBottom: Platform.OS === 'ios' ? 20 : 8,
         },
         tabBarLabelStyle: {
           fontSize: 10,
