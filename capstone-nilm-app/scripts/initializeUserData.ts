@@ -8,7 +8,8 @@
 import { deviceService } from '../services/deviceService';
 import { firestoreApplianceService } from '../services/firestoreApplianceService';
 import { electricityRateService } from '../services/electricityRateService';
-import { seedAlerts } from './seedAlerts';
+import { alertRuleService } from '../services/alertRuleService';
+import { seedNotifications } from './seedNotifications';
 
 async function initializeUserData(userId: string) {
   console.log(`\n🚀 Initializing data for user: ${userId}`);
@@ -31,16 +32,23 @@ async function initializeUserData(userId: string) {
     await electricityRateService.getCurrentRate(userId); // This creates default if none exists
     console.log('✅ Electricity rate configured');
 
-    // 4. Create sample alerts
-    console.log('\n🔔 Creating sample alerts...');
-    await seedAlerts(userId, device.id);
+    // 4. Create alert rules
+    console.log('\n⚡ Creating alert rules...');
+    const alertRules = await alertRuleService.createDefaultRules(userId, device.id);
+    console.log(`✅ Created ${alertRules.length} alert rules`);
+    alertRules.forEach(rule => console.log(`   - ${rule.alertType}: ${rule.thresholdValue} ${rule.description?.split(' ')[0] || ''}`));
+
+    // 5. Create sample notifications
+    console.log('\n🔔 Creating sample notifications...');
+    await seedNotifications(userId, device.id);
 
     console.log('\n' + '='.repeat(50));
     console.log('🎉 User data initialization complete!');
     console.log('\nSummary:');
     console.log(`- Device ID: ${device.id}`);
     console.log(`- Appliances: ${appliances.length}`);
-    console.log(`- Alerts: 6 sample alerts created`);
+    console.log(`- Alert Rules: ${alertRules.length}`);
+    console.log(`- Sample Notifications: 15 created`);
     console.log('\n✨ The user can now start monitoring their energy usage!');
 
   } catch (error) {
