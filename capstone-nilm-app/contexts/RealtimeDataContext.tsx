@@ -18,6 +18,7 @@ interface RealtimeDataContextType {
   deviceId: string | null;
   startMonitoring: () => void;
   stopMonitoring: () => void;
+  toggleAppliance: (applianceId: string) => Promise<void>;
 }
 
 const RealtimeDataContext = createContext<RealtimeDataContextType | undefined>(undefined);
@@ -73,7 +74,7 @@ export function RealtimeDataProvider({ children }: { children: ReactNode }) {
       }
 
       // Start monitoring with this device
-      startMonitoring(device.id);
+      startMonitoring(device.id, user.id);
     } catch (error) {
       console.error('Failed to initialize device:', error);
       // Fall back to mock mode without Firestore
@@ -81,7 +82,7 @@ export function RealtimeDataProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const startMonitoring = (deviceIdParam?: string) => {
+  const startMonitoring = async (deviceIdParam?: string, userIdParam?: string) => {
     // Subscribe to data updates
     const dataUnsubscribe = realtimeDataService.subscribeToData((reading) => {
       setCurrentReading(reading);
@@ -92,8 +93,8 @@ export function RealtimeDataProvider({ children }: { children: ReactNode }) {
       setAppliances(applianceList);
     });
 
-    // Start the service with device ID for Firestore persistence
-    realtimeDataService.start(deviceIdParam);
+    // Start the service with device ID and user ID for Firestore persistence
+    await realtimeDataService.start(deviceIdParam, userIdParam);
     setIsConnected(true);
 
     // Return cleanup function
@@ -108,6 +109,10 @@ export function RealtimeDataProvider({ children }: { children: ReactNode }) {
     setIsConnected(false);
   };
 
+  const toggleAppliance = async (applianceId: string) => {
+    await realtimeDataService.toggleAppliance(applianceId);
+  };
+
   return (
     <RealtimeDataContext.Provider
       value={{
@@ -117,6 +122,7 @@ export function RealtimeDataProvider({ children }: { children: ReactNode }) {
         deviceId,
         startMonitoring,
         stopMonitoring,
+        toggleAppliance,
       }}>
       {children}
     </RealtimeDataContext.Provider>

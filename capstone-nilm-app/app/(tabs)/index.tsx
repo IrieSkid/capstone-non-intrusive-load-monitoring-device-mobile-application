@@ -98,8 +98,9 @@ export default function HomeScreen() {
         {/* Info Note */}
         <View style={styles.infoNote}>
           <Text style={styles.infoText}>
-            ℹ️ This dashboard is displaying mock data for testing. When the hardware is ready, it
-            will show real-time readings from your IoT device.
+            ℹ️ This dashboard shows simulated readings based on your actual registered appliances. 
+            Toggle appliances on/off to see real-time power consumption changes. When hardware is 
+            connected, the system will automatically detect appliance states.
           </Text>
         </View>
       </ScrollView>

@@ -1,11 +1,11 @@
 /**
  * Real-Time Data Service
  * Simulates WebSocket connection with live data updates
- * Now with Firestore persistence! 🔥
+ * Now with Firestore persistence and real appliance data! 🔥
  */
 
-import { mockDevice, generateMockAppliances } from '@/utils/mockData';
 import { readingService } from './readingService';
+import { firestoreApplianceService, Appliance } from './firestoreApplianceService';
 
 export interface RealtimeReading {
   timestamp: Date;
@@ -39,11 +39,12 @@ class RealtimeDataService {
   private totalEnergy = 0; // Cumulative kWh
   private deviceId: string | null = null; // Current device ID
   private saveInterval = 0; // Counter for saving to Firestore
+  private userId: string | null = null; // User ID for loading appliances
 
   constructor() {
     // Initialize with base values
     this.currentReading = this.generateReading();
-    this.appliances = this.generateAppliances();
+    this.appliances = [];
   }
 
   /**
@@ -83,53 +84,88 @@ class RealtimeDataService {
   }
 
   /**
-   * Generate appliance statuses
+   * Load appliances from Firestore
    */
-  private generateAppliances(): ApplianceStatus[] {
-    const allAppliances = [
-      { id: '1', name: 'Air Conditioner', icon: '❄️', avgPower: 1500, probability: 0.6 },
-      { id: '2', name: 'Refrigerator', icon: '🧊', avgPower: 150, probability: 1.0 }, // Always on
-      { id: '3', name: 'Water Heater', icon: '🚿', avgPower: 3000, probability: 0.2 },
-      { id: '4', name: 'Washing Machine', icon: '🧺', avgPower: 500, probability: 0.1 },
-      { id: '5', name: 'TV', icon: '📺', avgPower: 100, probability: 0.5 },
-      { id: '6', name: 'Electric Fan', icon: '🌀', avgPower: 75, probability: 0.7 },
-      { id: '7', name: 'Computer', icon: '💻', avgPower: 300, probability: 0.4 },
-      { id: '8', name: 'Lights', icon: '💡', avgPower: 200, probability: 0.8 },
-    ];
+  async loadAppliances(userId: string, deviceId: string): Promise<void> {
+    try {
+      console.log('📱 Loading appliances from Firestore...');
+      const firestoreAppliances = await firestoreApplianceService.getDeviceAppliances(deviceId);
+      
+      // Convert to ApplianceStatus format
+      this.appliances = firestoreAppliances.map(app => ({
+        id: app.id,
+        name: app.name,
+        icon: app.icon,
+        isOn: app.isActive || false, // Use isActive from database
+        power: app.ratedPower,
+        duration: app.usageMinutes || 0,
+      }));
 
-    return allAppliances.map(appliance => ({
-      id: appliance.id,
-      name: appliance.name,
-      icon: appliance.icon,
-      isOn: Math.random() < appliance.probability,
-      power: appliance.avgPower + (Math.random() - 0.5) * appliance.avgPower * 0.1,
-      duration: Math.floor(Math.random() * 240), // 0-240 minutes
-    }));
+      console.log(`✅ Loaded ${this.appliances.length} appliances from database`);
+      
+      // Notify appliance callbacks
+      this.applianceCallbacks.forEach(callback => callback([...this.appliances]));
+    } catch (error) {
+      console.error('Failed to load appliances:', error);
+      // Fallback to empty array
+      this.appliances = [];
+    }
   }
 
   /**
-   * Update appliance states randomly
+   * Update appliance durations (increment usage time)
    */
   private updateAppliances(): void {
-    // 10% chance each appliance changes state
+    // Increment duration for appliances that are on
     this.appliances = this.appliances.map(appliance => {
-      if (Math.random() < 0.1) {
-        // Toggle state
-        const newIsOn = !appliance.isOn;
+      if (appliance.isOn) {
         return {
           ...appliance,
-          isOn: newIsOn,
-          duration: newIsOn ? 0 : appliance.duration,
+          duration: appliance.duration + 0.05, // Add 3 seconds = 0.05 minutes
+          // Add slight power variation (±5%) for realism
+          power: appliance.power * (0.95 + Math.random() * 0.1),
         };
       }
-      // Increment duration if on
-      return {
-        ...appliance,
-        duration: appliance.isOn ? appliance.duration + 1 : appliance.duration,
-      };
+      return appliance;
     });
 
     // Notify appliance callbacks
+    this.applianceCallbacks.forEach(callback => callback([...this.appliances]));
+  }
+
+  /**
+   * Toggle an appliance on/off
+   */
+  async toggleAppliance(applianceId: string): Promise<void> {
+    const appliance = this.appliances.find(a => a.id === applianceId);
+    if (!appliance) return;
+
+    const newIsOn = !appliance.isOn;
+    
+    // Update local state
+    this.appliances = this.appliances.map(a => {
+      if (a.id === applianceId) {
+        return {
+          ...a,
+          isOn: newIsOn,
+          duration: newIsOn ? 0 : a.duration, // Reset duration when turned on
+        };
+      }
+      return a;
+    });
+
+    // Update in Firestore
+    try {
+      await firestoreApplianceService.updateAppliance(applianceId, {
+        isActive: newIsOn,
+        currentPower: newIsOn ? appliance.power : 0,
+      });
+      console.log(`🔄 Toggled ${appliance.name}: ${newIsOn ? 'ON' : 'OFF'}`);
+    } catch (error) {
+      console.error('Failed to update appliance in Firestore:', error);
+    }
+
+    // Notify callbacks
     this.applianceCallbacks.forEach(callback => callback([...this.appliances]));
   }
 
@@ -145,11 +181,18 @@ class RealtimeDataService {
   /**
    * Start streaming data
    */
-  start(deviceId?: string): void {
+  async start(deviceId?: string, userId?: string): Promise<void> {
     if (this.interval) return; // Already running
 
     this.isConnected = true;
     this.deviceId = deviceId || null;
+    this.userId = userId || null;
+    
+    // Load appliances if we have deviceId and userId
+    if (deviceId && userId) {
+      await this.loadAppliances(userId, deviceId);
+    }
+    
     console.log('🔌 Real-time data service started', deviceId ? `for device ${deviceId}` : '');
 
     // Update every 3 seconds
@@ -168,10 +211,8 @@ class RealtimeDataService {
       // Notify data callbacks
       this.dataCallbacks.forEach(callback => callback({ ...this.currentReading }));
 
-      // Update appliances periodically (every 5 cycles = 15 seconds)
-      if (Math.random() < 0.2) {
-        this.updateAppliances();
-      }
+      // Update appliances every cycle (update durations)
+      this.updateAppliances();
 
       // Save to Firestore every 10 cycles (30 seconds)
       this.saveInterval++;

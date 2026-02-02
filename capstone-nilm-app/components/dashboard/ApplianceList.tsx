@@ -1,56 +1,102 @@
 /**
  * Appliance List Component
- * Shows active appliances with power consumption (Real-Time)
+ * Shows all appliances with toggle controls for simulation (Real-Time)
  */
 
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Switch } from 'react-native';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useRealtimeData } from '@/contexts/RealtimeDataContext';
 
 export function ApplianceList() {
   const { colors } = useTheme();
-  const { appliances } = useRealtimeData();
+  const { appliances, toggleAppliance } = useRealtimeData();
   const styles = createStyles(colors);
 
-  // Filter to show only appliances that are ON
+  // Show all appliances for simulation control
   const activeAppliances = appliances.filter(a => a.isOn);
+  const inactiveAppliances = appliances.filter(a => !a.isOn);
 
   // Format duration
   const formatDuration = (minutes: number): string => {
-    if (minutes < 60) return `${minutes}m`;
+    if (minutes < 1) return '< 1m';
+    if (minutes < 60) return `${Math.floor(minutes)}m`;
     const hours = Math.floor(minutes / 60);
-    const mins = minutes % 60;
+    const mins = Math.floor(minutes % 60);
     return mins > 0 ? `${hours}h ${mins}m` : `${hours}h`;
   };
+
+  const handleToggle = async (applianceId: string) => {
+    await toggleAppliance(applianceId);
+  };
+
+  const renderAppliance = (appliance: any) => (
+    <View key={appliance.id} style={styles.applianceItem}>
+      <View style={[
+        styles.applianceIcon,
+        { backgroundColor: appliance.isOn ? colors.success + '20' : colors.divider }
+      ]}>
+        <Text style={styles.iconText}>{appliance.icon}</Text>
+      </View>
+
+      <View style={styles.applianceInfo}>
+        <Text style={styles.applianceName}>{appliance.name}</Text>
+        <Text style={styles.applianceStatus}>
+          {appliance.isOn ? (
+            <>
+              <Text style={{ color: colors.success, fontWeight: '600' }}>ON</Text> • {formatDuration(appliance.duration)} • {appliance.power.toFixed(0)}W
+            </>
+          ) : (
+            <Text style={{ color: colors.textSecondary }}>OFF</Text>
+          )}
+        </Text>
+      </View>
+
+      <Switch
+        value={appliance.isOn}
+        onValueChange={() => handleToggle(appliance.id)}
+        trackColor={{ true: colors.success, false: colors.divider }}
+        thumbColor={appliance.isOn ? '#fff' : '#f4f3f4'}
+      />
+    </View>
+  );
 
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.title}>Active Appliances ({activeAppliances.length})</Text>
+        <Text style={styles.title}>
+          Appliance Simulation ({activeAppliances.length}/{appliances.length} ON)
+        </Text>
       </View>
 
-      {activeAppliances.length === 0 ? (
+      <View style={styles.sectionNote}>
+        <Text style={styles.sectionNoteText}>
+          🎮 Toggle appliances to simulate real-time power consumption
+        </Text>
+      </View>
+
+      {appliances.length === 0 ? (
         <View style={styles.emptyState}>
-          <Text style={styles.emptyText}>No appliances currently active</Text>
+          <Text style={styles.emptyText}>No appliances found. Add appliances from Devices tab.</Text>
         </View>
       ) : (
-        activeAppliances.map((appliance) => (
-          <View key={appliance.id} style={styles.applianceItem}>
-            <View style={styles.applianceIcon}>
-              <Text style={styles.iconText}>{appliance.icon}</Text>
-            </View>
+        <>
+          {/* Active Appliances */}
+          {activeAppliances.length > 0 && (
+            <>
+              <Text style={styles.sectionLabel}>ACTIVE ({activeAppliances.length})</Text>
+              {activeAppliances.map(renderAppliance)}
+            </>
+          )}
 
-            <View style={styles.applianceInfo}>
-              <Text style={styles.applianceName}>{appliance.name}</Text>
-              <Text style={styles.applianceStatus}>
-                {appliance.isOn ? 'ON' : 'OFF'} • {formatDuration(appliance.duration)}
-              </Text>
-            </View>
-
-            <Text style={styles.appliancePower}>{appliance.power.toFixed(0)} W</Text>
-          </View>
-        ))
+          {/* Inactive Appliances */}
+          {inactiveAppliances.length > 0 && (
+            <>
+              <Text style={[styles.sectionLabel, { marginTop: 16 }]}>INACTIVE ({inactiveAppliances.length})</Text>
+              {inactiveAppliances.map(renderAppliance)}
+            </>
+          )}
+        </>
       )}
     </View>
   );
@@ -134,5 +180,25 @@ const createStyles = (colors: any) => StyleSheet.create({
   emptyText: {
     fontSize: 14,
     color: colors.textSecondary,
+  },
+  sectionLabel: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: colors.textSecondary,
+    marginBottom: 8,
+    letterSpacing: 0.5,
+  },
+  sectionNote: {
+    backgroundColor: colors.primary + '10',
+    borderRadius: 8,
+    padding: 12,
+    marginBottom: 16,
+    borderLeftWidth: 3,
+    borderLeftColor: colors.primary,
+  },
+  sectionNoteText: {
+    fontSize: 13,
+    color: colors.textPrimary,
+    lineHeight: 18,
   },
 });
