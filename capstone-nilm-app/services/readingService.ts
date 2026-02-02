@@ -8,6 +8,7 @@ import {
   collection, 
   doc, 
   setDoc, 
+  updateDoc,
   query,
   where,
   orderBy,
@@ -57,6 +58,17 @@ class ReadingService {
         // Per-appliance readings
         applianceReadings,
       });
+
+      // Update device lastSeen timestamp for online status tracking
+      try {
+        const deviceRef = doc(firestore, 'devices', deviceId);
+        await updateDoc(deviceRef, {
+          lastSeen: Timestamp.now(),
+        });
+      } catch (error) {
+        // Device might not exist yet, that's okay
+        console.log('Could not update device lastSeen:', error);
+      }
     } catch (error) {
       console.error('Error saving reading:', error);
       // Don't throw - we don't want to break the app if Firestore fails

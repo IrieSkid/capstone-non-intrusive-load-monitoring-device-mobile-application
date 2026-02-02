@@ -222,27 +222,15 @@ export async function getAllDevices(): Promise<AdminDeviceData[]> {
       const applianceQuery = query(appliancesRef, where('deviceId', '==', docSnap.id));
       const applianceSnapshot = await getDocs(applianceQuery);
 
-      // Get latest reading to determine online status
-      const readingsRef = collection(db, 'realTimeReadings');
-      const readingQuery = query(
-        readingsRef,
-        where('deviceId', '==', docSnap.id),
-        orderBy('timestamp', 'desc')
-      );
-      const readingSnapshot = await getDocs(readingQuery);
-      
+      // Check device online status using lastSeen field from device document
+      // This avoids complex Firestore queries and indexes
       let lastReading: Date | undefined;
       let isOnline = false;
 
-      if (!readingSnapshot.empty) {
-        const latestReading = readingSnapshot.docs[0].data();
-        lastReading = latestReading.timestamp?.toDate();
-        
-        // Device is online if last reading is within 2 minutes
-        if (lastReading) {
-          const timeDiff = Date.now() - lastReading.getTime();
-          isOnline = timeDiff < 2 * 60 * 1000; // 2 minutes
-        }
+      if (deviceData.lastSeen) {
+        lastReading = deviceData.lastSeen.toDate();
+        const timeDiff = Date.now() - lastReading.getTime();
+        isOnline = timeDiff < 2 * 60 * 1000; // Device is online if seen within 2 minutes
       }
 
       devices.push({
@@ -290,26 +278,14 @@ export async function getDeviceById(deviceId: string): Promise<AdminDeviceData |
     const applianceQuery = query(appliancesRef, where('deviceId', '==', deviceId));
     const applianceSnapshot = await getDocs(applianceQuery);
 
-    // Get latest reading
-    const readingsRef = collection(db, 'realTimeReadings');
-    const readingQuery = query(
-      readingsRef,
-      where('deviceId', '==', deviceId),
-      orderBy('timestamp', 'desc')
-    );
-    const readingSnapshot = await getDocs(readingQuery);
-    
+    // Check device online status using lastSeen field
     let lastReading: Date | undefined;
     let isOnline = false;
 
-    if (!readingSnapshot.empty) {
-      const latestReading = readingSnapshot.docs[0].data();
-      lastReading = latestReading.timestamp?.toDate();
-      
-      if (lastReading) {
-        const timeDiff = Date.now() - lastReading.getTime();
-        isOnline = timeDiff < 2 * 60 * 1000;
-      }
+    if (deviceData.lastSeen) {
+      lastReading = deviceData.lastSeen.toDate();
+      const timeDiff = Date.now() - lastReading.getTime();
+      isOnline = timeDiff < 2 * 60 * 1000;
     }
 
     return {
