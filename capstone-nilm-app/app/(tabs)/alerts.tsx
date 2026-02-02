@@ -13,11 +13,12 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   RefreshControl,
+  Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useAuth } from '@/hooks/useAuth';
-import { alertService } from '@/services/alertService';
+import { firestoreAlertService } from '@/services/firestoreAlertService';
 import { Alert as AlertType } from '@/types/alert';
 import { getAlertIcon, getAlertColor, getStatusColor, getTimeAgo } from '@/utils/mockAlertData';
 
@@ -40,11 +41,12 @@ export default function AlertsScreen() {
     
     try {
       setIsLoading(true);
-      const data = await alertService.getAlerts(user.uid);
+      const data = await firestoreAlertService.getAlerts(user.uid);
       setAlerts(data);
       filterAlerts(data, filter);
     } catch (error) {
       console.error('Error loading alerts:', error);
+      Alert.alert('Error', 'Failed to load alerts. Please try again.');
     } finally {
       setIsLoading(false);
       setRefreshing(false);
@@ -76,13 +78,15 @@ export default function AlertsScreen() {
   const handleAlertAction = async (alertId: string, action: 'acknowledge' | 'dismiss') => {
     try {
       if (action === 'acknowledge') {
-        await alertService.acknowledgeAlert(alertId);
+        await firestoreAlertService.acknowledgeAlert(alertId);
       } else {
-        await alertService.dismissAlert(alertId);
+        await firestoreAlertService.dismissAlert(alertId);
       }
       loadAlerts(); // Reload after action
+      Alert.alert('Success', `Alert ${action}d successfully`);
     } catch (error) {
       console.error('Error handling alert action:', error);
+      Alert.alert('Error', `Failed to ${action} alert. Please try again.`);
     }
   };
 

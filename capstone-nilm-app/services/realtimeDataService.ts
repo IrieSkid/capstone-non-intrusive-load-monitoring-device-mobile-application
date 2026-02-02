@@ -1,9 +1,11 @@
 /**
  * Real-Time Data Service
  * Simulates WebSocket connection with live data updates
+ * Now with Firestore persistence! 🔥
  */
 
 import { mockDevice, generateMockAppliances } from '@/utils/mockData';
+import { readingService } from './readingService';
 
 export interface RealtimeReading {
   timestamp: Date;
@@ -35,6 +37,8 @@ class RealtimeDataService {
   private currentReading: RealtimeReading;
   private appliances: ApplianceStatus[] = [];
   private totalEnergy = 0; // Cumulative kWh
+  private deviceId: string | null = null; // Current device ID
+  private saveInterval = 0; // Counter for saving to Firestore
 
   constructor() {
     // Initialize with base values
@@ -141,11 +145,12 @@ class RealtimeDataService {
   /**
    * Start streaming data
    */
-  start(): void {
+  start(deviceId?: string): void {
     if (this.interval) return; // Already running
 
     this.isConnected = true;
-    console.log('🔌 Real-time data service started');
+    this.deviceId = deviceId || null;
+    console.log('🔌 Real-time data service started', deviceId ? `for device ${deviceId}` : '');
 
     // Update every 3 seconds
     this.interval = setInterval(() => {
@@ -167,7 +172,29 @@ class RealtimeDataService {
       if (Math.random() < 0.2) {
         this.updateAppliances();
       }
+
+      // Save to Firestore every 10 cycles (30 seconds)
+      this.saveInterval++;
+      if (this.saveInterval >= 10 && this.deviceId) {
+        this.saveToFirestore();
+        this.saveInterval = 0;
+      }
     }, 3000); // Every 3 seconds
+  }
+
+  /**
+   * Save current reading to Firestore
+   */
+  private async saveToFirestore(): Promise<void> {
+    if (!this.deviceId) return;
+
+    try {
+      await readingService.saveReading(this.deviceId, this.currentReading);
+      console.log('💾 Saved reading to Firestore');
+    } catch (error) {
+      console.error('Failed to save reading:', error);
+      // Don't throw - we don't want to break the simulation
+    }
   }
 
   /**
