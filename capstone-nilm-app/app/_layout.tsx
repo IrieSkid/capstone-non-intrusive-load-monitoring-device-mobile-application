@@ -7,6 +7,7 @@ import React from 'react';
 import { AuthProvider } from '@/contexts/AuthContext';
 import { ThemeProvider, useTheme } from '@/contexts/ThemeContext';
 import { RealtimeDataProvider } from '@/contexts/RealtimeDataContext';
+import { RBACProvider } from '@/contexts/RBACContext';
 
 export const unstable_settings = {
   anchor: '(tabs)',
@@ -16,9 +17,11 @@ export default function RootLayout() {
   return (
     <ThemeProvider>
       <AuthProvider>
-        <RealtimeDataProvider>
-          <RootLayoutContent />
-        </RealtimeDataProvider>
+        <RBACProvider>
+          <RealtimeDataProvider>
+            <RootLayoutContent />
+          </RealtimeDataProvider>
+        </RBACProvider>
       </AuthProvider>
     </ThemeProvider>
   );
