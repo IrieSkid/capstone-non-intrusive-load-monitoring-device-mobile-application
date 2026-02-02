@@ -1,11 +1,10 @@
 /**
  * Appliance Breakdown Component
- * Shows consumption by appliance with pie chart
+ * Shows consumption by appliance with visual breakdown
  */
 
 import React from 'react';
-import { View, Text, StyleSheet, Dimensions } from 'react-native';
-import { VictoryPie } from 'victory-native';
+import { View, Text, StyleSheet } from 'react-native';
 import { useTheme } from '@/contexts/ThemeContext';
 import { ApplianceConsumption } from '@/types/report';
 
@@ -14,11 +13,10 @@ interface ApplianceBreakdownProps {
 }
 
 export function ApplianceBreakdown({ appliances }: ApplianceBreakdownProps) {
-  const { colors, isDark } = useTheme();
+  const { colors } = useTheme();
   const styles = createStyles(colors);
-  const screenWidth = Dimensions.get('window').width;
 
-  // Colors for pie chart (contrasting colors)
+  // Colors for visualization
   const chartColors = [
     '#2196F3', // Blue
     '#FF9800', // Orange
@@ -30,52 +28,43 @@ export function ApplianceBreakdown({ appliances }: ApplianceBreakdownProps) {
     '#795548', // Brown
   ];
 
-  // Prepare pie chart data (top 5 appliances)
+  // Top appliances for pie-style visualization
   const topAppliances = appliances.slice(0, 5);
-  const pieData = topAppliances.map((appliance, index) => ({
-    x: appliance.name,
-    y: appliance.totalKwh,
-    label: `${appliance.percentage}%`,
-  }));
+  const totalKwh = appliances.reduce((sum, a) => sum + a.totalKwh, 0);
 
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Appliance Breakdown</Text>
 
-      {/* Pie Chart */}
+      {/* Horizontal Bar Chart */}
       <View style={styles.chartContainer}>
-        <VictoryPie
-          data={pieData}
-          width={screenWidth - 48}
-          height={220}
-          colorScale={chartColors}
-          style={{
-            labels: { 
-              fill: isDark ? '#FFFFFF' : '#000000',
-              fontSize: 12,
-              fontWeight: 'bold',
-            },
-          }}
-          labelRadius={({ innerRadius }) => (innerRadius as number) + 30}
-          innerRadius={0}
-          padAngle={2}
-        />
-      </View>
-
-      {/* Legend */}
-      <View style={styles.legendContainer}>
         {topAppliances.map((appliance, index) => (
-          <View key={appliance.applianceId} style={styles.legendItem}>
-            <View style={[styles.legendDot, { backgroundColor: chartColors[index] }]} />
-            <Text style={styles.legendText}>
-              {appliance.icon} {appliance.name}
-            </Text>
+          <View key={appliance.applianceId} style={styles.chartRow}>
+            <View style={styles.chartLabel}>
+              <Text style={styles.applianceIconSmall}>{appliance.icon}</Text>
+              <Text style={styles.chartLabelText} numberOfLines={1}>
+                {appliance.name}
+              </Text>
+            </View>
+            <View style={styles.chartBarContainer}>
+              <View
+                style={[
+                  styles.chartBar,
+                  {
+                    width: `${appliance.percentage}%`,
+                    backgroundColor: chartColors[index],
+                  },
+                ]}
+              />
+              <Text style={styles.chartPercentage}>{appliance.percentage}%</Text>
+            </View>
           </View>
         ))}
       </View>
 
       {/* Detailed List */}
       <View style={styles.listContainer}>
+        <Text style={styles.sectionTitle}>All Appliances</Text>
         {appliances.map((appliance, index) => (
           <View key={appliance.applianceId} style={styles.applianceItem}>
             <View style={styles.applianceHeader}>
@@ -143,32 +132,54 @@ const createStyles = (colors: any) =>
       marginBottom: 16,
     },
     chartContainer: {
-      alignItems: 'center',
-      marginBottom: 16,
-    },
-    legendContainer: {
-      flexDirection: 'row',
-      flexWrap: 'wrap',
-      justifyContent: 'center',
       gap: 12,
-      marginBottom: 16,
+      marginBottom: 24,
       paddingBottom: 16,
       borderBottomWidth: 1,
       borderBottomColor: colors.divider,
     },
-    legendItem: {
+    chartRow: {
       flexDirection: 'row',
       alignItems: 'center',
-      gap: 6,
+      gap: 12,
     },
-    legendDot: {
-      width: 12,
-      height: 12,
-      borderRadius: 6,
+    chartLabel: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      width: 120,
+      gap: 8,
     },
-    legendText: {
-      fontSize: 11,
-      color: colors.textSecondary,
+    applianceIconSmall: {
+      fontSize: 20,
+    },
+    chartLabelText: {
+      fontSize: 12,
+      color: colors.textPrimary,
+      fontWeight: '600',
+      flex: 1,
+    },
+    chartBarContainer: {
+      flex: 1,
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
+    },
+    chartBar: {
+      height: 24,
+      borderRadius: 4,
+      minWidth: 20,
+    },
+    chartPercentage: {
+      fontSize: 12,
+      fontWeight: '700',
+      color: colors.textPrimary,
+      width: 40,
+    },
+    sectionTitle: {
+      fontSize: 14,
+      fontWeight: '600',
+      color: colors.textPrimary,
+      marginBottom: 12,
     },
     listContainer: {
       gap: 16,

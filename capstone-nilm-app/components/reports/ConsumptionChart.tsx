@@ -1,11 +1,10 @@
 /**
  * Consumption Chart Component
- * Line chart showing consumption over time
+ * Simple bar chart showing consumption over time
  */
 
 import React from 'react';
-import { View, Text, StyleSheet, Dimensions } from 'react-native';
-import { VictoryLine, VictoryChart, VictoryAxis, VictoryTheme } from 'victory-native';
+import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import { useTheme } from '@/contexts/ThemeContext';
 import { ConsumptionDataPoint } from '@/types/report';
 
@@ -16,57 +15,69 @@ interface ConsumptionChartProps {
 }
 
 export function ConsumptionChartComponent({ title, data, unit = 'kWh' }: ConsumptionChartProps) {
-  const { colors, isDark } = useTheme();
+  const { colors } = useTheme();
   const styles = createStyles(colors);
-  const screenWidth = Dimensions.get('window').width;
 
-  // Prepare chart data for Victory
-  const chartData = data.map((d, index) => ({
-    x: index,
-    y: d.value,
-    label: d.label,
-  }));
+  // Find max value for scaling
+  const maxValue = Math.max(...data.map(d => d.value));
+
+  // Sample data for display (show every nth item if too many)
+  const displayData = data.length > 24 
+    ? data.filter((_, index) => index % Math.ceil(data.length / 12) === 0)
+    : data;
 
   return (
     <View style={styles.container}>
       <Text style={styles.title}>{title}</Text>
       
-      <VictoryChart
-        width={screenWidth - 48}
-        height={220}
-        theme={VictoryTheme.material}
-        padding={{ top: 20, bottom: 40, left: 50, right: 20 }}>
-        
-        <VictoryAxis
-          style={{
-            axis: { stroke: colors.divider },
-            tickLabels: { fill: colors.textSecondary, fontSize: 10 },
-            grid: { stroke: 'transparent' },
-          }}
-          tickValues={data.map((_, i) => i)}
-          tickFormat={(t) => data[t]?.label || ''}
-        />
-        
-        <VictoryAxis
-          dependentAxis
-          style={{
-            axis: { stroke: colors.divider },
-            tickLabels: { fill: colors.textSecondary, fontSize: 10 },
-            grid: { stroke: colors.divider, strokeDasharray: '4,4' },
-          }}
-        />
-        
-        <VictoryLine
-          data={chartData}
-          style={{
-            data: { 
-              stroke: colors.primary,
-              strokeWidth: 3,
-            },
-          }}
-          interpolation="natural"
-        />
-      </VictoryChart>
+      <View style={styles.statsRow}>
+        <View style={styles.statItem}>
+          <Text style={styles.statLabel}>Total</Text>
+          <Text style={styles.statValue}>
+            {data.reduce((sum, d) => sum + d.value, 0).toFixed(1)} {unit}
+          </Text>
+        </View>
+        <View style={styles.statItem}>
+          <Text style={styles.statLabel}>Average</Text>
+          <Text style={styles.statValue}>
+            {(data.reduce((sum, d) => sum + d.value, 0) / data.length).toFixed(1)} {unit}
+          </Text>
+        </View>
+        <View style={styles.statItem}>
+          <Text style={styles.statLabel}>Peak</Text>
+          <Text style={styles.statValue}>
+            {maxValue.toFixed(1)} {unit}
+          </Text>
+        </View>
+      </View>
+
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.chartScroll}>
+        <View style={styles.chartContainer}>
+          {displayData.map((item, index) => {
+            const barHeight = (item.value / maxValue) * 150; // Max height 150px
+            
+            return (
+              <View key={index} style={styles.barContainer}>
+                <View style={styles.barWrapper}>
+                  <Text style={styles.barValue}>{item.value.toFixed(1)}</Text>
+                  <View
+                    style={[
+                      styles.bar,
+                      {
+                        height: barHeight,
+                        backgroundColor: colors.primary,
+                      },
+                    ]}
+                  />
+                </View>
+                <Text style={styles.barLabel} numberOfLines={1}>
+                  {item.label}
+                </Text>
+              </View>
+            );
+          })}
+        </View>
+      </ScrollView>
 
       <View style={styles.legend}>
         <View style={styles.legendItem}>
@@ -92,7 +103,69 @@ const createStyles = (colors: any) =>
       fontSize: 16,
       fontWeight: '600',
       color: colors.textPrimary,
+      marginBottom: 12,
+    },
+    statsRow: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      marginBottom: 16,
+      gap: 8,
+    },
+    statItem: {
+      flex: 1,
+      backgroundColor: colors.background,
+      padding: 12,
+      borderRadius: 8,
+      alignItems: 'center',
+    },
+    statLabel: {
+      fontSize: 11,
+      color: colors.textSecondary,
+      marginBottom: 4,
+    },
+    statValue: {
+      fontSize: 14,
+      fontWeight: '700',
+      color: colors.primary,
+    },
+    chartScroll: {
+      marginBottom: 12,
+    },
+    chartContainer: {
+      flexDirection: 'row',
+      alignItems: 'flex-end',
+      paddingHorizontal: 8,
+      paddingVertical: 16,
+      minHeight: 200,
+      gap: 8,
+    },
+    barContainer: {
+      alignItems: 'center',
+      minWidth: 50,
+    },
+    barWrapper: {
+      alignItems: 'center',
+      justifyContent: 'flex-end',
+      height: 170,
       marginBottom: 8,
+    },
+    barValue: {
+      fontSize: 10,
+      color: colors.textSecondary,
+      marginBottom: 4,
+      fontWeight: '600',
+    },
+    bar: {
+      width: 40,
+      borderTopLeftRadius: 4,
+      borderTopRightRadius: 4,
+      minHeight: 2,
+    },
+    barLabel: {
+      fontSize: 10,
+      color: colors.textSecondary,
+      textAlign: 'center',
+      width: 50,
     },
     legend: {
       flexDirection: 'row',
