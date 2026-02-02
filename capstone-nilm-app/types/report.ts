@@ -60,11 +60,17 @@ export interface ApplianceConsumption {
   applianceId: string;
   name: string;
   icon: string;
+  category: string;
   totalKwh: number;
   totalCost: number;
   percentage: number; // percentage of total consumption
   averageHoursPerDay: number;
   estimatedMonthlyCost: number;
+  // Electrical Parameters
+  avgPower?: number;        // Average power (W)
+  avgVoltage?: number;      // Average voltage (V)
+  avgCurrent?: number;      // Average current (A)
+  avgPowerFactor?: number;  // Average power factor (0-1)
 }
 
 export interface CostAnalysis {

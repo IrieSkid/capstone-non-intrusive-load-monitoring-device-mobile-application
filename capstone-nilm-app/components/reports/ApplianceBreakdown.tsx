@@ -75,6 +75,9 @@ export function ApplianceBreakdown({ appliances }: ApplianceBreakdownProps) {
                   <Text style={styles.applianceUsage}>
                     {appliance.averageHoursPerDay}h/day · {appliance.percentage}% of total
                   </Text>
+                  <Text style={styles.applianceElectrical}>
+                    {appliance.avgPower?.toFixed(0) || 0}W · {appliance.avgVoltage?.toFixed(0) || 220}V · {appliance.avgCurrent?.toFixed(2) || 0}A · PF: {appliance.avgPowerFactor?.toFixed(2) || 0.90}
+                  </Text>
                 </View>
               </View>
               
@@ -216,6 +219,12 @@ const createStyles = (colors: any) =>
     applianceUsage: {
       fontSize: 11,
       color: colors.textSecondary,
+    },
+    applianceElectrical: {
+      fontSize: 10,
+      color: colors.primary,
+      marginTop: 2,
+      fontWeight: '500',
     },
     applianceConsumption: {
       alignItems: 'flex-end',

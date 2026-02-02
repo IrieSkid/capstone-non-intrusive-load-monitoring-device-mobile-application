@@ -18,11 +18,15 @@ import {
 export interface ApplianceConsumption {
   applianceId: string;
   applianceName: string;
+  category: string;
   totalKwh: number;
   totalCost: number;
   avgPower: number;
-  runtime: number;      // Total minutes
-  percentage: number;   // % of total consumption
+  avgVoltage: number;      // Average voltage (V)
+  avgCurrent: number;      // Average current (A)
+  avgPowerFactor: number;  // Average power factor
+  runtime: number;         // Total minutes
+  percentage: number;      // % of total consumption
 }
 
 export interface ConsumptionSummary {
@@ -148,21 +152,30 @@ class ConsumptionSummaryService {
       readings.forEach(reading => {
         if (reading.applianceReadings) {
           reading.applianceReadings.forEach((app: any) => {
-            const existing = applianceMap.get(app.applianceId) || {
+            const existing: any = applianceMap.get(app.applianceId) || {
               applianceId: app.applianceId,
               applianceName: app.applianceName,
+              category: app.category || 'Other',
               totalKwh: 0,
               totalCost: 0,
               avgPower: 0,
+              avgVoltage: 0,
+              avgCurrent: 0,
+              avgPowerFactor: 0,
               runtime: 0,
               percentage: 0,
+              _count: 0, // Internal counter for averaging
             };
 
             // Accumulate data
             if (app.isActive) {
               existing.totalKwh += (app.power / 1000) * (3 / 3600); // 3 seconds to kWh
-              existing.avgPower = (existing.avgPower + app.power) / 2;
+              existing.avgPower = (existing.avgPower * existing._count + app.power) / (existing._count + 1);
+              existing.avgVoltage = (existing.avgVoltage * existing._count + (app.voltage || 220)) / (existing._count + 1);
+              existing.avgCurrent = (existing.avgCurrent * existing._count + (app.current || 0)) / (existing._count + 1);
+              existing.avgPowerFactor = (existing.avgPowerFactor * existing._count + (app.powerFactor || 0.9)) / (existing._count + 1);
               existing.runtime = Math.max(existing.runtime, app.runtime);
+              existing._count++;
             }
 
             applianceMap.set(app.applianceId, existing);
@@ -171,11 +184,15 @@ class ConsumptionSummaryService {
       });
 
       // Calculate percentages and costs
-      const applianceBreakdown: ApplianceConsumption[] = Array.from(applianceMap.values()).map(app => ({
-        ...app,
-        totalCost: app.totalKwh * 12,
-        percentage: totalKwh > 0 ? (app.totalKwh / totalKwh) * 100 : 0,
-      }));
+        const applianceBreakdown: ApplianceConsumption[] = Array.from(applianceMap.values()).map((app: any) => {
+          // Remove internal counter before returning
+          const { _count, ...cleanApp } = app;
+          return {
+            ...cleanApp,
+            totalCost: app.totalKwh * 12,
+            percentage: totalKwh > 0 ? (app.totalKwh / totalKwh) * 100 : 0,
+          };
+        });
 
       // Create summary
       return await this.createSummary({
