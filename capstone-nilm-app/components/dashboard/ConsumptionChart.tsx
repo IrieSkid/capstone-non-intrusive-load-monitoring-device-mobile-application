@@ -34,7 +34,7 @@ export function ConsumptionChart() {
           <Text style={styles.summaryLabel}>Energy</Text>
         </View>
         <View style={{ alignItems: 'flex-end' }}>
-          <Text style={[styles.summaryValue, { color: Colors.success }]}>
+          <Text style={[styles.summaryValue, { color: colors.success }]}>
             ₱{todayStats.totalCost.toFixed(2)}
           </Text>
           <Text style={styles.summaryLabel}>Cost</Text>
