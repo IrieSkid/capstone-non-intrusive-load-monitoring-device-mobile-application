@@ -4,27 +4,29 @@ import { Platform, StatusBar } from 'react-native';
 
 import { HapticTab } from '@/components/haptic-tab';
 import { IconSymbol } from '@/components/ui/icon-symbol';
-import Colors from '@/constants/Colors';
+import { useTheme } from '@/contexts/ThemeContext';
 
 export default function TabLayout() {
-  // Set status bar to dark content (visible on light background)
+  const { colors, isDark } = useTheme();
+
+  // Set status bar based on theme
   React.useEffect(() => {
-    StatusBar.setBarStyle('dark-content');
+    StatusBar.setBarStyle(isDark ? 'light-content' : 'dark-content');
     if (Platform.OS === 'android') {
-      StatusBar.setBackgroundColor(Colors.surface);
+      StatusBar.setBackgroundColor(colors.surface);
     }
-  }, []);
+  }, [isDark, colors.surface]);
   
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: Colors.primary,
-        tabBarInactiveTintColor: Colors.textSecondary,
+        tabBarActiveTintColor: colors.primary,
+        tabBarInactiveTintColor: colors.textSecondary,
         headerShown: false,
         tabBarButton: HapticTab,
         tabBarStyle: {
-          backgroundColor: Colors.surface,
-          borderTopColor: Colors.divider,
+          backgroundColor: colors.surface,
+          borderTopColor: colors.divider,
           borderTopWidth: 1,
           paddingTop: 8,
           paddingBottom: Platform.OS === 'ios' ? 20 : 8,
@@ -32,6 +34,7 @@ export default function TabLayout() {
         tabBarLabelStyle: {
           fontSize: 10,
           fontWeight: '500',
+          color: colors.textSecondary,
         },
       }}>
       <Tabs.Screen
