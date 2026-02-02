@@ -42,18 +42,22 @@ class NotificationService {
   /**
    * Create a new notification
    */
-  async createNotification(notification: Omit<Notification, 'id'>): Promise<Notification> {
+  async createNotification(
+    notification: Omit<Notification, 'id' | 'createdAt'> & { createdAt?: Date }
+  ): Promise<Notification> {
     try {
       const notificationRef = doc(collection(firestore, this.collectionName));
+      const now = new Date();
       
       const newNotification: Notification = {
         ...notification,
         id: notificationRef.id,
+        createdAt: notification.createdAt || now,
       };
 
       await setDoc(notificationRef, {
         ...newNotification,
-        createdAt: Timestamp.fromDate(notification.createdAt),
+        createdAt: Timestamp.fromDate(newNotification.createdAt),
         readAt: notification.readAt ? Timestamp.fromDate(notification.readAt) : null,
         expiresAt: notification.expiresAt ? Timestamp.fromDate(notification.expiresAt) : null,
       });

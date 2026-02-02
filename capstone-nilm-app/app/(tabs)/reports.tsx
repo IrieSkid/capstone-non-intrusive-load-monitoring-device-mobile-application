@@ -18,6 +18,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTheme } from '@/contexts/ThemeContext';
+import { useRealtimeData } from '@/contexts/RealtimeDataContext';
 import { reportService } from '@/services/reportService';
 import { DailyReport, WeeklyReport, MonthlyReport, CostAnalysis } from '@/types/report';
 import { PeriodTabs } from '@/components/reports/PeriodTabs';
@@ -31,6 +32,7 @@ type Period = 'daily' | 'weekly' | 'monthly';
 
 export default function ReportsScreen() {
   const { colors, isDark } = useTheme();
+  const { deviceId } = useRealtimeData();
   const styles = createStyles(colors);
   const statusBarStyle = isDark ? 'light-content' : 'dark-content';
 
@@ -52,15 +54,21 @@ export default function ReportsScreen() {
 
   // Load reports
   const loadReports = async () => {
+    if (!deviceId) {
+      console.log('No deviceId available yet');
+      setIsLoading(false);
+      return;
+    }
+
     try {
       setIsLoading(true);
       
       // Load all reports in parallel
       const [daily, weekly, monthly, cost] = await Promise.all([
-        reportService.getDailyReport(),
-        reportService.getWeeklyReport(),
-        reportService.getMonthlyReport(),
-        reportService.getCostAnalysis(selectedPeriod),
+        reportService.getDailyReport(deviceId),
+        reportService.getWeeklyReport(deviceId),
+        reportService.getMonthlyReport(deviceId),
+        reportService.getCostAnalysis(deviceId, selectedPeriod),
       ]);
       
       setDailyReport(daily);
@@ -75,10 +83,10 @@ export default function ReportsScreen() {
     }
   };
 
-  // Load reports on mount and when period changes
+  // Load reports on mount and when period or deviceId changes
   useEffect(() => {
     loadReports();
-  }, [selectedPeriod]);
+  }, [selectedPeriod, deviceId]);
 
   const onRefresh = useCallback(() => {
     setRefreshing(true);

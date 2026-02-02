@@ -9,6 +9,7 @@ import { realtimeDataService, RealtimeReading, ApplianceStatus } from '@/service
 import { deviceService } from '@/services/deviceService';
 import { firestoreApplianceService } from '@/services/firestoreApplianceService';
 import { alertRuleService } from '@/services/alertRuleService';
+import { alertMonitoringService } from '@/services/alertMonitoringService';
 import { useAuth } from '@/hooks/useAuth';
 
 interface RealtimeDataContextType {
@@ -83,9 +84,19 @@ export function RealtimeDataProvider({ children }: { children: ReactNode }) {
   };
 
   const startMonitoring = async (deviceIdParam?: string, userIdParam?: string) => {
+    // Initialize alert monitoring if we have both deviceId and userId
+    if (deviceIdParam && userIdParam) {
+      await alertMonitoringService.initialize(userIdParam, deviceIdParam);
+    }
+
     // Subscribe to data updates
     const dataUnsubscribe = realtimeDataService.subscribeToData((reading) => {
       setCurrentReading(reading);
+      
+      // Process reading for alert monitoring
+      if (deviceIdParam && userIdParam) {
+        alertMonitoringService.processReading(reading);
+      }
     });
 
     // Subscribe to appliance updates
