@@ -12,6 +12,13 @@ class ReportService {
   private readonly defaultCostPerKwh = 12; // ₱12 per kWh fallback
 
   /**
+   * Format number to 3 decimal places
+   */
+  private fmt(value: number): number {
+    return parseFloat(value.toFixed(3));
+  }
+
+  /**
    * Get current electricity rate for user, or default
    */
   private async getCostPerKwh(userId?: string): Promise<number> {
@@ -60,13 +67,13 @@ class ReportService {
 
       return {
         date: new Date(),
-        totalKwh,
-        totalCost,
-        peakPower,
-        averagePower: avgPower,
+        totalKwh: this.fmt(totalKwh),
+        totalCost: this.fmt(totalCost),
+        peakPower: this.fmt(peakPower),
+        averagePower: this.fmt(avgPower),
         hourlyData,
         applianceBreakdown,
-        comparisonToYesterday: 0, // TODO: Calculate from previous day
+        comparisonToYesterday: 0,
       };
     } catch (error) {
       console.error('Error generating daily report:', error);
@@ -147,14 +154,14 @@ class ReportService {
       return {
         month: now.toLocaleDateString('en-US', { month: 'long' }),
         year: now.getFullYear(),
-        totalKwh,
-        totalCost,
-        averageDaily: avgDailyKwh,
+        totalKwh: this.fmt(totalKwh),
+        totalCost: this.fmt(totalCost),
+        averageDaily: this.fmt(avgDailyKwh),
         dailyData,
         weeklyData,
         applianceBreakdown,
-        comparisonToPreviousMonth: 0, // TODO: Calculate
-        projectedBill: totalCost * (30 / daysInMonth), // Project to 30 days
+        comparisonToPreviousMonth: 0,
+        projectedBill: this.fmt(totalCost * (30 / daysInMonth)),
       };
     } catch (error) {
       console.error('Error generating monthly report:', error);
@@ -266,15 +273,15 @@ class ReportService {
           name: data.name,
           icon: data.icon,
           category: data.category,
-          totalKwh: data.totalKwh,
-          totalCost,
-          percentage,
-          averageHoursPerDay,
-          estimatedMonthlyCost,
-          avgPower: data.count > 0 ? data.powerSum / data.count : 0,
-          avgVoltage: data.count > 0 ? data.voltageSum / data.count : 220,
-          avgCurrent: data.count > 0 ? data.currentSum / data.count : 0,
-          avgPowerFactor: data.count > 0 ? data.pfSum / data.count : 0.9,
+          totalKwh: this.fmt(data.totalKwh),
+          totalCost: this.fmt(totalCost),
+          percentage: this.fmt(percentage),
+          averageHoursPerDay: this.fmt(averageHoursPerDay),
+          estimatedMonthlyCost: this.fmt(estimatedMonthlyCost),
+          avgPower: this.fmt(data.count > 0 ? data.powerSum / data.count : 0),
+          avgVoltage: this.fmt(data.count > 0 ? data.voltageSum / data.count : 220),
+          avgCurrent: this.fmt(data.count > 0 ? data.currentSum / data.count : 0),
+          avgPowerFactor: this.fmt(data.count > 0 ? data.pfSum / data.count : 0.9),
         });
       });
 
@@ -308,8 +315,8 @@ class ReportService {
       result.push({ 
         timestamp: now,
         label: `${i}:00`,
-        value: kwh,
-        cost: kwh * costPerKwh,
+        value: this.fmt(kwh),
+        cost: this.fmt(kwh * costPerKwh),
       });
     }
     
@@ -343,8 +350,8 @@ class ReportService {
       result.push({
         timestamp: new Date(currentDate),
         label: dateLabel.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
-        value: kwh,
-        cost: kwh * costPerKwh,
+        value: this.fmt(kwh),
+        cost: this.fmt(kwh * costPerKwh),
       });
       currentDate.setDate(currentDate.getDate() + 1);
     }
@@ -379,8 +386,8 @@ class ReportService {
       result.push({
         timestamp: weekStart,
         label: `${weekStart.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - ${weekEnd.toLocaleDateString('en-US', { day: 'numeric' })}`,
-        value: kwh,
-        cost: kwh * costPerKwh,
+        value: this.fmt(kwh),
+        cost: this.fmt(kwh * costPerKwh),
       });
     });
     
@@ -442,12 +449,17 @@ class ReportService {
     const costByTimeOfDay = this.calculateCostByTimeOfDay(readings);
 
     return {
-      currentPeriodCost: currentCost,
-      previousPeriodCost: previousCost,
-      percentageChange,
-      estimatedNextBill: currentCost * 1.05, // Estimate 5% increase
-      savingsOpportunity: Math.max(0, previousCost - currentCost),
-      costByTimeOfDay,
+      currentPeriodCost: this.fmt(currentCost),
+      previousPeriodCost: this.fmt(previousCost),
+      percentageChange: this.fmt(percentageChange),
+      estimatedNextBill: this.fmt(currentCost * 30),
+      savingsOpportunity: this.fmt(currentCost * 0.15),
+      costByTimeOfDay: {
+        morning: this.fmt(costByTimeOfDay.morning),
+        afternoon: this.fmt(costByTimeOfDay.afternoon),
+        evening: this.fmt(costByTimeOfDay.evening),
+        night: this.fmt(costByTimeOfDay.night),
+      },
     };
   }
 
@@ -563,10 +575,10 @@ class ReportService {
 
       return {
         date: startDate,
-        totalKwh,
-        totalCost,
-        peakPower,
-        averagePower: avgPower,
+        totalKwh: this.fmt(totalKwh),
+        totalCost: this.fmt(totalCost),
+        peakPower: this.fmt(peakPower),
+        averagePower: this.fmt(avgPower),
         hourlyData,
         applianceBreakdown,
         comparisonToYesterday: 0,
@@ -598,9 +610,9 @@ class ReportService {
       return {
         weekStart: startDate,
         weekEnd: endDate,
-        totalKwh,
-        totalCost,
-        averageDaily,
+        totalKwh: this.fmt(totalKwh),
+        totalCost: this.fmt(totalCost),
+        averageDaily: this.fmt(averageDaily),
         dailyData,
         applianceBreakdown,
         comparisonToPreviousWeek: 0,
@@ -633,14 +645,14 @@ class ReportService {
       return {
         month: startDate.toLocaleDateString('en-US', { month: 'long' }),
         year: startDate.getFullYear(),
-        totalKwh,
-        totalCost,
-        averageDaily,
+        totalKwh: this.fmt(totalKwh),
+        totalCost: this.fmt(totalCost),
+        averageDaily: this.fmt(averageDaily),
         dailyData,
         weeklyData: [],
         applianceBreakdown,
         comparisonToPreviousMonth: 0,
-        projectedBill,
+        projectedBill: this.fmt(projectedBill),
       };
     } catch (error) {
       console.error('Error generating monthly report by date range:', error);
@@ -678,12 +690,17 @@ class ReportService {
       const estimatedNextBill = (totalKwh / days) * 30 * this.costPerKwh;
 
       return {
-        currentPeriodCost,
+        currentPeriodCost: this.fmt(currentPeriodCost),
         previousPeriodCost: 0,
         percentageChange: 0,
-        estimatedNextBill,
-        savingsOpportunity: estimatedNextBill * 0.15,
-        costByTimeOfDay,
+        estimatedNextBill: this.fmt(estimatedNextBill),
+        savingsOpportunity: this.fmt(estimatedNextBill * 0.15),
+        costByTimeOfDay: {
+          morning: this.fmt(costByTimeOfDay.morning),
+          afternoon: this.fmt(costByTimeOfDay.afternoon),
+          evening: this.fmt(costByTimeOfDay.evening),
+          night: this.fmt(costByTimeOfDay.night),
+        },
       };
     } catch (error) {
       console.error('Error generating cost analysis by date range:', error);
