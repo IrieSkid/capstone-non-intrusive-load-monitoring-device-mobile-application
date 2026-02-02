@@ -65,12 +65,11 @@ class ElectricityRateService {
   async getCurrentRate(userId: string): Promise<ElectricityRate | null> {
     try {
       const now = new Date();
+      
+      // Simple query without composite index
       const q = query(
         collection(firestore, this.collectionName),
-        where('userId', '==', userId),
-        where('effectiveDate', '<=', Timestamp.fromDate(now)),
-        orderBy('effectiveDate', 'desc'),
-        limit(1)
+        where('userId', '==', userId)
       );
 
       const snapshot = await getDocs(q);
@@ -80,16 +79,26 @@ class ElectricityRateService {
         return this.createDefaultRate(userId);
       }
 
-      const doc = snapshot.docs[0];
-      const data = doc.data();
-      
-      return {
-        ...data,
-        id: doc.id,
-        effectiveDate: data.effectiveDate?.toDate() || new Date(),
-        endDate: data.endDate?.toDate(),
-        createdAt: data.createdAt?.toDate() || new Date(),
-      } as ElectricityRate;
+      // Filter and sort in memory to avoid composite index
+      const rates = snapshot.docs
+        .map(doc => {
+          const data = doc.data();
+          return {
+            ...data,
+            id: doc.id,
+            effectiveDate: data.effectiveDate?.toDate() || new Date(),
+            endDate: data.endDate?.toDate(),
+            createdAt: data.createdAt?.toDate() || new Date(),
+          } as ElectricityRate;
+        })
+        .filter(rate => rate.effectiveDate <= now)
+        .sort((a, b) => b.effectiveDate.getTime() - a.effectiveDate.getTime());
+
+      if (rates.length === 0) {
+        return this.createDefaultRate(userId);
+      }
+
+      return rates[0];
     } catch (error) {
       console.error('Error getting current rate:', error);
       return null;
@@ -101,23 +110,27 @@ class ElectricityRateService {
    */
   async getAllRates(userId: string): Promise<ElectricityRate[]> {
     try {
+      // Simple query without composite index
       const q = query(
         collection(firestore, this.collectionName),
-        where('userId', '==', userId),
-        orderBy('effectiveDate', 'desc')
+        where('userId', '==', userId)
       );
 
       const snapshot = await getDocs(q);
-      return snapshot.docs.map(doc => {
-        const data = doc.data();
-        return {
-          ...data,
-          id: doc.id,
-          effectiveDate: data.effectiveDate?.toDate() || new Date(),
-          endDate: data.endDate?.toDate(),
-          createdAt: data.createdAt?.toDate() || new Date(),
-        } as ElectricityRate;
-      });
+      
+      // Sort in memory to avoid composite index
+      return snapshot.docs
+        .map(doc => {
+          const data = doc.data();
+          return {
+            ...data,
+            id: doc.id,
+            effectiveDate: data.effectiveDate?.toDate() || new Date(),
+            endDate: data.endDate?.toDate(),
+            createdAt: data.createdAt?.toDate() || new Date(),
+          } as ElectricityRate;
+        })
+        .sort((a, b) => b.effectiveDate.getTime() - a.effectiveDate.getTime());
     } catch (error) {
       console.error('Error getting rates:', error);
       return [];

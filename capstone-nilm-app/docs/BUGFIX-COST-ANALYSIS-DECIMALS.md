@@ -1,9 +1,25 @@
 # Bug Fixes: Cost Analysis & Decimal Precision
 
 **Date**: February 2, 2026  
-**Status**: ✅ COMPLETE
+**Status**: ✅ COMPLETE (Hotfixed)
 
 ## Issues Reported
+
+### ⚠️ Additional Issues Found After Initial Fix
+
+1. **ReferenceError: Property 'userId' doesn't exist**
+   - The method signatures for `getWeeklyReport` and `getMonthlyReport` were missing the `userId` parameter
+   - The code inside was trying to use `userId` but it wasn't defined
+   - **Fixed**: Added `userId?: string` parameter to both methods
+
+2. **Firebase Index Error**
+   - The `electricityRateService` query required a composite index
+   - Error: "The query requires an index" for `userId` + `effectiveDate` + `orderBy`
+   - **Fixed**: Simplified queries to only filter by `userId`, then sort in memory
+
+---
+
+## Original Issues
 
 ### 1. Cost by Time of Day Showing ₱0.00
 **Problem**: The "Cost Analysis" section was showing ₱0.00 for all time periods (morning, afternoon, evening, night).
@@ -72,6 +88,7 @@ const voltage = parseFloat((deviceVoltage + (Math.random() - 0.5) * 4).toFixed(3
 
 ### 1. `services/reportService.ts`
 **Changes**:
+- **CRITICAL FIX**: Added missing `userId` parameter to method signatures
 - Updated all report methods to accept `userId` parameter
 - Modified `getCostAnalysis` to fetch user-specific `costPerKwh`
 - Fixed `calculateCostByTimeOfDay` to use correct interval (3 seconds)
@@ -79,14 +96,14 @@ const voltage = parseFloat((deviceVoltage + (Math.random() - 0.5) * 4).toFixed(3
 - Updated all date range methods to pass `costPerKwh` to helper functions
 
 **Methods Updated**:
-- `getDailyReport(deviceId, userId?)`
-- `getWeeklyReport(deviceId, userId?)`
-- `getMonthlyReport(deviceId, userId?)`
-- `getCostAnalysis(deviceId, period, userId?)`
-- `getDailyReportByDateRange(deviceId, startDate, endDate, userId?)`
-- `getWeeklyReportByDateRange(deviceId, startDate, endDate, userId?)`
-- `getMonthlyReportByDateRange(deviceId, startDate, endDate, userId?)`
-- `getCostAnalysisByDateRange(deviceId, startDate, endDate, userId?)`
+- `getDailyReport(deviceId, userId?)` ✅ Already had parameter
+- `getWeeklyReport(deviceId, userId?)` ✅ **FIXED - Added parameter**
+- `getMonthlyReport(deviceId, userId?)` ✅ **FIXED - Added parameter**
+- `getCostAnalysis(deviceId, period, userId?)` ✅ Already had parameter
+- `getDailyReportByDateRange(deviceId, startDate, endDate, userId?)` ✅ Already had parameter
+- `getWeeklyReportByDateRange(deviceId, startDate, endDate, userId?)` ✅ Already had parameter
+- `getMonthlyReportByDateRange(deviceId, startDate, endDate, userId?)` ✅ Already had parameter
+- `getCostAnalysisByDateRange(deviceId, startDate, endDate, userId?)` ✅ Already had parameter
 
 ### 2. `app/(tabs)/reports.tsx`
 **Changes**:
@@ -110,6 +127,34 @@ reportService.getCostAnalysis(deviceId, selectedPeriod, user?.id)
 - Applied `.toFixed(3)` to all device-level electrical parameters
 - Applied `.toFixed(3)` to all appliance-level electrical parameters
 - Ensured consistent 3-decimal precision across all calculations
+
+### 4. `services/electricityRateService.ts` ⚠️ **HOTFIX**
+**Changes**:
+- **CRITICAL**: Removed composite index requirement
+- Simplified `getCurrentRate()` query to only filter by `userId`
+- Moved sorting and filtering to in-memory operations
+- Simplified `getAllRates()` query similarly
+- This eliminates Firebase index errors without requiring manual index creation
+
+**Before** (Required composite index):
+```typescript
+query(
+  collection(firestore, 'electricityRates'),
+  where('userId', '==', userId),
+  where('effectiveDate', '<=', Timestamp.fromDate(now)),
+  orderBy('effectiveDate', 'desc'),
+  limit(1)
+)
+```
+
+**After** (No index required):
+```typescript
+query(
+  collection(firestore, 'electricityRates'),
+  where('userId', '==', userId)
+)
+// Then filter and sort in memory
+```
 
 ## Testing Verification
 

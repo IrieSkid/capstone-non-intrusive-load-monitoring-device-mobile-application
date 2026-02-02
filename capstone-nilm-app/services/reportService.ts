@@ -84,7 +84,7 @@ class ReportService {
   /**
    * Get this week's report
    */
-  async getWeeklyReport(deviceId: string): Promise<WeeklyReport> {
+  async getWeeklyReport(deviceId: string, userId?: string): Promise<WeeklyReport> {
     try {
       const now = new Date();
       const startOfWeek = new Date(now);
@@ -128,7 +128,7 @@ class ReportService {
   /**
    * Get this month's report
    */
-  async getMonthlyReport(deviceId: string): Promise<MonthlyReport> {
+  async getMonthlyReport(deviceId: string, userId?: string): Promise<MonthlyReport> {
     try {
       const now = new Date();
       const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
@@ -139,18 +139,19 @@ class ReportService {
         return this.getEmptyMonthlyReport();
       }
 
+      const costPerKwh = await this.getCostPerKwh(userId);
       const totalKwh = this.calculateTotalKwh(readings);
       const daysInMonth = now.getDate();
       const avgDailyKwh = totalKwh / daysInMonth;
-      const totalCost = totalKwh * this.costPerKwh;
+      const totalCost = totalKwh * costPerKwh;
       const peakPower = Math.max(...readings.map(r => r.power || 0), 0);
 
       // Calculate daily and weekly data
-      const dailyData = this.calculateDailyData(readings, startOfMonth);
-      const weeklyData = this.calculateWeeklyData(readings, startOfMonth);
+      const dailyData = this.calculateDailyData(readings, startOfMonth, costPerKwh);
+      const weeklyData = this.calculateWeeklyData(readings, startOfMonth, costPerKwh);
 
       // Get appliance breakdown
-      const applianceBreakdown = await this.calculateApplianceBreakdown(readings, deviceId);
+      const applianceBreakdown = await this.calculateApplianceBreakdown(readings, deviceId, costPerKwh);
 
       return {
         month: now.toLocaleDateString('en-US', { month: 'long' }),
