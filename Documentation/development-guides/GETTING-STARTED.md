@@ -89,13 +89,13 @@ That's it! Firebase SDK will be ready to use.
 - [ ] Device status indicators
 - [ ] Quick stats cards (today's consumption, cost, etc.)
 
-### Phase 3: Device & Appliance Management (Week 5-6)
+### Phase 3: Device & Appliance Management (Week 5-6) ✅ COMPLETE
 - [x] Device list screen ✅ (Feb 2, 2026)
 - [x] Add new device (when hardware ready) ✅ (4-step wizard complete)
 - [x] Device details screen ✅ (Settings, connection management)
-- [ ] Appliance list per device
-- [ ] Add/edit/delete appliances
-- [ ] Appliance classification settings
+- [x] Appliance list per device ✅ (Active/Inactive sections)
+- [x] Add/edit/delete appliances ✅ (Quick add, full CRUD)
+- [x] Appliance classification settings ✅ (Detection config, training)
 
 ### Phase 4: Consumption Analytics (Week 7-8)
 - [ ] Consumption history screen
