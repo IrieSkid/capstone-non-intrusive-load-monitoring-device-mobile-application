@@ -1,31 +1,25 @@
 import React, { useEffect, useState } from 'react';
-import { StyleSheet, ActivityIndicator, ScrollView, RefreshControl, View } from 'react-native';
+import { StyleSheet, ActivityIndicator, ScrollView, RefreshControl, View, Text } from 'react-native';
 import { router } from 'expo-router';
 
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { useAuth } from '@/hooks/useAuth';
-import { StatsCard } from '@/components/dashboard/StatsCard';
-import { RealTimeMonitor } from '@/components/dashboard/RealTimeMonitor';
-import { DeviceStatus } from '@/components/dashboard/DeviceStatus';
+import { GradientPowerCard } from '@/components/dashboard/GradientPowerCard';
+import { ParametersGrid } from '@/components/dashboard/ParametersGrid';
 import { ConsumptionChart } from '@/components/dashboard/ConsumptionChart';
-import { PowerGauge } from '@/components/dashboard/PowerGauge';
+import { ApplianceList } from '@/components/dashboard/ApplianceList';
+import Colors from '@/constants/Colors';
 import {
   generateMockDevice,
   calculateTodayStats,
-  calculateMonthlyStats,
-  getComparisonStats,
-  generateMockReading,
 } from '@/utils/mockData';
 
 export default function HomeScreen() {
   const { user, isLoading } = useAuth();
   const [refreshing, setRefreshing] = useState(false);
-  const [mockDevice, setMockDevice] = useState(generateMockDevice(user?.id || 'mock-user'));
-  const [currentReading, setCurrentReading] = useState(generateMockReading(mockDevice.id));
+  const [mockDevice] = useState(generateMockDevice(user?.id || 'mock-user'));
   const [todayStats, setTodayStats] = useState(calculateTodayStats());
-  const [monthlyStats, setMonthlyStats] = useState(calculateMonthlyStats());
-  const [comparison, setComparison] = useState(getComparisonStats());
 
   useEffect(() => {
     // Redirect to login if not authenticated
@@ -34,25 +28,15 @@ export default function HomeScreen() {
     }
   }, [isLoading, user]);
 
-  useEffect(() => {
-    // Update mock device when user changes
-    if (user) {
-      setMockDevice(generateMockDevice(user.id));
-    }
-  }, [user]);
-
   const onRefresh = React.useCallback(() => {
     setRefreshing(true);
     
     // Simulate data refresh
     setTimeout(() => {
-      setCurrentReading(generateMockReading(mockDevice.id));
       setTodayStats(calculateTodayStats());
-      setMonthlyStats(calculateMonthlyStats());
-      setComparison(getComparisonStats());
       setRefreshing(false);
     }, 1000);
-  }, [mockDevice]);
+  }, []);
 
   if (isLoading) {
     return (
@@ -67,101 +51,51 @@ export default function HomeScreen() {
     return null; // Will redirect to login
   }
 
+  const getGreeting = () => {
+    const hour = new Date().getHours();
+    if (hour < 12) return 'Good Morning';
+    if (hour < 18) return 'Good Afternoon';
+    return 'Good Evening';
+  };
+
   return (
     <ScrollView
       style={styles.container}
+      contentContainerStyle={styles.scrollContent}
       refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}>
-      <ThemedView style={styles.content}>
-        {/* Header */}
-        <View style={styles.header}>
-          <ThemedText type="title">Welcome, {user.firstName}! 👋</ThemedText>
-          <ThemedText style={styles.subtitle}>
-            {new Date().toLocaleDateString('en-US', {
-              weekday: 'long',
-              year: 'numeric',
-              month: 'long',
-              day: 'numeric',
-            })}
-          </ThemedText>
-        </View>
+      {/* Greeting Section */}
+      <View style={styles.greeting}>
+        <Text style={styles.greetingText}>{getGreeting()}</Text>
+        <Text style={styles.greetingName}>{user.firstName} {user.lastName}</Text>
+      </View>
 
-        {/* Quick Stats */}
-        <View style={styles.statsGrid}>
-          <View style={styles.statsRow}>
-            <View style={{ flex: 1 }}>
-              <StatsCard
-                title="Today's Usage"
-                value={todayStats.totalKwh.toString()}
-                unit="kWh"
-                icon="bolt.fill"
-                iconColor="#FF9500"
-                trend={{
-                  value: comparison.change,
-                  isPositive: !comparison.isIncrease,
-                }}
-                subtitle={`vs yesterday: ${comparison.previousKwh} kWh`}
-              />
-            </View>
-          </View>
+      {/* Gradient Power Card */}
+      <View style={styles.section}>
+        <GradientPowerCard deviceId={mockDevice.id} />
+      </View>
 
-          <View style={styles.statsRow}>
-            <View style={{ flex: 1 }}>
-              <StatsCard
-                title="Today's Cost"
-                value={`₱${todayStats.totalCost.toFixed(2)}`}
-                icon="Philippine peso sign.circle.fill"
-                iconColor="#34C759"
-                subtitle="@ ₱11.50/kWh"
-              />
-            </View>
-          </View>
+      {/* Electrical Parameters Grid */}
+      <View style={styles.section}>
+        <ParametersGrid deviceId={mockDevice.id} />
+      </View>
 
-          <View style={styles.statsRow}>
-            <View style={{ flex: 1 }}>
-              <StatsCard
-                title="This Month"
-                value={monthlyStats.totalKwh.toFixed(0)}
-                unit="kWh"
-                icon="calendar"
-                iconColor="#007AFF"
-                subtitle={`Day ${monthlyStats.daysElapsed} of ${monthlyStats.daysInMonth}`}
-              />
-            </View>
-          </View>
-
-          <View style={styles.statsRow}>
-            <View style={{ flex: 1 }}>
-              <StatsCard
-                title="Projected Bill"
-                value={`₱${monthlyStats.projectedCost.toFixed(0)}`}
-                icon="chart.line.uptrend.xyaxis"
-                iconColor="#FF3B30"
-                subtitle={`${monthlyStats.projectedKwh.toFixed(0)} kWh estimated`}
-              />
-            </View>
-          </View>
-        </View>
-
-        {/* Power Gauge */}
-        <PowerGauge currentWatts={currentReading.powerWatts} maxWatts={5000} />
-
-        {/* Real-Time Monitor */}
-        <RealTimeMonitor deviceId={mockDevice.id} />
-
-        {/* Consumption Chart */}
+      {/* Today's Consumption Chart */}
+      <View style={styles.section}>
         <ConsumptionChart />
+      </View>
 
-        {/* Device Status */}
-        <DeviceStatus device={mockDevice} />
+      {/* Active Appliances */}
+      <View style={styles.section}>
+        <ApplianceList />
+      </View>
 
-        {/* Info Note */}
-        <ThemedView style={styles.infoNote}>
-          <ThemedText style={styles.infoText}>
-            ℹ️ This dashboard is displaying mock data for testing. When the hardware is ready, it
-            will show real-time readings from your IoT device.
-          </ThemedText>
-        </ThemedView>
-      </ThemedView>
+      {/* Info Note */}
+      <View style={styles.infoNote}>
+        <Text style={styles.infoText}>
+          ℹ️ This dashboard is displaying mock data for testing. When the hardware is ready, it
+          will show real-time readings from your IoT device.
+        </Text>
+      </View>
     </ScrollView>
   );
 }
@@ -169,44 +103,51 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: Colors.background,
+  },
+  scrollContent: {
+    paddingBottom: 100, // Space for bottom nav
   },
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    backgroundColor: Colors.background,
   },
   loadingText: {
     marginTop: 10,
+    color: Colors.textSecondary,
   },
-  content: {
+  greeting: {
     padding: 16,
-    paddingTop: 60, // Account for status bar
+    backgroundColor: Colors.surface,
   },
-  header: {
-    marginBottom: 24,
-  },
-  subtitle: {
+  greetingText: {
     fontSize: 14,
-    color: '#666666',
-    marginTop: 4,
+    color: Colors.textSecondary,
+    marginBottom: 4,
   },
-  statsGrid: {
-    marginBottom: 16,
+  greetingName: {
+    fontSize: 20,
+    fontWeight: '600',
+    color: Colors.textPrimary,
   },
-  statsRow: {
-    flexDirection: 'row',
-    gap: 12,
+  section: {
+    paddingHorizontal: 16,
+    marginTop: 16,
   },
   infoNote: {
+    margin: 16,
+    marginTop: 24,
     padding: 16,
     borderRadius: 12,
     backgroundColor: '#E3F2FD',
-    marginTop: 16,
-    marginBottom: 32,
+    borderLeftWidth: 4,
+    borderLeftColor: Colors.primary,
   },
   infoText: {
     fontSize: 13,
-    color: '#1976D2',
+    color: Colors.primaryDark,
     lineHeight: 20,
   },
 });

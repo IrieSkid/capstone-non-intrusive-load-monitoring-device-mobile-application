@@ -1,63 +1,42 @@
 /**
- * Consumption Chart Component
- * Displays daily consumption as a simple bar chart
+ * Today's Consumption Chart Component
+ * Shows hourly consumption for today with chart placeholder
  */
 
 import React from 'react';
-import { View, StyleSheet, Dimensions } from 'react-native';
-import { ThemedText } from '@/components/themed-text';
+import { View, Text, StyleSheet } from 'react-native';
 import { ThemedView } from '@/components/themed-view';
-import { generateDailyConsumptionData } from '@/utils/mockData';
-
-const screenWidth = Dimensions.get('window').width;
+import { calculateTodayStats } from '@/utils/mockData';
+import Colors from '@/constants/Colors';
 
 export function ConsumptionChart() {
-  const data = generateDailyConsumptionData();
-  const maxKwh = Math.max(...data.map((d) => d.kwh));
+  const todayStats = calculateTodayStats();
 
   return (
-    <ThemedView style={styles.container}>
-      <ThemedText type="subtitle" style={styles.title}>
-        📊 Last 7 Days Consumption
-      </ThemedText>
-
-      <View style={styles.chart}>
-        {data.map((item, index) => {
-          const heightPercentage = (item.kwh / maxKwh) * 100;
-
-          return (
-            <View key={index} style={styles.barContainer}>
-              <ThemedText style={styles.kwhValue}>{item.kwh}</ThemedText>
-              <View style={styles.barWrapper}>
-                <View
-                  style={[
-                    styles.bar,
-                    {
-                      height: `${heightPercentage}%`,
-                      backgroundColor: index === 6 ? '#007AFF' : '#4ECDC4',
-                    },
-                  ]}
-                />
-              </View>
-              <ThemedText style={styles.dayLabel}>{item.date}</ThemedText>
-              <ThemedText style={styles.costLabel}>₱{item.cost.toFixed(0)}</ThemedText>
-            </View>
-          );
-        })}
+    <ThemedView style={styles.card}>
+      <View style={styles.header}>
+        <Text style={styles.title}>Today's Consumption</Text>
       </View>
 
-      <View style={styles.summary}>
-        <View style={styles.summaryItem}>
-          <ThemedText style={styles.summaryLabel}>Weekly Total</ThemedText>
-          <ThemedText style={styles.summaryValue}>
-            {data.reduce((sum, item) => sum + item.kwh, 0).toFixed(1)} kWh
-          </ThemedText>
+      {/* Chart Placeholder */}
+      <View style={styles.chartContainer}>
+        <View style={styles.chartPlaceholder}>
+          <Text style={styles.chartText}>📈 Hourly Consumption Chart</Text>
+          <Text style={styles.chartSubtext}>Line chart coming in Phase 3</Text>
         </View>
-        <View style={styles.summaryItem}>
-          <ThemedText style={styles.summaryLabel}>Weekly Cost</ThemedText>
-          <ThemedText style={styles.summaryValue}>
-            ₱{data.reduce((sum, item) => sum + item.cost, 0).toFixed(2)}
-          </ThemedText>
+      </View>
+
+      {/* Summary Stats */}
+      <View style={styles.summary}>
+        <View>
+          <Text style={styles.summaryValue}>{todayStats.totalKwh.toFixed(1)} kWh</Text>
+          <Text style={styles.summaryLabel}>Energy</Text>
+        </View>
+        <View style={{ alignItems: 'flex-end' }}>
+          <Text style={[styles.summaryValue, { color: Colors.success }]}>
+            ₱{todayStats.totalCost.toFixed(2)}
+          </Text>
+          <Text style={styles.summaryLabel}>Cost</Text>
         </View>
       </View>
     </ThemedView>
@@ -65,79 +44,67 @@ export function ConsumptionChart() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    padding: 16,
+  card: {
+    backgroundColor: Colors.surface,
     borderRadius: 12,
+    padding: 16,
     marginBottom: 16,
     borderWidth: 1,
-    borderColor: '#D0D0D0',
-    backgroundColor: '#FFFFFF',
+    borderColor: Colors.divider,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 3,
+  },
+  header: {
+    marginBottom: 12,
   },
   title: {
-    fontSize: 18,
-    marginBottom: 16,
+    fontSize: 16,
+    fontWeight: '600',
+    color: Colors.textPrimary,
   },
-  chart: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-end',
-    height: 180,
-    marginBottom: 16,
+  chartContainer: {
+    minHeight: 150,
+    marginBottom: 12,
   },
-  barContainer: {
+  chartPlaceholder: {
     flex: 1,
+    justifyContent: 'center',
     alignItems: 'center',
-    gap: 4,
+    backgroundColor: Colors.background,
+    borderRadius: 8,
+    borderWidth: 2,
+    borderColor: Colors.divider,
+    borderStyle: 'dashed',
+    padding: 32,
   },
-  kwhValue: {
-    fontSize: 10,
+  chartText: {
+    fontSize: 16,
     fontWeight: '600',
-    color: '#007AFF',
+    color: Colors.textSecondary,
+    marginBottom: 4,
   },
-  barWrapper: {
-    flex: 1,
-    width: '80%',
-    backgroundColor: '#E8E8E8',
-    borderRadius: 4,
-    justifyContent: 'flex-end',
-    overflow: 'hidden',
-    borderWidth: 1,
-    borderColor: '#D0D0D0',
-  },
-  bar: {
-    width: '100%',
-    borderTopLeftRadius: 4,
-    borderTopRightRadius: 4,
-    minHeight: 2,
-  },
-  dayLabel: {
-    fontSize: 10,
-    fontWeight: '600',
-    color: '#333333',
-  },
-  costLabel: {
-    fontSize: 9,
-    color: '#666666',
+  chartSubtext: {
+    fontSize: 12,
+    color: Colors.textSecondary,
   },
   summary: {
     flexDirection: 'row',
-    justifyContent: 'space-around',
-    paddingTop: 16,
+    justifyContent: 'space-between',
+    paddingTop: 12,
     borderTopWidth: 1,
-    borderTopColor: '#e0e0e0',
-  },
-  summaryItem: {
-    alignItems: 'center',
-  },
-  summaryLabel: {
-    fontSize: 12,
-    color: '#555555',
-    fontWeight: '500',
-    marginBottom: 4,
+    borderTopColor: Colors.divider,
   },
   summaryValue: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#000000',
+    fontSize: 24,
+    fontWeight: '700',
+    color: Colors.primary,
+  },
+  summaryLabel: {
+    fontSize: 14,
+    color: Colors.textSecondary,
+    marginTop: 4,
   },
 });
