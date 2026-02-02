@@ -49,18 +49,25 @@ A comprehensive IoT-based energy monitoring system that enables real-time classi
 
 ```
 NILM-Planning/
-├── Documentation/
-│   ├── database-design/          # Database schema, ERD, and documentation
-│   ├── thesis-documentation/     # Thesis chapters and research documentation
-│   └── mobile-app-prototype/      # HTML/CSS prototype mockups
-├── mobile-app/                    # React Native + Expo mobile application (to be created)
-│   ├── src/                       # Source code
-│   ├── App.js                     # Main app component
+├── capstone-nilm-app/             # React Native + Expo mobile application
+│   ├── app/                       # Expo Router screens (file-based routing)
+│   ├── components/                # Reusable UI components
+│   ├── config/                    # Firebase and app configuration
+│   ├── hooks/                     # Custom React hooks
+│   ├── services/                  # Business logic & API calls
+│   ├── types/                     # TypeScript type definitions
+│   ├── utils/                     # Utility functions
+│   ├── assets/                    # Images, fonts, and static files
 │   └── package.json               # Dependencies
+├── Documentation/
+│   ├── database-design/           # Database schema, ERD, and documentation
+│   ├── thesis-documentation/      # Thesis chapters and research documentation
+│   ├── development-guides/        # Development setup and guides
+│   └── mobile-app-prototype/      # HTML/CSS prototype mockups
 └── README.md                      # This file
 ```
 
-> **Note**: The `mobile-app/` folder will be created when you initialize the Expo project. See [Getting Started](#-getting-started) section.
+> **Note**: The `capstone-nilm-app/` folder contains the React Native app built with Expo Router and TypeScript.
 
 ## 📚 Documentation
 
@@ -88,6 +95,11 @@ NILM-Planning/
 - **[UI Specification](Documentation/thesis-documentation/MOBILE-APP-UI-SPECIFICATION.md)** - Complete UI/UX specification
 - **[Prototype](Documentation/mobile-app-prototype/)** - HTML/CSS prototype mockups
 
+#### Development Guides
+- **[🚀 Quick Start Guide](Documentation/development-guides/GETTING-STARTED.md)** - Complete development roadmap
+- **[🔥 Firebase Setup Guide](Documentation/development-guides/FIREBASE-SETUP-GUIDE.md)** - Detailed Firebase configuration
+- **[✅ Firebase Quick Start](Documentation/development-guides/FIREBASE-QUICK-START.md)** - Step-by-step checklist
+
 ## 🗄️ Database Design
 
 - **11 Core Tables** - Normalized database design (3NF)
@@ -114,8 +126,17 @@ See [Documentation/mobile-app-prototype/](Documentation/mobile-app-prototype/) f
 
 - Node.js 18+ and npm
 - Expo CLI
-- Firebase account
+- Firebase account (free tier is sufficient)
+- Expo Go app on your mobile device
 - React Native development environment
+
+### Quick Start
+
+**👉 Follow our comprehensive guides:**
+
+1. **[📖 Getting Started Guide](Documentation/development-guides/GETTING-STARTED.md)** - Complete development roadmap
+2. **[✅ Firebase Quick Start Checklist](Documentation/development-guides/FIREBASE-QUICK-START.md)** - 40-minute setup
+3. **[🔥 Detailed Firebase Guide](Documentation/development-guides/FIREBASE-SETUP-GUIDE.md)** - Full reference
 
 ### Installation
 
@@ -126,11 +147,8 @@ git clone https://github.com/IrieSkid/capstone-non-intrusive-load-monitoring-dev
 # Navigate to project directory
 cd capstone-non-intrusive-load-monitoring-device-mobile-application
 
-# Create Expo app (if not already created)
-npx create-expo-app mobile-app
-
-# Navigate to mobile app directory
-cd mobile-app
+# Navigate to mobile app directory (already created)
+cd capstone-nilm-app
 
 # Install dependencies
 npm install
@@ -139,14 +157,24 @@ npm install
 npx expo start
 ```
 
-### Setting Up the Mobile App
+### Setting Up Firebase (Required First!)
 
-1. **Create the Expo app:**
+**Before running the app, you MUST set up Firebase:**
+
+1. **Follow the [Firebase Quick Start Checklist](Documentation/development-guides/FIREBASE-QUICK-START.md)** (~40 minutes)
+2. **Get your Firebase credentials** from Firebase Console
+3. **Update `capstone-nilm-app/config/firebase.ts`** with your credentials
+4. **Test the connection** by running the app
+
+### Running the App
+
+1. **Start the development server:**
    ```bash
-   npx create-expo-app mobile-app
+   cd capstone-nilm-app
+   npm start
    ```
 
-2. **Install required dependencies:**
+2. **Open in Expo Go:**
    ```bash
    cd mobile-app
    npm install @react-navigation/native @react-navigation/stack
