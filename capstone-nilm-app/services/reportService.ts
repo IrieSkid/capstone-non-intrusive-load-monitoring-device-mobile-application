@@ -7,6 +7,7 @@ import { DailyReport, WeeklyReport, MonthlyReport, CostAnalysis, ApplianceConsum
 import { readingService } from './readingService';
 import { firestoreApplianceService } from './firestoreApplianceService';
 import { electricityRateService } from './electricityRateService';
+import { consumptionSummaryService } from './consumptionSummaryService';
 
 class ReportService {
   private readonly defaultCostPerKwh = 12; // ₱12 per kWh fallback
