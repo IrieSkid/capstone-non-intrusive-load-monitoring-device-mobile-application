@@ -5,7 +5,7 @@
 
 import React from 'react';
 import { View, Text, StyleSheet, Dimensions } from 'react-native';
-import { PieChart } from 'react-native-chart-kit';
+import { VictoryPie } from 'victory-native';
 import { useTheme } from '@/contexts/ThemeContext';
 import { ApplianceConsumption } from '@/types/report';
 
@@ -33,19 +33,10 @@ export function ApplianceBreakdown({ appliances }: ApplianceBreakdownProps) {
   // Prepare pie chart data (top 5 appliances)
   const topAppliances = appliances.slice(0, 5);
   const pieData = topAppliances.map((appliance, index) => ({
-    name: appliance.name,
-    population: appliance.totalKwh,
-    color: chartColors[index % chartColors.length],
-    legendFontColor: colors.textSecondary,
-    legendFontSize: 12,
+    x: appliance.name,
+    y: appliance.totalKwh,
+    label: `${appliance.percentage}%`,
   }));
-
-  const chartConfig = {
-    backgroundColor: colors.surface,
-    backgroundGradientFrom: colors.surface,
-    backgroundGradientTo: colors.surface,
-    color: (opacity = 1) => colors.primary,
-  };
 
   return (
     <View style={styles.container}>
@@ -53,16 +44,34 @@ export function ApplianceBreakdown({ appliances }: ApplianceBreakdownProps) {
 
       {/* Pie Chart */}
       <View style={styles.chartContainer}>
-        <PieChart
+        <VictoryPie
           data={pieData}
           width={screenWidth - 48}
-          height={200}
-          chartConfig={chartConfig}
-          accessor="population"
-          backgroundColor="transparent"
-          paddingLeft="15"
-          absolute={false} // Show percentages
+          height={220}
+          colorScale={chartColors}
+          style={{
+            labels: { 
+              fill: isDark ? '#FFFFFF' : '#000000',
+              fontSize: 12,
+              fontWeight: 'bold',
+            },
+          }}
+          labelRadius={({ innerRadius }) => (innerRadius as number) + 30}
+          innerRadius={0}
+          padAngle={2}
         />
+      </View>
+
+      {/* Legend */}
+      <View style={styles.legendContainer}>
+        {topAppliances.map((appliance, index) => (
+          <View key={appliance.applianceId} style={styles.legendItem}>
+            <View style={[styles.legendDot, { backgroundColor: chartColors[index] }]} />
+            <Text style={styles.legendText}>
+              {appliance.icon} {appliance.name}
+            </Text>
+          </View>
+        ))}
       </View>
 
       {/* Detailed List */}
@@ -135,7 +144,31 @@ const createStyles = (colors: any) =>
     },
     chartContainer: {
       alignItems: 'center',
-      marginBottom: 24,
+      marginBottom: 16,
+    },
+    legendContainer: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      justifyContent: 'center',
+      gap: 12,
+      marginBottom: 16,
+      paddingBottom: 16,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.divider,
+    },
+    legendItem: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 6,
+    },
+    legendDot: {
+      width: 12,
+      height: 12,
+      borderRadius: 6,
+    },
+    legendText: {
+      fontSize: 11,
+      color: colors.textSecondary,
     },
     listContainer: {
       gap: 16,
