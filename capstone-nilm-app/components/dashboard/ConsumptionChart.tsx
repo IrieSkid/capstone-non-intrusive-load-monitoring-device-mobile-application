@@ -96,10 +96,12 @@ const styles = StyleSheet.create({
   barWrapper: {
     flex: 1,
     width: '80%',
-    backgroundColor: '#f0f0f0',
+    backgroundColor: '#E8E8E8',
     borderRadius: 4,
     justifyContent: 'flex-end',
     overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: '#D0D0D0',
   },
   bar: {
     width: '100%',
@@ -110,10 +112,11 @@ const styles = StyleSheet.create({
   dayLabel: {
     fontSize: 10,
     fontWeight: '600',
+    color: '#333333',
   },
   costLabel: {
     fontSize: 9,
-    opacity: 0.6,
+    color: '#666666',
   },
   summary: {
     flexDirection: 'row',
@@ -127,7 +130,7 @@ const styles = StyleSheet.create({
   },
   summaryLabel: {
     fontSize: 12,
-    opacity: 0.7,
+    color: '#666666',
     marginBottom: 4,
   },
   summaryValue: {

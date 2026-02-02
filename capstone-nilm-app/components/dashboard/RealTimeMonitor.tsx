@@ -116,14 +116,16 @@ const styles = StyleSheet.create({
   reading: {
     flex: 1,
     minWidth: '45%',
-    backgroundColor: '#f5f5f5',
+    backgroundColor: '#FFFFFF',
     padding: 12,
     borderRadius: 8,
     alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
   },
   label: {
     fontSize: 12,
-    opacity: 0.7,
+    color: '#666666',
     marginBottom: 4,
   },
   value: {
@@ -133,12 +135,12 @@ const styles = StyleSheet.create({
   },
   unit: {
     fontSize: 14,
-    opacity: 0.7,
+    color: '#666666',
     marginTop: 2,
   },
   timestamp: {
     fontSize: 12,
-    opacity: 0.6,
+    color: '#999999',
     textAlign: 'center',
     marginTop: 12,
   },

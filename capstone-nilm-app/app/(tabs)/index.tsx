@@ -187,7 +187,7 @@ const styles = StyleSheet.create({
   },
   subtitle: {
     fontSize: 14,
-    opacity: 0.7,
+    color: '#666666',
     marginTop: 4,
   },
   statsGrid: {

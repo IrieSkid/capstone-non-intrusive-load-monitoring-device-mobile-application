@@ -102,7 +102,7 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 14,
-    opacity: 0.7,
+    color: '#666666',
     marginBottom: 8,
   },
   valueContainer: {
@@ -115,11 +115,11 @@ const styles = StyleSheet.create({
   },
   unit: {
     fontSize: 16,
-    opacity: 0.7,
+    color: '#666666',
   },
   subtitle: {
     fontSize: 12,
-    opacity: 0.6,
+    color: '#999999',
     marginTop: 4,
   },
 });

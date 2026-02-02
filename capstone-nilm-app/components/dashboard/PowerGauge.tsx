@@ -95,8 +95,11 @@ const styles = StyleSheet.create({
     height: 100,
     borderTopLeftRadius: 100,
     borderTopRightRadius: 100,
-    backgroundColor: '#f0f0f0',
+    backgroundColor: '#E8E8E8',
     overflow: 'hidden',
+    borderWidth: 2,
+    borderColor: '#D0D0D0',
+    borderBottomWidth: 0,
   },
   gaugeFill: {
     position: 'absolute',
@@ -120,11 +123,11 @@ const styles = StyleSheet.create({
   },
   unit: {
     fontSize: 14,
-    opacity: 0.7,
+    color: '#666666',
   },
   percentage: {
     fontSize: 12,
-    opacity: 0.6,
+    color: '#999999',
     marginTop: 4,
   },
   labels: {
@@ -135,7 +138,7 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: 12,
-    opacity: 0.6,
+    color: '#666666',
   },
   status: {
     flexDirection: 'row',
