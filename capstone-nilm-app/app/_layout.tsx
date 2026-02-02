@@ -33,6 +33,11 @@ function RootLayoutContent() {
         <Stack.Screen name="(auth)" options={{ headerShown: false }} />
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal' }} />
+        <Stack.Screen name="add-device" options={{ headerShown: false }} />
+        <Stack.Screen name="device-details" options={{ headerShown: false }} />
+        <Stack.Screen name="device-appliances" options={{ headerShown: false }} />
+        <Stack.Screen name="add-appliance" options={{ headerShown: false }} />
+        <Stack.Screen name="appliance-details" options={{ headerShown: false }} />
       </Stack>
       <StatusBar style={isDark ? 'light' : 'dark'} />
     </NavThemeProvider>

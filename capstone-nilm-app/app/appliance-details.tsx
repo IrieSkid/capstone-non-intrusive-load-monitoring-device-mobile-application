@@ -19,12 +19,14 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useTheme } from '@/contexts/ThemeContext';
+import { useAuth } from '@/hooks/useAuth';
 import { firestoreApplianceService, Appliance } from '@/services/firestoreApplianceService';
 
 const ICONS = ['❄️', '🧊', '🌀', '🔥', '🚿', '🍳', '🍲', '🍚', '🧺', '📺', '💡', '💻', '🔌', '⚡', '🔋'];
 
 export default function ApplianceDetailsScreen() {
   const { colors } = useTheme();
+  const { user } = useAuth();
   const { applianceId } = useLocalSearchParams<{ applianceId: string }>();
   const styles = createStyles(colors);
 
@@ -48,13 +50,13 @@ export default function ApplianceDetailsScreen() {
   }, [applianceId]);
 
   const loadAppliance = async () => {
-    if (!applianceId) return;
+    if (!applianceId || !user) return;
 
     try {
       setIsLoading(true);
       // We need to load appliances and find the one we want
       // In a real scenario, we'd have a getApplianceById method
-      const appliances = await firestoreApplianceService.getUserAppliances('');
+      const appliances = await firestoreApplianceService.getUserAppliances(user.id);
       const found = appliances.find(a => a.id === applianceId);
       
       if (found) {
