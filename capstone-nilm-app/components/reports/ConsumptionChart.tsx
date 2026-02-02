@@ -18,8 +18,18 @@ export function ConsumptionChartComponent({ title, data, unit = 'kWh' }: Consump
   const { colors } = useTheme();
   const styles = createStyles(colors);
 
-  // Find max value for scaling
-  const maxValue = Math.max(...data.map(d => d.value));
+  // Ensure data is valid
+  if (!data || data.length === 0) {
+    return (
+      <View style={styles.container}>
+        <Text style={styles.title}>{title}</Text>
+        <Text style={styles.noData}>No data available</Text>
+      </View>
+    );
+  }
+
+  // Find max value for scaling (safely handle undefined values)
+  const maxValue = Math.max(...data.map(d => d.value || 0));
 
   // Sample data for display (show every nth item if too many)
   const displayData = data.length > 24 
@@ -34,13 +44,13 @@ export function ConsumptionChartComponent({ title, data, unit = 'kWh' }: Consump
         <View style={styles.statItem}>
           <Text style={styles.statLabel}>Total</Text>
           <Text style={styles.statValue}>
-            {data.reduce((sum, d) => sum + d.value, 0).toFixed(1)} {unit}
+            {data.reduce((sum, d) => sum + (d.value || 0), 0).toFixed(1)} {unit}
           </Text>
         </View>
         <View style={styles.statItem}>
           <Text style={styles.statLabel}>Average</Text>
           <Text style={styles.statValue}>
-            {(data.reduce((sum, d) => sum + d.value, 0) / data.length).toFixed(1)} {unit}
+            {(data.reduce((sum, d) => sum + (d.value || 0), 0) / data.length).toFixed(1)} {unit}
           </Text>
         </View>
         <View style={styles.statItem}>
@@ -54,24 +64,25 @@ export function ConsumptionChartComponent({ title, data, unit = 'kWh' }: Consump
       <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.chartScroll}>
         <View style={styles.chartContainer}>
           {displayData.map((item, index) => {
-            const barHeight = (item.value / maxValue) * 150; // Max height 150px
+            const value = item.value || 0;
+            const barHeight = maxValue > 0 ? (value / maxValue) * 150 : 0; // Max height 150px
             
             return (
               <View key={index} style={styles.barContainer}>
                 <View style={styles.barWrapper}>
-                  <Text style={styles.barValue}>{item.value.toFixed(1)}</Text>
+                  <Text style={styles.barValue}>{value.toFixed(1)}</Text>
                   <View
                     style={[
                       styles.bar,
                       {
-                        height: barHeight,
+                        height: Math.max(barHeight, 2), // Minimum 2px height
                         backgroundColor: colors.primary,
                       },
                     ]}
                   />
                 </View>
                 <Text style={styles.barLabel} numberOfLines={1}>
-                  {item.label}
+                  {item.label || ''}
                 </Text>
               </View>
             );
@@ -186,5 +197,11 @@ const createStyles = (colors: any) =>
     legendText: {
       fontSize: 12,
       color: colors.textSecondary,
+    },
+    noData: {
+      fontSize: 14,
+      color: colors.textSecondary,
+      textAlign: 'center',
+      paddingVertical: 32,
     },
   });

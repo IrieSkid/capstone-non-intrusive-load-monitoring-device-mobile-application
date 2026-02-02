@@ -181,7 +181,7 @@ class ReportService {
   /**
    * Calculate hourly data from readings
    */
-  private calculateHourlyData(readings: any[]): Array<{ hour: number; kwh: number }> {
+  private calculateHourlyData(readings: any[]): any[] {
     const hourlyMap = new Map<number, number>();
     
     readings.forEach(reading => {
@@ -192,7 +192,16 @@ class ReportService {
 
     const result = [];
     for (let i = 0; i < 24; i++) {
-      result.push({ hour: i, kwh: hourlyMap.get(i) || 0 });
+      const kwh = hourlyMap.get(i) || 0;
+      const now = new Date();
+      now.setHours(i, 0, 0, 0);
+      
+      result.push({ 
+        timestamp: now,
+        label: `${i}:00`,
+        value: kwh,
+        cost: kwh * this.costPerKwh,
+      });
     }
     
     return result;
@@ -201,7 +210,7 @@ class ReportService {
   /**
    * Calculate daily data from readings
    */
-  private calculateDailyData(readings: any[], startDate: Date): Array<{ date: Date; kwh: number }> {
+  private calculateDailyData(readings: any[], startDate: Date): any[] {
     const dailyMap = new Map<string, number>();
     
     readings.forEach(reading => {
@@ -218,9 +227,14 @@ class ReportService {
     
     while (currentDate <= endDate) {
       const dateKey = currentDate.toDateString();
+      const kwh = dailyMap.get(dateKey) || 0;
+      const dateLabel = new Date(currentDate);
+      
       result.push({
-        date: new Date(currentDate),
-        kwh: dailyMap.get(dateKey) || 0,
+        timestamp: new Date(currentDate),
+        label: dateLabel.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+        value: kwh,
+        cost: kwh * this.costPerKwh,
       });
       currentDate.setDate(currentDate.getDate() + 1);
     }
@@ -276,13 +290,23 @@ class ReportService {
 
   // Empty report helpers
   private getEmptyDailyReport(): DailyReport {
+    const now = new Date();
     return {
       date: new Date(),
       totalKwh: 0,
       peakPower: 0,
       avgPower: 0,
       totalCost: 0,
-      hourlyData: Array.from({ length: 24 }, (_, i) => ({ hour: i, kwh: 0 })),
+      hourlyData: Array.from({ length: 24 }, (_, i) => {
+        const timestamp = new Date(now);
+        timestamp.setHours(i, 0, 0, 0);
+        return {
+          timestamp,
+          label: `${i}:00`,
+          value: 0,
+          cost: 0,
+        };
+      }),
       applianceBreakdown: [],
       comparisonToYesterday: 0,
     };
