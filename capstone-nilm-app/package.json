@@ -8,7 +8,8 @@
     "android": "expo start --android",
     "ios": "expo start --ios",
     "web": "expo start --web",
-    "lint": "expo lint"
+    "lint": "expo lint",
+    "cleanup-data": "ts-node --project tsconfig.json scripts/cleanupTestData.ts"
   },
   "dependencies": {
     "@expo/vector-icons": "^15.0.3",

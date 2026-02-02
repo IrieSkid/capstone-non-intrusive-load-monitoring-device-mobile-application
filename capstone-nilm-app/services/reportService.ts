@@ -1,6 +1,10 @@
 /**
  * Report Service
  * Handles data aggregation and report generation from Firestore
+ * 
+ * ⚠️ DEPLOYMENT NOTE:
+ * Caching is configured in config/environment.ts
+ * Can be kept enabled in production for better performance
  */
 
 import { DailyReport, WeeklyReport, MonthlyReport, CostAnalysis, ApplianceConsumption } from '@/types/report';
@@ -8,6 +12,7 @@ import { readingService } from './readingService';
 import { firestoreApplianceService } from './firestoreApplianceService';
 import { electricityRateService } from './electricityRateService';
 import { consumptionSummaryService } from './consumptionSummaryService';
+import { cache, generateCacheKey } from '@/utils/cache';
 
 class ReportService {
   private readonly defaultCostPerKwh = 12; // ₱12 per kWh fallback
@@ -38,6 +43,11 @@ class ReportService {
    * Get today's report from Firestore readings
    */
   async getDailyReport(deviceId: string, userId?: string): Promise<DailyReport> {
+    // Check cache first
+    const cacheKey = generateCacheKey('daily-report', deviceId, userId, new Date().toDateString());
+    const cached = cache.get<DailyReport>(cacheKey);
+    if (cached) return cached;
+
     try {
       const startOfDay = new Date();
       startOfDay.setHours(0, 0, 0, 0);
@@ -66,7 +76,7 @@ class ReportService {
       // Get appliance breakdown
       const applianceBreakdown = await this.calculateApplianceBreakdown(readings, deviceId, costPerKwh);
 
-      return {
+      const report = {
         date: new Date(),
         totalKwh: this.fmt(totalKwh),
         totalCost: this.fmt(totalCost),
@@ -76,6 +86,11 @@ class ReportService {
         applianceBreakdown,
         comparisonToYesterday: 0,
       };
+
+      // Cache the result
+      cache.set(cacheKey, report);
+      
+      return report;
     } catch (error) {
       console.error('Error generating daily report:', error);
       return this.getEmptyDailyReport();

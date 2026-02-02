@@ -2,10 +2,14 @@
  * Real-Time Data Service
  * Simulates WebSocket connection with live data updates
  * Now with Firestore persistence and real appliance data! 🔥
+ * 
+ * ⚠️ DEPLOYMENT NOTE:
+ * Configure DEVELOPMENT_MODE in config/environment.ts before deployment
  */
 
 import { readingService } from './readingService';
 import { firestoreApplianceService, Appliance } from './firestoreApplianceService';
+import { ENV, logConfig } from '@/config/environment';
 
 export interface RealtimeReading {
   timestamp: Date;
@@ -253,12 +257,15 @@ class RealtimeDataService {
     }
     
     console.log('🔌 Real-time data service started', deviceId ? `for device ${deviceId}` : '');
+    console.log('⚙️  UI Update Interval:', ENV.UI_UPDATE_INTERVAL / 1000, 'seconds');
+    console.log('💾 Persistence Interval:', ENV.PERSISTENCE_INTERVAL / 1000, 'seconds');
 
-    // Update every 3 seconds
+    // Update UI at configured interval (3 seconds for smooth UI)
     this.interval = setInterval(() => {
       // Update energy (cumulative)
       const appliancePower = this.calculateTotalPower();
-      this.totalEnergy += (appliancePower / 1000) * (3 / 3600); // Convert to kWh for 3 seconds
+      const intervalSeconds = ENV.UI_UPDATE_INTERVAL / 1000;
+      this.totalEnergy += (appliancePower / 1000) * (intervalSeconds / 3600); // Convert to kWh
 
       // Generate new reading based on appliances
       this.currentReading = {
@@ -267,24 +274,27 @@ class RealtimeDataService {
         energy: this.totalEnergy,
       };
 
-      // Notify data callbacks
+      // Notify data callbacks (UI updates)
       this.dataCallbacks.forEach(callback => callback({ ...this.currentReading }));
 
       // Update appliances every cycle (update durations)
       this.updateAppliances();
 
-      // Save to Firestore every 10 cycles (30 seconds)
-      this.saveInterval++;
-      if (this.saveInterval >= 10 && this.deviceId) {
+      // Increment persistence counter
+      this.persistenceCounter += ENV.UI_UPDATE_INTERVAL;
+
+      // Save to Firestore at configured persistence interval
+      // In development: Every 30 seconds
+      // In production: Every 3 seconds
+      if (this.persistenceCounter >= ENV.PERSISTENCE_INTERVAL && this.deviceId) {
         this.saveToFirestore(); // This now also updates appliance usage
-        this.saveInterval = 0;
+        this.persistenceCounter = 0;
+        
+        if (ENV.DEVELOPMENT_MODE) {
+          console.log('💾 [DEV MODE] Saved reading (reduced frequency to save quota)');
+        }
       }
-      
-      // Also update appliance usage more frequently (every 20 cycles = 60 seconds)
-      if (this.saveInterval % 20 === 0 && this.deviceId) {
-        this.updateApplianceUsageInFirestore();
-      }
-    }, 3000); // Every 3 seconds
+    }, ENV.UI_UPDATE_INTERVAL); // Configurable UI update rate
   }
 
   /**
