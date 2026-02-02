@@ -273,17 +273,14 @@ export function AdminDashboard() {
         <TouchableOpacity 
           style={styles.actionCard} 
           activeOpacity={0.7}
-          onPress={() => {
-            // TODO: Navigate to system reports
-            alert('System Reports - Coming Soon');
-          }}
+          onPress={() => router.push('/admin/audit-logs')}
         >
           <View style={styles.actionIcon}>
-            <Ionicons name="stats-chart-outline" size={24} color={colors.primary} />
+            <Ionicons name="document-text-outline" size={24} color={colors.primary} />
           </View>
           <View style={styles.actionContent}>
-            <Text style={styles.actionTitle}>System Reports</Text>
-            <Text style={styles.actionSubtitle}>View system-wide analytics</Text>
+            <Text style={styles.actionTitle}>Audit Logs</Text>
+            <Text style={styles.actionSubtitle}>View system activity trail</Text>
           </View>
           <Ionicons name="chevron-forward" size={24} color={colors.textSecondary} />
         </TouchableOpacity>
@@ -291,10 +288,7 @@ export function AdminDashboard() {
         <TouchableOpacity 
           style={styles.actionCard} 
           activeOpacity={0.7}
-          onPress={() => {
-            // TODO: Navigate to system settings
-            alert('System Settings - Coming Soon');
-          }}
+          onPress={() => router.push('/admin/settings')}
         >
           <View style={styles.actionIcon}>
             <Ionicons name="settings-outline" size={24} color={colors.primary} />
