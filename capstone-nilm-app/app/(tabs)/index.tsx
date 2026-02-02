@@ -1,18 +1,31 @@
-import React, { useEffect } from 'react';
-import { Image } from 'expo-image';
-import { Platform, StyleSheet, ActivityIndicator } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { StyleSheet, ActivityIndicator, ScrollView, RefreshControl, View } from 'react-native';
 import { router } from 'expo-router';
 
-import { HelloWave } from '@/components/hello-wave';
-import ParallaxScrollView from '@/components/parallax-scroll-view';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { Link } from 'expo-router';
-import { FirebaseTest } from '@/components/firebase-test';
 import { useAuth } from '@/hooks/useAuth';
+import { StatsCard } from '@/components/dashboard/StatsCard';
+import { RealTimeMonitor } from '@/components/dashboard/RealTimeMonitor';
+import { DeviceStatus } from '@/components/dashboard/DeviceStatus';
+import { ConsumptionChart } from '@/components/dashboard/ConsumptionChart';
+import { PowerGauge } from '@/components/dashboard/PowerGauge';
+import {
+  generateMockDevice,
+  calculateTodayStats,
+  calculateMonthlyStats,
+  getComparisonStats,
+  generateMockReading,
+} from '@/utils/mockData';
 
 export default function HomeScreen() {
   const { user, isLoading } = useAuth();
+  const [refreshing, setRefreshing] = useState(false);
+  const [mockDevice, setMockDevice] = useState(generateMockDevice(user?.id || 'mock-user'));
+  const [currentReading, setCurrentReading] = useState(generateMockReading(mockDevice.id));
+  const [todayStats, setTodayStats] = useState(calculateTodayStats());
+  const [monthlyStats, setMonthlyStats] = useState(calculateMonthlyStats());
+  const [comparison, setComparison] = useState(getComparisonStats());
 
   useEffect(() => {
     // Redirect to login if not authenticated
@@ -20,6 +33,26 @@ export default function HomeScreen() {
       router.replace('/(auth)/login');
     }
   }, [isLoading, user]);
+
+  useEffect(() => {
+    // Update mock device when user changes
+    if (user) {
+      setMockDevice(generateMockDevice(user.id));
+    }
+  }, [user]);
+
+  const onRefresh = React.useCallback(() => {
+    setRefreshing(true);
+    
+    // Simulate data refresh
+    setTimeout(() => {
+      setCurrentReading(generateMockReading(mockDevice.id));
+      setTodayStats(calculateTodayStats());
+      setMonthlyStats(calculateMonthlyStats());
+      setComparison(getComparisonStats());
+      setRefreshing(false);
+    }, 1000);
+  }, [mockDevice]);
 
   if (isLoading) {
     return (
@@ -35,90 +68,108 @@ export default function HomeScreen() {
   }
 
   return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-      headerImage={
-        <Image
-          source={require('@/assets/images/partial-react-logo.png')}
-          style={styles.reactLogo}
-        />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Welcome, {user.firstName}!</ThemedText>
-        <HelloWave />
-      </ThemedView>
-      
-      {/* Firebase Connection Test - Remove this after testing */}
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">🔥 Firebase Connection Test</ThemedText>
-        <FirebaseTest />
-      </ThemedView>
-
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">User Info</ThemedText>
-        <ThemedText>Email: {user.email}</ThemedText>
-        <ThemedText>Role: {user.role}</ThemedText>
-        <ThemedText>Status: {user.isActive ? 'Active' : 'Inactive'}</ThemedText>
-      </ThemedView>
-
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-        <ThemedText>
-          Edit <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> to see changes.
-          Press{' '}
-          <ThemedText type="defaultSemiBold">
-            {Platform.select({
-              ios: 'cmd + d',
-              android: 'cmd + m',
-              web: 'F12',
+    <ScrollView
+      style={styles.container}
+      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}>
+      <ThemedView style={styles.content}>
+        {/* Header */}
+        <View style={styles.header}>
+          <ThemedText type="title">Welcome, {user.firstName}! 👋</ThemedText>
+          <ThemedText style={styles.subtitle}>
+            {new Date().toLocaleDateString('en-US', {
+              weekday: 'long',
+              year: 'numeric',
+              month: 'long',
+              day: 'numeric',
             })}
-          </ThemedText>{' '}
-          to open developer tools.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <Link href="/modal">
-          <Link.Trigger>
-            <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-          </Link.Trigger>
-          <Link.Preview />
-          <Link.Menu>
-            <Link.MenuAction title="Action" icon="cube" onPress={() => alert('Action pressed')} />
-            <Link.MenuAction
-              title="Share"
-              icon="square.and.arrow.up"
-              onPress={() => alert('Share pressed')}
-            />
-            <Link.Menu title="More" icon="ellipsis">
-              <Link.MenuAction
-                title="Delete"
-                icon="trash"
-                destructive
-                onPress={() => alert('Delete pressed')}
-              />
-            </Link.Menu>
-          </Link.Menu>
-        </Link>
+          </ThemedText>
+        </View>
 
-        <ThemedText>
-          {`Tap the Explore tab to learn more about what's included in this starter app.`}
-        </ThemedText>
+        {/* Quick Stats */}
+        <View style={styles.statsGrid}>
+          <View style={styles.statsRow}>
+            <View style={{ flex: 1 }}>
+              <StatsCard
+                title="Today's Usage"
+                value={todayStats.totalKwh.toString()}
+                unit="kWh"
+                icon="bolt.fill"
+                iconColor="#FF9500"
+                trend={{
+                  value: comparison.change,
+                  isPositive: !comparison.isIncrease,
+                }}
+                subtitle={`vs yesterday: ${comparison.previousKwh} kWh`}
+              />
+            </View>
+          </View>
+
+          <View style={styles.statsRow}>
+            <View style={{ flex: 1 }}>
+              <StatsCard
+                title="Today's Cost"
+                value={`₱${todayStats.totalCost.toFixed(2)}`}
+                icon="Philippine peso sign.circle.fill"
+                iconColor="#34C759"
+                subtitle="@ ₱11.50/kWh"
+              />
+            </View>
+          </View>
+
+          <View style={styles.statsRow}>
+            <View style={{ flex: 1 }}>
+              <StatsCard
+                title="This Month"
+                value={monthlyStats.totalKwh.toFixed(0)}
+                unit="kWh"
+                icon="calendar"
+                iconColor="#007AFF"
+                subtitle={`Day ${monthlyStats.daysElapsed} of ${monthlyStats.daysInMonth}`}
+              />
+            </View>
+          </View>
+
+          <View style={styles.statsRow}>
+            <View style={{ flex: 1 }}>
+              <StatsCard
+                title="Projected Bill"
+                value={`₱${monthlyStats.projectedCost.toFixed(0)}`}
+                icon="chart.line.uptrend.xyaxis"
+                iconColor="#FF3B30"
+                subtitle={`${monthlyStats.projectedKwh.toFixed(0)} kWh estimated`}
+              />
+            </View>
+          </View>
+        </View>
+
+        {/* Power Gauge */}
+        <PowerGauge currentWatts={currentReading.powerWatts} maxWatts={5000} />
+
+        {/* Real-Time Monitor */}
+        <RealTimeMonitor deviceId={mockDevice.id} />
+
+        {/* Consumption Chart */}
+        <ConsumptionChart />
+
+        {/* Device Status */}
+        <DeviceStatus device={mockDevice} />
+
+        {/* Info Note */}
+        <ThemedView style={styles.infoNote}>
+          <ThemedText style={styles.infoText}>
+            ℹ️ This dashboard is displaying mock data for testing. When the hardware is ready, it
+            will show real-time readings from your IoT device.
+          </ThemedText>
+        </ThemedView>
       </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          {`When you're ready, run `}
-          <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText> to get a fresh{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> directory. This will move the current{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-        </ThemedText>
-      </ThemedView>
-    </ParallaxScrollView>
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
@@ -127,20 +178,35 @@ const styles = StyleSheet.create({
   loadingText: {
     marginTop: 10,
   },
-  titleContainer: {
+  content: {
+    padding: 16,
+    paddingTop: 60, // Account for status bar
+  },
+  header: {
+    marginBottom: 24,
+  },
+  subtitle: {
+    fontSize: 14,
+    opacity: 0.7,
+    marginTop: 4,
+  },
+  statsGrid: {
+    marginBottom: 16,
+  },
+  statsRow: {
     flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
+    gap: 12,
   },
-  stepContainer: {
-    gap: 8,
-    marginBottom: 8,
+  infoNote: {
+    padding: 16,
+    borderRadius: 12,
+    backgroundColor: '#E3F2FD',
+    marginTop: 16,
+    marginBottom: 32,
   },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
-    position: 'absolute',
+  infoText: {
+    fontSize: 13,
+    color: '#1976D2',
+    lineHeight: 20,
   },
 });
