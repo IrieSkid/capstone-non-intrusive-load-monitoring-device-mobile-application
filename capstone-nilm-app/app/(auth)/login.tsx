@@ -40,10 +40,11 @@ export default function LoginScreen() {
     try {
       setIsSubmitting(true);
       await login(email, password);
-      // Navigation is handled automatically by AuthContext
+      
+      // Navigate to dashboard
+      router.replace('/(tabs)');
     } catch (error: any) {
       Alert.alert('Login Failed', error.message || 'Invalid email or password');
-    } finally {
       setIsSubmitting(false);
     }
   };

@@ -66,10 +66,20 @@ export default function RegisterScreen() {
         phoneNumber: formData.phoneNumber || undefined,
         role: formData.role,
       });
-      // Navigation is handled automatically by AuthContext
+      
+      // Show success message and navigate
+      Alert.alert(
+        'Success!',
+        'Your account has been created successfully.',
+        [
+          {
+            text: 'OK',
+            onPress: () => router.replace('/(tabs)'),
+          },
+        ]
+      );
     } catch (error: any) {
       Alert.alert('Registration Failed', error.message || 'Please try again');
-    } finally {
       setIsSubmitting(false);
     }
   };
