@@ -176,17 +176,29 @@ export const DEFAULT_SETTINGS: Record<string, Omit<SystemSetting, 'key' | 'creat
 
 /**
  * Initialize system settings with defaults
+ * Creates any missing default settings (doesn't overwrite existing ones)
  */
 export async function initializeSettings(adminUserId: string): Promise<void> {
   try {
     const settingsRef = collection(db, 'systemSettings');
     const snapshot = await getDocs(settingsRef);
 
-    // Only initialize if no settings exist
-    if (snapshot.empty) {
-      console.log('Initializing system settings...');
+    // Get existing setting keys
+    const existingKeys = new Set(snapshot.docs.map(doc => doc.id));
+
+    // Find missing settings
+    const missingSettings: Array<[string, Omit<SystemSetting, 'key' | 'createdAt' | 'updatedAt'>]> = [];
+    for (const [key, setting] of Object.entries(DEFAULT_SETTINGS)) {
+      if (!existingKeys.has(key)) {
+        missingSettings.push([key, setting]);
+      }
+    }
+
+    // Create missing settings
+    if (missingSettings.length > 0) {
+      console.log(`Initializing ${missingSettings.length} missing system settings...`);
       
-      for (const [key, setting] of Object.entries(DEFAULT_SETTINGS)) {
+      for (const [key, setting] of missingSettings) {
         await setDoc(doc(db, 'systemSettings', key), {
           ...setting,
           createdAt: Timestamp.now(),
@@ -194,9 +206,12 @@ export async function initializeSettings(adminUserId: string): Promise<void> {
           updatedAt: Timestamp.now(),
           updatedBy: adminUserId,
         });
+        console.log(`✅ Created setting: ${key}`);
       }
 
-      console.log('✅ System settings initialized');
+      console.log(`✅ System settings initialized (${missingSettings.length} new settings)`);
+    } else {
+      console.log('✅ All system settings already exist');
     }
   } catch (error) {
     console.error('Error initializing settings:', error);
@@ -269,15 +284,18 @@ export async function getSettingValue<T = any>(key: string, defaultValue?: T): P
 
 /**
  * Get all settings
+ * Merges Firestore settings with defaults (defaults are used for missing settings)
  */
 export async function getAllSettings(): Promise<SystemSetting[]> {
   try {
     const settingsRef = collection(db, 'systemSettings');
     const snapshot = await getDocs(settingsRef);
 
-    return snapshot.docs.map(doc => {
+    // Create a map of existing Firestore settings
+    const firestoreSettings = new Map<string, SystemSetting>();
+    snapshot.docs.forEach(doc => {
       const data = doc.data();
-      return {
+      firestoreSettings.set(doc.id, {
         key: doc.id,
         value: data.value,
         description: data.description,
@@ -288,11 +306,39 @@ export async function getAllSettings(): Promise<SystemSetting[]> {
         createdBy: data.createdBy,
         updatedAt: data.updatedAt?.toDate(),
         updatedBy: data.updatedBy,
-      };
+      });
     });
+
+    // Merge with defaults - Firestore values take precedence
+    const allSettings: SystemSetting[] = [];
+    for (const [key, defaultSetting] of Object.entries(DEFAULT_SETTINGS)) {
+      if (firestoreSettings.has(key)) {
+        // Use Firestore value
+        allSettings.push(firestoreSettings.get(key)!);
+      } else {
+        // Use default value (not yet in Firestore)
+        allSettings.push({
+          key,
+          ...defaultSetting,
+        });
+      }
+    }
+
+    // Add any custom settings that aren't in defaults
+    firestoreSettings.forEach((setting, key) => {
+      if (!DEFAULT_SETTINGS[key]) {
+        allSettings.push(setting);
+      }
+    });
+
+    return allSettings;
   } catch (error) {
     console.error('Error getting all settings:', error);
-    return [];
+    // Return defaults if Firestore fails
+    return Object.entries(DEFAULT_SETTINGS).map(([key, setting]) => ({
+      key,
+      ...setting,
+    }));
   }
 }
 

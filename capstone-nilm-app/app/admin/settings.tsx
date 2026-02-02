@@ -167,6 +167,37 @@ export default function AdminSettingsScreen() {
     loadSettings();
   };
 
+  /**
+   * Initialize missing settings in Firestore
+   */
+  const handleInitializeSettings = async () => {
+    if (!user?.id) return;
+
+    Alert.alert(
+      'Initialize Settings',
+      'This will create any missing default settings in the database. Continue?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Initialize',
+          onPress: async () => {
+            try {
+              setIsLoading(true);
+              await systemSettingsService.initializeSettings(user.id);
+              Alert.alert('Success', 'Missing settings have been initialized');
+              loadSettings();
+            } catch (error) {
+              console.error('Error initializing settings:', error);
+              Alert.alert('Error', 'Failed to initialize settings');
+            } finally {
+              setIsLoading(false);
+            }
+          },
+        },
+      ]
+    );
+  };
+
   if (isLoading) {
     return (
       <View style={styles.loadingContainer}>
@@ -185,6 +216,14 @@ export default function AdminSettingsScreen() {
         </TouchableOpacity>
         <Text style={styles.headerTitle}>System Settings</Text>
         <View style={styles.headerRight}>
+          <TouchableOpacity
+            onPress={handleInitializeSettings}
+            style={styles.initButton}
+            activeOpacity={0.7}
+          >
+            <Ionicons name="refresh" size={18} color={colors.primary} />
+            <Text style={styles.initButtonText}>Init</Text>
+          </TouchableOpacity>
           <Text style={styles.settingCount}>{filteredSettings.length} settings</Text>
         </View>
       </View>
@@ -418,6 +457,21 @@ const createStyles = (colors: any) =>
     headerRight: {
       flexDirection: 'row',
       alignItems: 'center',
+      gap: 12,
+    },
+    initButton: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingHorizontal: 10,
+      paddingVertical: 6,
+      borderRadius: 8,
+      backgroundColor: colors.primary + '20',
+      gap: 4,
+    },
+    initButtonText: {
+      fontSize: 12,
+      fontWeight: '600',
+      color: colors.primary,
     },
     settingCount: {
       fontSize: 14,
