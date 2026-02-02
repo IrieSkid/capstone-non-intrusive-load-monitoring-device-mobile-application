@@ -244,7 +244,7 @@ Note: This will fetch actual data from Firestore when connected to real hardware
         {costAnalysis && <CostAnalysisCard analysis={costAnalysis} />}
 
         {/* Appliance Breakdown */}
-        {currentReport && (
+        {currentReport && currentReport.applianceBreakdown && (
           <ApplianceBreakdown appliances={currentReport.applianceBreakdown} />
         )}
 
@@ -274,10 +274,10 @@ Note: This will fetch actual data from Firestore when connected to real hardware
             dateRange: getDateRange(),
             totalKwh: currentReport.totalKwh,
             totalCost: currentReport.totalCost,
-            appliances: currentReport.applianceBreakdown.map(a => ({
+            appliances: (currentReport.applianceBreakdown || []).map(a => ({
               name: a.name,
-              kwh: a.totalKwh,
-              cost: a.totalCost,
+              kwh: a.totalKwh || a.kwh,
+              cost: a.totalCost || 0,
             })),
           }}
         />

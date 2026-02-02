@@ -43,6 +43,9 @@ class ReportService {
       // Calculate hourly data
       const hourlyData = this.calculateHourlyData(readings);
 
+      // Get appliance breakdown
+      const applianceBreakdown = await this.getApplianceBreakdown(deviceId);
+
       return {
         date: new Date(),
         totalKwh,
@@ -50,6 +53,7 @@ class ReportService {
         avgPower,
         totalCost,
         hourlyData,
+        applianceBreakdown,
         comparisonToYesterday: 0, // TODO: Calculate from previous day
       };
     } catch (error) {
@@ -83,6 +87,9 @@ class ReportService {
       // Calculate daily data
       const dailyData = this.calculateDailyData(readings, startOfWeek);
 
+      // Get appliance breakdown
+      const applianceBreakdown = await this.getApplianceBreakdown(deviceId);
+
       return {
         startDate: startOfWeek,
         endDate: now,
@@ -91,6 +98,7 @@ class ReportService {
         peakPower,
         totalCost,
         dailyData,
+        applianceBreakdown,
         comparisonToPreviousWeek: 0, // TODO: Calculate
       };
     } catch (error) {
@@ -275,6 +283,7 @@ class ReportService {
       avgPower: 0,
       totalCost: 0,
       hourlyData: Array.from({ length: 24 }, (_, i) => ({ hour: i, kwh: 0 })),
+      applianceBreakdown: [],
       comparisonToYesterday: 0,
     };
   }
@@ -292,6 +301,7 @@ class ReportService {
       peakPower: 0,
       totalCost: 0,
       dailyData: [],
+      applianceBreakdown: [],
       comparisonToPreviousWeek: 0,
     };
   }
