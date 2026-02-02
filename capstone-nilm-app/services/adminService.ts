@@ -18,6 +18,7 @@ import {
 import { db } from '@/config/firebase';
 import { UserRole } from '@/types/rbac.types';
 import { Device } from '@/types/device.types';
+import { auditLogService } from './auditLogService';
 
 // ============================================
 // USER MANAGEMENT
@@ -113,13 +114,40 @@ export async function getUserById(userId: string): Promise<AdminUserData | null>
 /**
  * Update user role
  */
-export async function updateUserRole(userId: string, newRole: UserRole): Promise<void> {
+export async function updateUserRole(
+  userId: string,
+  newRole: UserRole,
+  adminUserId?: string,
+  adminEmail?: string,
+  adminName?: string
+): Promise<void> {
   try {
+    // Get old role for audit log
     const userRef = doc(db, 'users', userId);
+    const userSnap = await getDoc(userRef);
+    const oldRole = userSnap.exists() ? userSnap.data().role : 'tenant';
+    const userName = userSnap.exists() 
+      ? `${userSnap.data().firstName || ''} ${userSnap.data().lastName || ''}`.trim()
+      : 'Unknown';
+
     await updateDoc(userRef, {
       role: newRole,
       updatedAt: Timestamp.now(),
     });
+
+    // Log role change
+    if (adminUserId && adminEmail && adminName) {
+      await auditLogService.logRoleChange(
+        adminUserId,
+        adminEmail,
+        adminName,
+        userId,
+        userName,
+        oldRole,
+        newRole
+      );
+    }
+
     console.log(`✅ User ${userId} role updated to ${newRole}`);
   } catch (error) {
     console.error('Error updating user role:', error);
@@ -137,14 +165,36 @@ export async function updateUserDetails(
     lastName?: string;
     phoneNumber?: string;
     isActive?: boolean;
-  }
+  },
+  adminUserId?: string,
+  adminEmail?: string,
+  adminName?: string
 ): Promise<void> {
   try {
+    // Get old values for audit log
     const userRef = doc(db, 'users', userId);
+    const userSnap = await getDoc(userRef);
+    const oldValues = userSnap.exists() ? userSnap.data() : {};
+    const userName = `${updates.firstName || oldValues.firstName || ''} ${updates.lastName || oldValues.lastName || ''}`.trim();
+
     await updateDoc(userRef, {
       ...updates,
       updatedAt: Timestamp.now(),
     });
+
+    // Log user update
+    if (adminUserId && adminEmail && adminName) {
+      await auditLogService.logUserUpdate(
+        adminUserId,
+        adminEmail,
+        adminName,
+        userId,
+        userName,
+        oldValues,
+        updates
+      );
+    }
+
     console.log(`✅ User ${userId} details updated`);
   } catch (error) {
     console.error('Error updating user details:', error);
@@ -155,13 +205,36 @@ export async function updateUserDetails(
 /**
  * Deactivate user account
  */
-export async function deactivateUser(userId: string): Promise<void> {
+export async function deactivateUser(
+  userId: string,
+  adminUserId?: string,
+  adminEmail?: string,
+  adminName?: string
+): Promise<void> {
   try {
     const userRef = doc(db, 'users', userId);
+    const userSnap = await getDoc(userRef);
+    const userName = userSnap.exists()
+      ? `${userSnap.data().firstName || ''} ${userSnap.data().lastName || ''}`.trim()
+      : 'Unknown';
+
     await updateDoc(userRef, {
       isActive: false,
       deactivatedAt: Timestamp.now(),
     });
+
+    // Log deactivation
+    if (adminUserId && adminEmail && adminName) {
+      await auditLogService.logUserStatusChange(
+        adminUserId,
+        adminEmail,
+        adminName,
+        userId,
+        userName,
+        false
+      );
+    }
+
     console.log(`✅ User ${userId} deactivated`);
   } catch (error) {
     console.error('Error deactivating user:', error);
@@ -172,13 +245,36 @@ export async function deactivateUser(userId: string): Promise<void> {
 /**
  * Reactivate user account
  */
-export async function reactivateUser(userId: string): Promise<void> {
+export async function reactivateUser(
+  userId: string,
+  adminUserId?: string,
+  adminEmail?: string,
+  adminName?: string
+): Promise<void> {
   try {
     const userRef = doc(db, 'users', userId);
+    const userSnap = await getDoc(userRef);
+    const userName = userSnap.exists()
+      ? `${userSnap.data().firstName || ''} ${userSnap.data().lastName || ''}`.trim()
+      : 'Unknown';
+
     await updateDoc(userRef, {
       isActive: true,
       reactivatedAt: Timestamp.now(),
     });
+
+    // Log reactivation
+    if (adminUserId && adminEmail && adminName) {
+      await auditLogService.logUserStatusChange(
+        adminUserId,
+        adminEmail,
+        adminName,
+        userId,
+        userName,
+        true
+      );
+    }
+
     console.log(`✅ User ${userId} reactivated`);
   } catch (error) {
     console.error('Error reactivating user:', error);
@@ -323,8 +419,32 @@ export async function getDeviceById(deviceId: string): Promise<AdminDeviceData |
 /**
  * Reassign device to a different user
  */
-export async function reassignDevice(deviceId: string, newUserId: string): Promise<void> {
+export async function reassignDevice(
+  deviceId: string,
+  newUserId: string,
+  adminUserId?: string,
+  adminEmail?: string,
+  adminName?: string
+): Promise<void> {
   try {
+    // Get device and old owner info
+    const deviceRef = doc(db, 'devices', deviceId);
+    const deviceSnap = await getDoc(deviceRef);
+    const deviceData = deviceSnap.exists() ? deviceSnap.data() : null;
+    const deviceName = deviceData?.name || 'Unknown Device';
+    const oldUserId = deviceData?.userId;
+
+    // Get old owner name
+    let oldOwnerName = 'Unknown User';
+    if (oldUserId) {
+      const oldUserRef = doc(db, 'users', oldUserId);
+      const oldUserSnap = await getDoc(oldUserRef);
+      if (oldUserSnap.exists()) {
+        const oldUserData = oldUserSnap.data();
+        oldOwnerName = `${oldUserData.firstName || ''} ${oldUserData.lastName || ''}`.trim();
+      }
+    }
+
     // Verify new user exists
     const userRef = doc(db, 'users', newUserId);
     const userSnap = await getDoc(userRef);
@@ -333,12 +453,27 @@ export async function reassignDevice(deviceId: string, newUserId: string): Promi
       throw new Error('New user does not exist');
     }
 
+    const newUserData = userSnap.data();
+    const newOwnerName = `${newUserData.firstName || ''} ${newUserData.lastName || ''}`.trim();
+
     // Update device ownership
-    const deviceRef = doc(db, 'devices', deviceId);
     await updateDoc(deviceRef, {
       userId: newUserId,
       updatedAt: Timestamp.now(),
     });
+
+    // Log reassignment
+    if (adminUserId && adminEmail && adminName) {
+      await auditLogService.logDeviceReassignment(
+        adminUserId,
+        adminEmail,
+        adminName,
+        deviceId,
+        deviceName,
+        oldOwnerName,
+        newOwnerName
+      );
+    }
 
     console.log(`✅ Device ${deviceId} reassigned to user ${newUserId}`);
   } catch (error) {
@@ -376,8 +511,18 @@ export async function updateDeviceDetails(
 /**
  * Delete device (admin only)
  */
-export async function deleteDevice(deviceId: string): Promise<void> {
+export async function deleteDevice(
+  deviceId: string,
+  adminUserId?: string,
+  adminEmail?: string,
+  adminName?: string
+): Promise<void> {
   try {
+    // Get device info for audit log
+    const deviceRef = doc(db, 'devices', deviceId);
+    const deviceSnap = await getDoc(deviceRef);
+    const deviceName = deviceSnap.exists() ? deviceSnap.data().name : 'Unknown Device';
+
     // Delete all appliances associated with this device
     const appliancesRef = collection(db, 'appliances');
     const applianceQuery = query(appliancesRef, where('deviceId', '==', deviceId));
@@ -387,8 +532,19 @@ export async function deleteDevice(deviceId: string): Promise<void> {
     await Promise.all(deletePromises);
 
     // Delete the device
-    const deviceRef = doc(db, 'devices', deviceId);
     await deleteDoc(deviceRef);
+
+    // Log deletion
+    if (adminUserId && adminEmail && adminName) {
+      await auditLogService.logDeviceDeletion(
+        adminUserId,
+        adminEmail,
+        adminName,
+        deviceId,
+        deviceName,
+        applianceSnapshot.size
+      );
+    }
 
     console.log(`✅ Device ${deviceId} and ${applianceSnapshot.size} appliances deleted`);
   } catch (error) {
