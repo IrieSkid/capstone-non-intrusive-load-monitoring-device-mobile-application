@@ -27,28 +27,31 @@ export function ApplianceList() {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.title}>Active Appliances ({mockAppliances.length})</Text>
-        <TouchableOpacity>
-          <Text style={styles.viewAll}>View All →</Text>
-        </TouchableOpacity>
+        <Text style={styles.title}>Active Appliances ({activeAppliances.length})</Text>
       </View>
 
-      {mockAppliances.map((appliance) => (
-        <View key={appliance.id} style={styles.applianceItem}>
-          <View style={styles.applianceIcon}>
-            <Text style={styles.iconText}>{appliance.icon}</Text>
-          </View>
-
-          <View style={styles.applianceInfo}>
-            <Text style={styles.applianceName}>{appliance.name}</Text>
-            <Text style={styles.applianceStatus}>
-              {appliance.status} • {appliance.duration}
-            </Text>
-          </View>
-
-          <Text style={styles.appliancePower}>{appliance.power} W</Text>
+      {activeAppliances.length === 0 ? (
+        <View style={styles.emptyState}>
+          <Text style={styles.emptyText}>No appliances currently active</Text>
         </View>
-      ))}
+      ) : (
+        activeAppliances.map((appliance) => (
+          <View key={appliance.id} style={styles.applianceItem}>
+            <View style={styles.applianceIcon}>
+              <Text style={styles.iconText}>{appliance.icon}</Text>
+            </View>
+
+            <View style={styles.applianceInfo}>
+              <Text style={styles.applianceName}>{appliance.name}</Text>
+              <Text style={styles.applianceStatus}>
+                {appliance.isOn ? 'ON' : 'OFF'} • {formatDuration(appliance.duration)}
+              </Text>
+            </View>
+
+            <Text style={styles.appliancePower}>{appliance.power.toFixed(0)} W</Text>
+          </View>
+        ))
+      )}
     </View>
   );
 }
@@ -119,5 +122,17 @@ const createStyles = (colors: any) => StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     color: colors.primary,
+  },
+  emptyState: {
+    backgroundColor: colors.surface,
+    borderRadius: 8,
+    padding: 24,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: colors.divider,
+  },
+  emptyText: {
+    fontSize: 14,
+    color: colors.textSecondary,
   },
 });
