@@ -18,7 +18,14 @@ import {
 
 interface AuthContextType extends AuthState {
   login: (email: string, password: string) => Promise<void>;
-  register: (data: UserRegistrationData) => Promise<void>;
+  register: (
+    email: string,
+    password: string,
+    firstName: string,
+    lastName: string,
+    role?: 'tenant' | 'landlord' | 'admin',
+    phoneNumber?: string
+  ) => Promise<void>;
   logout: () => Promise<void>;
   sendPasswordReset: (email: string) => Promise<void>;
   updateProfile: (data: UserUpdateData) => Promise<void>;
@@ -91,9 +98,24 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
-  const register = async (data: UserRegistrationData): Promise<void> => {
+  const register = async (
+    email: string,
+    password: string,
+    firstName: string,
+    lastName: string,
+    role?: 'tenant' | 'landlord' | 'admin',
+    phoneNumber?: string
+  ): Promise<void> => {
     try {
       setAuthState((prev) => ({ ...prev, isLoading: true }));
+      const data: UserRegistrationData = {
+        email,
+        password,
+        firstName,
+        lastName,
+        role: role || 'tenant',
+        phoneNumber,
+      };
       const user = await registerUser(data);
       setAuthState({
         user,
