@@ -1,51 +1,28 @@
 /**
  * Appliance List Component
- * Shows active appliances with power consumption
+ * Shows active appliances with power consumption (Real-Time)
  */
 
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { useTheme } from '@/contexts/ThemeContext';
-
-interface Appliance {
-  id: string;
-  name: string;
-  icon: string;
-  power: number;
-  status: string;
-  duration: string;
-}
-
-const mockAppliances: Appliance[] = [
-  {
-    id: '1',
-    name: 'Refrigerator',
-    icon: '🧊',
-    power: 150,
-    status: 'ON',
-    duration: '2.5 hours',
-  },
-  {
-    id: '2',
-    name: 'Air Conditioner',
-    icon: '❄️',
-    power: 1000,
-    status: 'ON',
-    duration: '1.2 hours',
-  },
-  {
-    id: '3',
-    name: 'Television',
-    icon: '📺',
-    power: 80,
-    status: 'ON',
-    duration: '0.5 hours',
-  },
-];
+import { useRealtimeData } from '@/contexts/RealtimeDataContext';
 
 export function ApplianceList() {
   const { colors } = useTheme();
+  const { appliances } = useRealtimeData();
   const styles = createStyles(colors);
+
+  // Filter to show only appliances that are ON
+  const activeAppliances = appliances.filter(a => a.isOn);
+
+  // Format duration
+  const formatDuration = (minutes: number): string => {
+    if (minutes < 60) return `${minutes}m`;
+    const hours = Math.floor(minutes / 60);
+    const mins = minutes % 60;
+    return mins > 0 ? `${hours}h ${mins}m` : `${hours}h`;
+  };
 
   return (
     <View style={styles.container}>

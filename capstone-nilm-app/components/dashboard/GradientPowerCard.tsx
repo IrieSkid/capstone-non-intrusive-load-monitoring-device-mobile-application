@@ -1,12 +1,12 @@
 /**
  * Gradient Power Card Component
- * Shows current power consumption with gradient background
+ * Shows current power consumption with gradient background (Real-Time)
  */
 
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { generateMockReading } from '@/utils/mockData';
+import { useRealtimeData } from '@/contexts/RealtimeDataContext';
 import Colors from '@/constants/Colors';
 
 interface GradientPowerCardProps {
@@ -14,26 +14,13 @@ interface GradientPowerCardProps {
 }
 
 export function GradientPowerCard({ deviceId }: GradientPowerCardProps) {
-  const [currentWatts, setCurrentWatts] = useState(0);
-  const [lastUpdate, setLastUpdate] = useState(new Date());
+  const { currentReading, isConnected } = useRealtimeData();
 
-  useEffect(() => {
-    // Initial reading
-    const reading = generateMockReading(deviceId);
-    setCurrentWatts(reading.powerWatts);
-    setLastUpdate(new Date());
-
-    // Update every 2 seconds
-    const interval = setInterval(() => {
-      const reading = generateMockReading(deviceId);
-      setCurrentWatts(reading.powerWatts);
-      setLastUpdate(new Date());
-    }, 2000);
-
-    return () => clearInterval(interval);
-  }, [deviceId]);
+  const currentWatts = currentReading?.power || 0;
+  const lastUpdate = currentReading?.timestamp || new Date();
 
   const getStatus = () => {
+    if (!isConnected) return '🔌 Connecting...';
     if (currentWatts > 2000) return '⚡ High Load';
     if (currentWatts > 1000) return '⚡ Active';
     return '⚡ Normal';
@@ -45,6 +32,12 @@ export function GradientPowerCard({ deviceId }: GradientPowerCardProps) {
       start={{ x: 0, y: 0 }}
       end={{ x: 1, y: 1 }}
       style={styles.container}>
+      {/* Connection Status Indicator */}
+      <View style={styles.connectionIndicator}>
+        <View style={[styles.connectionDot, { backgroundColor: isConnected ? '#4CAF50' : '#FFA726' }]} />
+        <Text style={styles.connectionText}>{isConnected ? 'Live' : 'Connecting'}</Text>
+      </View>
+
       <Text style={styles.label}>CURRENT POWER</Text>
       <Text style={styles.value}>{currentWatts.toFixed(0)}</Text>
       <Text style={styles.unit}>Watts</Text>
@@ -57,6 +50,28 @@ export function GradientPowerCard({ deviceId }: GradientPowerCardProps) {
 }
 
 const styles = StyleSheet.create({
+  connectionIndicator: {
+    position: 'absolute',
+    top: 16,
+    right: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 12,
+  },
+  connectionDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+  },
+  connectionText: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: '#FFFFFF',
+  },
   container: {
     borderRadius: 16,
     padding: 24,
