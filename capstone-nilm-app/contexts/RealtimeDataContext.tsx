@@ -30,7 +30,7 @@ export function RealtimeDataProvider({ children }: { children: ReactNode }) {
   const [deviceId, setDeviceId] = useState<string | null>(null);
 
   useEffect(() => {
-    if (user) {
+    if (user && user.id) {
       // Initialize device and start monitoring
       initializeDevice();
     }
@@ -42,20 +42,23 @@ export function RealtimeDataProvider({ children }: { children: ReactNode }) {
   }, [user]);
 
   const initializeDevice = async () => {
-    if (!user) return;
+    if (!user || !user.id) {
+      console.log('⏳ Waiting for user authentication...');
+      return;
+    }
 
     try {
       // Get user's devices
-      let devices = await deviceService.getUserDevices(user.uid);
+      let devices = await deviceService.getUserDevices(user.id);
       
       // If no device exists, create a mock one for testing
       if (devices.length === 0) {
         console.log('📱 No device found, creating mock device...');
-        const mockDevice = await deviceService.createMockDevice(user.uid);
+        const mockDevice = await deviceService.createMockDevice(user.id);
         devices = [mockDevice];
 
         // Also create default appliances
-        await firestoreApplianceService.createDefaultAppliances(user.uid, mockDevice.id);
+        await firestoreApplianceService.createDefaultAppliances(user.id, mockDevice.id);
       }
 
       // Use the first device
@@ -63,10 +66,10 @@ export function RealtimeDataProvider({ children }: { children: ReactNode }) {
       setDeviceId(device.id);
 
       // Create default alert rules if none exist
-      const existingRules = await alertRuleService.getUserRules(user.uid);
+      const existingRules = await alertRuleService.getUserRules(user.id);
       if (existingRules.length === 0) {
         console.log('⚡ Creating default alert rules...');
-        await alertRuleService.createDefaultRules(user.uid, device.id);
+        await alertRuleService.createDefaultRules(user.id, device.id);
       }
 
       // Start monitoring with this device

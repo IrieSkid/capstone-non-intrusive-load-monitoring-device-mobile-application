@@ -40,7 +40,7 @@ export default function AlertsScreen() {
     
     try {
       setIsLoading(true);
-      const data = await notificationService.getNotifications(user.uid);
+      const data = await notificationService.getNotifications(user.id);
       setNotifications(data);
       filterNotifications(data, filter);
     } catch (error) {
