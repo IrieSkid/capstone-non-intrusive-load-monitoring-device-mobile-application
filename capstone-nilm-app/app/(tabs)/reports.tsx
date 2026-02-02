@@ -126,10 +126,10 @@ export default function ReportsScreen() {
         });
       case 'weekly':
         const weekReport = currentReport as WeeklyReport;
-        return `${weekReport.weekStart.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - ${weekReport.weekEnd.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`;
+        return `${weekReport.startDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - ${weekReport.endDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`;
       case 'monthly':
         const monthReport = currentReport as MonthlyReport;
-        return `${monthReport.month} ${monthReport.year}`;
+        return monthReport.month.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
     }
   };
 
