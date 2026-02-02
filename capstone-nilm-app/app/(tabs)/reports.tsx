@@ -126,10 +126,10 @@ export default function ReportsScreen() {
         });
       case 'weekly':
         const weekReport = currentReport as WeeklyReport;
-        return `${weekReport.startDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - ${weekReport.endDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`;
+        return `${weekReport.weekStart.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - ${weekReport.weekEnd.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`;
       case 'monthly':
         const monthReport = currentReport as MonthlyReport;
-        return monthReport.month.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+        return `${monthReport.month} ${monthReport.year}`;
     }
   };
 
@@ -251,8 +251,7 @@ Note: This will fetch actual data from Firestore when connected to real hardware
         {/* Info Note */}
         <View style={styles.infoNote}>
           <Text style={styles.infoText}>
-            ℹ️ These reports are generated using mock data for testing. When connected to
-            hardware, real-time consumption data will be displayed.
+            ℹ️ Reports are generated from your real-time simulated data. Toggle appliances on the dashboard to see their impact on consumption.
           </Text>
         </View>
       </ScrollView>
@@ -276,8 +275,8 @@ Note: This will fetch actual data from Firestore when connected to real hardware
             totalCost: currentReport.totalCost,
             appliances: (currentReport.applianceBreakdown || []).map(a => ({
               name: a.name,
-              kwh: a.totalKwh || a.kwh,
-              cost: a.totalCost || 0,
+              kwh: a.totalKwh,
+              cost: a.totalCost,
             })),
           }}
         />

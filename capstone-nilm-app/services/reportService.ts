@@ -3,7 +3,7 @@
  * Handles data aggregation and report generation from Firestore
  */
 
-import { DailyReport, WeeklyReport, MonthlyReport, CostAnalysis } from '@/types/report';
+import { DailyReport, WeeklyReport, MonthlyReport, CostAnalysis, ApplianceConsumption } from '@/types/report';
 import { readingService } from './readingService';
 import { firestoreApplianceService } from './firestoreApplianceService';
 
@@ -27,31 +27,24 @@ class ReportService {
         return this.getEmptyDailyReport();
       }
 
-      // Calculate total kWh from readings
-      const latestReading = readings[readings.length - 1];
-      const totalKwh = latestReading?.energy || 0;
-      
-      // Calculate average power
-      const avgPower = await readingService.getAveragePower(deviceId, startOfDay, endOfDay);
-      
-      // Calculate peak power
-      const peakPower = Math.max(...readings.map(r => r.power));
-
-      // Calculate cost
+      // Calculate metrics from readings
+      const totalKwh = this.calculateTotalKwh(readings);
+      const avgPower = this.calculateAveragePower(readings);
+      const peakPower = Math.max(...readings.map(r => r.power || 0), 0);
       const totalCost = totalKwh * this.costPerKwh;
 
       // Calculate hourly data
       const hourlyData = this.calculateHourlyData(readings);
 
       // Get appliance breakdown
-      const applianceBreakdown = await this.getApplianceBreakdown(deviceId);
+      const applianceBreakdown = await this.calculateApplianceBreakdown(readings, deviceId);
 
       return {
         date: new Date(),
         totalKwh,
-        peakPower,
-        avgPower,
         totalCost,
+        peakPower,
+        averagePower: avgPower,
         hourlyData,
         applianceBreakdown,
         comparisonToYesterday: 0, // TODO: Calculate from previous day
@@ -78,25 +71,23 @@ class ReportService {
         return this.getEmptyWeeklyReport();
       }
 
-      const latestReading = readings[readings.length - 1];
-      const totalKwh = latestReading?.energy || 0;
+      const totalKwh = this.calculateTotalKwh(readings);
       const avgDailyKwh = totalKwh / 7;
       const totalCost = totalKwh * this.costPerKwh;
-      const peakPower = Math.max(...readings.map(r => r.power));
+      const peakPower = Math.max(...readings.map(r => r.power || 0), 0);
 
       // Calculate daily data
       const dailyData = this.calculateDailyData(readings, startOfWeek);
 
       // Get appliance breakdown
-      const applianceBreakdown = await this.getApplianceBreakdown(deviceId);
+      const applianceBreakdown = await this.calculateApplianceBreakdown(readings, deviceId);
 
       return {
-        startDate: startOfWeek,
-        endDate: now,
+        weekStart: startOfWeek,
+        weekEnd: now,
         totalKwh,
-        avgDailyKwh,
-        peakPower,
         totalCost,
+        averageDaily: avgDailyKwh,
         dailyData,
         applianceBreakdown,
         comparisonToPreviousWeek: 0, // TODO: Calculate
@@ -121,28 +112,30 @@ class ReportService {
         return this.getEmptyMonthlyReport();
       }
 
-      const latestReading = readings[readings.length - 1];
-      const totalKwh = latestReading?.energy || 0;
-      const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+      const totalKwh = this.calculateTotalKwh(readings);
+      const daysInMonth = now.getDate();
       const avgDailyKwh = totalKwh / daysInMonth;
       const totalCost = totalKwh * this.costPerKwh;
-      const peakPower = Math.max(...readings.map(r => r.power));
+      const peakPower = Math.max(...readings.map(r => r.power || 0), 0);
 
-      // Calculate daily data
+      // Calculate daily and weekly data
       const dailyData = this.calculateDailyData(readings, startOfMonth);
+      const weeklyData = this.calculateWeeklyData(readings, startOfMonth);
 
       // Get appliance breakdown
-      const applianceBreakdown = await this.getApplianceBreakdown(deviceId);
+      const applianceBreakdown = await this.calculateApplianceBreakdown(readings, deviceId);
 
       return {
-        month: now,
+        month: now.toLocaleDateString('en-US', { month: 'long' }),
+        year: now.getFullYear(),
         totalKwh,
-        avgDailyKwh,
-        peakPower,
         totalCost,
+        averageDaily: avgDailyKwh,
         dailyData,
+        weeklyData,
         applianceBreakdown,
         comparisonToPreviousMonth: 0, // TODO: Calculate
+        projectedBill: totalCost * (30 / daysInMonth), // Project to 30 days
       };
     } catch (error) {
       console.error('Error generating monthly report:', error);
@@ -151,27 +144,101 @@ class ReportService {
   }
 
   /**
-   * Get appliance breakdown based on rated power and usage
+   * Calculate total kWh from readings
    */
-  private async getApplianceBreakdown(deviceId: string): Promise<Array<{ name: string; kwh: number; percentage: number }>> {
+  private calculateTotalKwh(readings: any[]): number {
+    if (readings.length === 0) return 0;
+    
+    // Sum up energy from all readings (assuming 30-second intervals)
+    let totalKwh = 0;
+    readings.forEach(reading => {
+      const power = reading.power || 0;
+      const intervalHours = 30 / 3600; // 30 seconds in hours
+      totalKwh += (power / 1000) * intervalHours;
+    });
+    
+    return totalKwh;
+  }
+
+  /**
+   * Calculate average power from readings
+   */
+  private calculateAveragePower(readings: any[]): number {
+    if (readings.length === 0) return 0;
+    const sum = readings.reduce((acc, r) => acc + (r.power || 0), 0);
+    return sum / readings.length;
+  }
+
+  /**
+   * Calculate appliance breakdown from readings
+   */
+  private async calculateApplianceBreakdown(readings: any[], deviceId: string): Promise<ApplianceConsumption[]> {
     try {
+      // Get all appliances for this device
       const appliances = await firestoreApplianceService.getDeviceAppliances(deviceId);
       
-      // Estimate usage based on rated power and simulated usage time
-      const breakdown = appliances.map(app => ({
-        name: app.name,
-        kwh: (app.ratedPower / 1000) * (app.usageMinutes || 0) / 60, // Convert W to kWh
-        percentage: 0, // Will calculate below
-      }));
+      if (appliances.length === 0) {
+        return [];
+      }
 
-      // Calculate total and percentages
-      const totalKwh = breakdown.reduce((sum, item) => sum + item.kwh, 0);
-      breakdown.forEach(item => {
-        item.percentage = totalKwh > 0 ? (item.kwh / totalKwh) * 100 : 0;
+      // Aggregate data per appliance from readings
+      const applianceMap = new Map<string, {
+        name: string;
+        icon: string;
+        totalKwh: number;
+        totalMinutes: number;
+      }>();
+
+      // Initialize map with all appliances
+      appliances.forEach(app => {
+        applianceMap.set(app.id, {
+          name: app.name,
+          icon: app.icon,
+          totalKwh: 0,
+          totalMinutes: 0,
+        });
       });
 
-      // Sort by usage (highest first)
-      return breakdown.sort((a, b) => b.kwh - a.kwh);
+      // Aggregate from readings
+      readings.forEach(reading => {
+        if (reading.applianceReadings && Array.isArray(reading.applianceReadings)) {
+          reading.applianceReadings.forEach((appReading: any) => {
+            const existing = applianceMap.get(appReading.applianceId);
+            if (existing && appReading.isActive) {
+              const kwh = (appReading.power / 1000) * (30 / 3600); // 30 seconds to kWh
+              existing.totalKwh += kwh;
+              existing.totalMinutes += 0.5; // 30 seconds = 0.5 minutes
+            }
+          });
+        }
+      });
+
+      // Convert to ApplianceConsumption format
+      const breakdown: ApplianceConsumption[] = [];
+      const totalKwh = Array.from(applianceMap.values()).reduce((sum, app) => sum + app.totalKwh, 0);
+
+      applianceMap.forEach((data, applianceId) => {
+        const totalCost = data.totalKwh * this.costPerKwh;
+        const percentage = totalKwh > 0 ? (data.totalKwh / totalKwh) * 100 : 0;
+        const averageHoursPerDay = data.totalMinutes / 60; // Convert to hours
+        const estimatedMonthlyCost = totalCost * 30; // Project to 30 days
+
+        breakdown.push({
+          applianceId,
+          name: data.name,
+          icon: data.icon,
+          totalKwh: data.totalKwh,
+          totalCost,
+          percentage,
+          averageHoursPerDay,
+          estimatedMonthlyCost,
+        });
+      });
+
+      // Sort by usage (highest first) and filter out zero usage
+      return breakdown
+        .filter(app => app.totalKwh > 0)
+        .sort((a, b) => b.totalKwh - a.totalKwh);
     } catch (error) {
       console.error('Error calculating appliance breakdown:', error);
       return [];
@@ -187,7 +254,8 @@ class ReportService {
     readings.forEach(reading => {
       const hour = new Date(reading.timestamp).getHours();
       const currentKwh = hourlyMap.get(hour) || 0;
-      hourlyMap.set(hour, Math.max(currentKwh, reading.energy));
+      const kwh = (reading.power / 1000) * (30 / 3600);
+      hourlyMap.set(hour, currentKwh + kwh);
     });
 
     const result = [];
@@ -217,7 +285,8 @@ class ReportService {
       const date = new Date(reading.timestamp);
       const dateKey = date.toDateString();
       const currentKwh = dailyMap.get(dateKey) || 0;
-      dailyMap.set(dateKey, Math.max(currentKwh, reading.energy));
+      const kwh = (reading.power / 1000) * (30 / 3600);
+      dailyMap.set(dateKey, currentKwh + kwh);
     });
 
     // Generate array for all days
@@ -243,6 +312,41 @@ class ReportService {
   }
 
   /**
+   * Calculate weekly data from readings
+   */
+  private calculateWeeklyData(readings: any[], startDate: Date): any[] {
+    const weeklyMap = new Map<string, number>();
+    
+    readings.forEach(reading => {
+      const date = new Date(reading.timestamp);
+      const weekStart = new Date(date);
+      weekStart.setDate(date.getDate() - date.getDay());
+      weekStart.setHours(0, 0, 0, 0);
+      const weekKey = weekStart.toDateString();
+      
+      const currentKwh = weeklyMap.get(weekKey) || 0;
+      const kwh = (reading.power / 1000) * (30 / 3600);
+      weeklyMap.set(weekKey, currentKwh + kwh);
+    });
+
+    const result: any[] = [];
+    weeklyMap.forEach((kwh, weekKey) => {
+      const weekStart = new Date(weekKey);
+      const weekEnd = new Date(weekStart);
+      weekEnd.setDate(weekStart.getDate() + 6);
+      
+      result.push({
+        timestamp: weekStart,
+        label: `${weekStart.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - ${weekEnd.toLocaleDateString('en-US', { day: 'numeric' })}`,
+        value: kwh,
+        cost: kwh * this.costPerKwh,
+      });
+    });
+    
+    return result.sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime());
+  }
+
+  /**
    * Get cost analysis
    */
   async getCostAnalysis(deviceId: string, period: 'daily' | 'weekly' | 'monthly'): Promise<CostAnalysis> {
@@ -257,7 +361,6 @@ class ReportService {
           currentKwh = dailyReport.totalKwh;
           previousKwh = currentKwh * 0.95; // TODO: Get from previous day
           
-          // Get today's readings for time of day breakdown
           const startOfDay = new Date();
           startOfDay.setHours(0, 0, 0, 0);
           const endOfDay = new Date();
@@ -269,7 +372,6 @@ class ReportService {
           currentKwh = weeklyReport.totalKwh;
           previousKwh = currentKwh * 0.90; // TODO: Get from previous week
           
-          // Get week's readings
           const now = new Date();
           const startOfWeek = new Date(now);
           startOfWeek.setDate(now.getDate() - now.getDay());
@@ -281,7 +383,6 @@ class ReportService {
           currentKwh = monthlyReport.totalKwh;
           previousKwh = currentKwh * 0.85; // TODO: Get from previous month
           
-          // Get month's readings
           const startOfMonth = new Date();
           startOfMonth.setDate(1);
           startOfMonth.setHours(0, 0, 0, 0);
@@ -350,9 +451,9 @@ class ReportService {
     return {
       date: new Date(),
       totalKwh: 0,
-      peakPower: 0,
-      avgPower: 0,
       totalCost: 0,
+      peakPower: 0,
+      averagePower: 0,
       hourlyData: Array.from({ length: 24 }, (_, i) => {
         const timestamp = new Date(now);
         timestamp.setHours(i, 0, 0, 0);
@@ -374,12 +475,11 @@ class ReportService {
     startOfWeek.setDate(now.getDate() - now.getDay());
     
     return {
-      startDate: startOfWeek,
-      endDate: now,
+      weekStart: startOfWeek,
+      weekEnd: now,
       totalKwh: 0,
-      avgDailyKwh: 0,
-      peakPower: 0,
       totalCost: 0,
+      averageDaily: 0,
       dailyData: [],
       applianceBreakdown: [],
       comparisonToPreviousWeek: 0,
@@ -387,25 +487,19 @@ class ReportService {
   }
 
   private getEmptyMonthlyReport(): MonthlyReport {
+    const now = new Date();
     return {
-      month: new Date(),
+      month: now.toLocaleDateString('en-US', { month: 'long' }),
+      year: now.getFullYear(),
       totalKwh: 0,
-      avgDailyKwh: 0,
-      peakPower: 0,
       totalCost: 0,
+      averageDaily: 0,
       dailyData: [],
+      weeklyData: [],
       applianceBreakdown: [],
       comparisonToPreviousMonth: 0,
+      projectedBill: 0,
     };
-  }
-
-  /**
-   * Export report (placeholder for now)
-   */
-  async exportReport(format: 'pdf' | 'csv', data: any): Promise<string> {
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    // TODO: Implement actual export functionality in Phase 3.2
-    return `Report exported as ${format.toUpperCase()}`;
   }
 }
 
