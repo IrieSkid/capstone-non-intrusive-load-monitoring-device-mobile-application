@@ -31,11 +31,15 @@ class ReadingService {
     try {
       const readingRef = doc(collection(firestore, this.collectionName));
       
-      // Map appliances to reading format
+      // Map appliances to reading format with electrical parameters
       const applianceReadings = appliances.map(app => ({
         applianceId: app.id,
         applianceName: app.name,
+        category: app.category,
         power: app.power,
+        voltage: app.voltage,
+        current: app.current,
+        powerFactor: app.powerFactor,
         isActive: app.isOn,
         runtime: app.duration,
       }));

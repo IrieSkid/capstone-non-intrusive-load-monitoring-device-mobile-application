@@ -44,12 +44,17 @@ export function ApplianceList() {
         <Text style={styles.applianceStatus}>
           {appliance.isOn ? (
             <>
-              <Text style={{ color: colors.success, fontWeight: '600' }}>ON</Text> • {formatDuration(appliance.duration)} • {appliance.power.toFixed(0)}W
+              <Text style={{ color: colors.success, fontWeight: '600' }}>ON</Text> • {formatDuration(appliance.duration)}
             </>
           ) : (
             <Text style={{ color: colors.textSecondary }}>OFF</Text>
           )}
         </Text>
+        {appliance.isOn && (
+          <Text style={styles.applianceElectrical}>
+            {appliance.power.toFixed(0)}W • {appliance.voltage.toFixed(0)}V • {appliance.current.toFixed(2)}A • PF: {appliance.powerFactor.toFixed(2)}
+          </Text>
+        )}
       </View>
 
       <Switch
@@ -163,6 +168,12 @@ const createStyles = (colors: any) => StyleSheet.create({
   applianceStatus: {
     fontSize: 12,
     color: colors.textSecondary,
+  },
+  applianceElectrical: {
+    fontSize: 11,
+    color: colors.primary,
+    marginTop: 2,
+    fontWeight: '500',
   },
   appliancePower: {
     fontSize: 16,

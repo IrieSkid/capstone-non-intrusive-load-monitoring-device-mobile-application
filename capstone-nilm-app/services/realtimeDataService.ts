@@ -21,9 +21,13 @@ export interface ApplianceStatus {
   id: string;
   name: string;
   icon: string;
+  category: string;
   isOn: boolean;
-  power: number; // Current watts
-  duration: number; // Minutes on
+  power: number;        // Current watts
+  voltage: number;      // Voltage (V)
+  current: number;      // Current (A)
+  powerFactor: number;  // Power factor (0-1)
+  duration: number;     // Minutes on
 }
 
 type DataCallback = (data: RealtimeReading) => void;
@@ -96,8 +100,12 @@ class RealtimeDataService {
         id: app.id,
         name: app.name,
         icon: app.icon,
+        category: app.category,
         isOn: app.isActive || false, // Use isActive from database
         power: app.currentPower || app.ratedPower, // Use current or rated power
+        voltage: app.voltage || 220, // Load saved voltage or default
+        current: app.current || 0,   // Load saved current
+        powerFactor: app.powerFactor || this.getDefaultPowerFactor(app.category), // Load or calculate
         duration: app.usageMinutes || 0, // Load existing usage time
       }));
 
@@ -114,17 +122,52 @@ class RealtimeDataService {
   }
 
   /**
-   * Update appliance durations (increment usage time)
+   * Get default power factor based on appliance category
+   */
+  private getDefaultPowerFactor(category: string): number {
+    const powerFactors: { [key: string]: number } = {
+      'Cooling': 0.85,      // AC, Fans - Motors
+      'Heating': 0.95,      // Heaters - Resistive
+      'Lighting': 0.90,     // LED/CFL lights
+      'Entertainment': 0.88, // TV, Audio - Electronics
+      'Kitchen': 0.92,      // Microwave, etc.
+      'Laundry': 0.80,      // Washing machine - Motors
+      'Computing': 0.85,    // Computer, Laptop - SMPS
+      'Other': 0.90,        // Default
+    };
+    return powerFactors[category] || 0.90;
+  }
+
+  /**
+   * Update appliance durations and electrical parameters
    */
   private updateAppliances(): void {
+    // Get current device voltage from reading
+    const deviceVoltage = this.currentReading.voltage;
+    
     // Increment duration for appliances that are on
     this.appliances = this.appliances.map(appliance => {
       if (appliance.isOn) {
+        // Add slight power variation (±5%) for realism
+        const actualPower = appliance.power * (0.95 + Math.random() * 0.1);
+        
+        // Calculate current: I = P / (V * PF)
+        const current = actualPower / (deviceVoltage * appliance.powerFactor);
+        
+        // Add slight voltage variation (±2V)
+        const voltage = deviceVoltage + (Math.random() - 0.5) * 4;
+        
+        // Add slight power factor variation (±0.02)
+        const basePF = this.getDefaultPowerFactor(appliance.category);
+        const powerFactor = Math.min(1.0, Math.max(0.5, basePF + (Math.random() - 0.5) * 0.04));
+        
         return {
           ...appliance,
           duration: appliance.duration + 0.05, // Add 3 seconds = 0.05 minutes
-          // Add slight power variation (±5%) for realism
-          power: appliance.power * (0.95 + Math.random() * 0.1),
+          power: actualPower,
+          voltage,
+          current,
+          powerFactor,
         };
       }
       return appliance;
@@ -265,18 +308,21 @@ class RealtimeDataService {
   }
 
   /**
-   * Update appliance usage data in Firestore (usageMinutes, lastDetected)
+   * Update appliance usage data in Firestore (usageMinutes, lastDetected, electrical params)
    */
   private async updateApplianceUsageInFirestore(): Promise<void> {
     const now = new Date();
     const updatePromises = this.appliances.map(async (appliance) => {
       if (appliance.isOn) {
-        // Update usage time and last detected for active appliances
+        // Update usage time, electrical parameters, and last detected for active appliances
         try {
           await firestoreApplianceService.updateAppliance(appliance.id, {
             usageMinutes: Math.round(appliance.duration), // Round to nearest minute
             lastDetected: now,
             currentPower: appliance.power,
+            voltage: appliance.voltage,
+            current: appliance.current,
+            powerFactor: appliance.powerFactor,
           });
         } catch (error) {
           console.error(`Failed to update usage for ${appliance.name}:`, error);

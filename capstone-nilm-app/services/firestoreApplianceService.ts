@@ -28,6 +28,9 @@ export interface Appliance {
   portNumber?: number; // Hardware port (1-8) - optional for backward compatibility
   isActive: boolean;
   currentPower?: number;
+  voltage?: number;        // Real-time voltage (V)
+  current?: number;        // Real-time current (A)
+  powerFactor?: number;    // Real-time power factor (0-1)
   usageMinutes?: number;
   lastDetected?: Date;
   createdAt: Date;
