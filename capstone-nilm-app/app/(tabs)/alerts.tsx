@@ -89,13 +89,13 @@ export default function AlertsScreen() {
     }
   };
 
-  if (isLoading && alerts.length === 0) {
+  if (isLoading && notifications.length === 0) {
     return (
       <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
         <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} backgroundColor={colors.background} />
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={colors.primary} />
-          <Text style={styles.loadingText}>Loading alerts...</Text>
+          <Text style={styles.loadingText}>Loading notifications...</Text>
         </View>
       </SafeAreaView>
     );
@@ -112,9 +112,9 @@ export default function AlertsScreen() {
         
         {/* Header */}
         <View style={styles.header}>
-          <Text style={styles.title}>🔔 Alerts</Text>
+          <Text style={styles.title}>🔔 Notifications</Text>
           <Text style={styles.subtitle}>
-            {filteredAlerts.length} {filter !== 'all' ? filter : ''} alert{filteredAlerts.length !== 1 ? 's' : ''}
+            {filteredNotifications.length} {filter !== 'all' ? filter : ''} notification{filteredNotifications.length !== 1 ? 's' : ''}
           </Text>
         </View>
 
@@ -122,7 +122,7 @@ export default function AlertsScreen() {
         <View style={styles.filterContainer}>
           <ScrollView horizontal showsHorizontalScrollIndicator={false}>
             <View style={styles.filterTabs}>
-              {(['all', 'active', 'acknowledged', 'resolved'] as FilterType[]).map(f => (
+              {(['all', 'alert', 'warning', 'info'] as FilterType[]).map(f => (
                 <TouchableOpacity
                   key={f}
                   style={[styles.filterTab, filter === f && styles.filterTabActive]}
@@ -130,10 +130,10 @@ export default function AlertsScreen() {
                   <Text style={[styles.filterTabText, filter === f && styles.filterTabTextActive]}>
                     {f.charAt(0).toUpperCase() + f.slice(1)}
                   </Text>
-                  {f === 'active' && (
+                  {f === 'alert' && (
                     <View style={styles.badge}>
                       <Text style={styles.badgeText}>
-                        {alerts.filter(a => a.status === 'active').length}
+                        {notifications.filter(n => n.type === 'alert' && !n.isRead).length}
                       </Text>
                     </View>
                   )}
@@ -143,47 +143,47 @@ export default function AlertsScreen() {
           </ScrollView>
         </View>
 
-        {/* Alerts List */}
-        {filteredAlerts.length === 0 ? (
+        {/* Notifications List */}
+        {filteredNotifications.length === 0 ? (
           <View style={styles.emptyState}>
             <Text style={styles.emptyIcon}>✅</Text>
-            <Text style={styles.emptyTitle}>No {filter !== 'all' ? filter : ''} alerts</Text>
+            <Text style={styles.emptyTitle}>No {filter !== 'all' ? filter : ''} notifications</Text>
             <Text style={styles.emptyText}>
-              {filter === 'active' 
-                ? 'Great! You have no active alerts.'
-                : 'You have no alerts in this category.'}
+              {filter === 'alert' 
+                ? 'Great! You have no alert notifications.'
+                : 'You have no notifications in this category.'}
             </Text>
           </View>
         ) : (
           <View style={styles.alertsList}>
-            {filteredAlerts.map(alert => (
-              <View key={alert.id} style={styles.alertCard}>
+            {filteredNotifications.map(notification => (
+              <View key={notification.id} style={styles.alertCard}>
                 <View style={styles.alertHeader}>
                   <View style={styles.alertIconContainer}>
-                    <Text style={styles.alertIcon}>{getAlertIcon(alert.type)}</Text>
+                    <Text style={styles.alertIcon}>{getAlertIcon(notification.type)}</Text>
                     <View
                       style={[
                         styles.priorityDot,
-                        { backgroundColor: getAlertColor(alert.priority) },
+                        { backgroundColor: getAlertColor(notification.priority) },
                       ]}
                     />
                   </View>
                   <View style={styles.alertContent}>
-                    <Text style={styles.alertTitle}>{alert.title}</Text>
-                    <Text style={styles.alertMessage}>{alert.message}</Text>
+                    <Text style={styles.alertTitle}>{notification.title}</Text>
+                    <Text style={styles.alertMessage}>{notification.message}</Text>
                     <View style={styles.alertMeta}>
-                      <Text style={styles.alertTime}>{getTimeAgo(alert.timestamp)}</Text>
+                      <Text style={styles.alertTime}>{getTimeAgo(notification.createdAt)}</Text>
                       <View
                         style={[
                           styles.statusBadge,
-                          { backgroundColor: `${getStatusColor(alert.status)}20` },
+                          { backgroundColor: notification.isRead ? `${colors.textSecondary}20` : `${colors.primary}20` },
                         ]}>
                         <Text
                           style={[
                             styles.statusBadgeText,
-                            { color: getStatusColor(alert.status) },
+                            { color: notification.isRead ? colors.textSecondary : colors.primary },
                           ]}>
-                          {alert.status}
+                          {notification.isRead ? 'Read' : 'Unread'}
                         </Text>
                       </View>
                     </View>
@@ -191,18 +191,18 @@ export default function AlertsScreen() {
                 </View>
 
                 {/* Actions */}
-                {alert.status === 'active' && (
+                {!notification.isRead && (
                   <View style={styles.alertActions}>
                     <TouchableOpacity
                       style={[styles.actionButton, styles.acknowledgeButton]}
-                      onPress={() => handleAlertAction(alert.id, 'acknowledge')}>
-                      <Text style={styles.actionButtonText}>Acknowledge</Text>
+                      onPress={() => handleNotificationAction(notification.id, 'markRead')}>
+                      <Text style={styles.actionButtonText}>Mark as Read</Text>
                     </TouchableOpacity>
                     <TouchableOpacity
                       style={[styles.actionButton, styles.dismissButton]}
-                      onPress={() => handleAlertAction(alert.id, 'dismiss')}>
+                      onPress={() => handleNotificationAction(notification.id, 'delete')}>
                       <Text style={[styles.actionButtonText, { color: colors.textSecondary }]}>
-                        Dismiss
+                        Delete
                       </Text>
                     </TouchableOpacity>
                   </View>
@@ -215,8 +215,8 @@ export default function AlertsScreen() {
         {/* Info Note */}
         <View style={styles.infoNote}>
           <Text style={styles.infoText}>
-            ℹ️ These alerts are generated from mock data. When connected to hardware, you'll receive
-            real-time alerts based on your consumption patterns and configured thresholds.
+            ℹ️ These notifications are generated from mock data. When connected to hardware, you'll receive
+            real-time notifications based on your consumption patterns and configured alert rules.
           </Text>
         </View>
       </ScrollView>
