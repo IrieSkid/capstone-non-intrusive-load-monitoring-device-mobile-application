@@ -3,16 +3,19 @@
  */
 
 import React from 'react';
-import { View, StyleSheet, ScrollView } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { View, StyleSheet, ScrollView, StatusBar } from 'react-native';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import Colors from '@/constants/Colors';
 
 export default function ReportsScreen() {
+  const insets = useSafeAreaInsets();
+  
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
-      <ScrollView style={styles.container}>
+      <StatusBar barStyle="dark-content" backgroundColor={Colors.surface} />
+      <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: insets.bottom + 80 }}>
         <ThemedView style={styles.header}>
           <ThemedText type="title">Reports</ThemedText>
         </ThemedView>
