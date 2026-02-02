@@ -224,14 +224,14 @@ class RealtimeDataService {
   }
 
   /**
-   * Save current reading to Firestore
+   * Save current reading to Firestore with appliance data
    */
   private async saveToFirestore(): Promise<void> {
     if (!this.deviceId) return;
 
     try {
-      await readingService.saveReading(this.deviceId, this.currentReading);
-      console.log('💾 Saved reading to Firestore');
+      await readingService.saveReading(this.deviceId, this.currentReading, this.appliances);
+      console.log('💾 Saved reading with', this.appliances.length, 'appliances to Firestore');
     } catch (error) {
       console.error('Failed to save reading:', error);
       // Don't throw - we don't want to break the simulation

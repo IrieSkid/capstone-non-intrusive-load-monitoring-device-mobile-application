@@ -15,20 +15,34 @@ import {
   getDocs,
   Timestamp 
 } from 'firebase/firestore';
-import { RealtimeReading } from './realtimeDataService';
+import { RealtimeReading, ApplianceStatus } from './realtimeDataService';
 
 class ReadingService {
   private collectionName = 'realTimeReadings';
 
   /**
-   * Save a reading to Firestore
+   * Save a reading to Firestore with appliance-level data
    */
-  async saveReading(deviceId: string, reading: RealtimeReading): Promise<void> {
+  async saveReading(
+    deviceId: string, 
+    reading: RealtimeReading, 
+    appliances: ApplianceStatus[]
+  ): Promise<void> {
     try {
       const readingRef = doc(collection(firestore, this.collectionName));
       
+      // Map appliances to reading format
+      const applianceReadings = appliances.map(app => ({
+        applianceId: app.id,
+        applianceName: app.name,
+        power: app.power,
+        isActive: app.isOn,
+        runtime: app.duration,
+      }));
+
       await setDoc(readingRef, {
         deviceId,
+        // Device-level readings
         voltage: reading.voltage,
         current: reading.current,
         power: reading.power,
@@ -36,6 +50,8 @@ class ReadingService {
         frequency: reading.frequency,
         energy: reading.energy,
         timestamp: Timestamp.fromDate(reading.timestamp),
+        // Per-appliance readings
+        applianceReadings,
       });
     } catch (error) {
       console.error('Error saving reading:', error);
@@ -66,7 +82,8 @@ class ReadingService {
           frequency: data.frequency,
           energy: data.energy,
           timestamp: data.timestamp?.toDate() || new Date(),
-        } as RealtimeReading;
+          applianceReadings: data.applianceReadings || [],
+        } as any;
       });
     } catch (error) {
       console.error('Error getting readings:', error);
@@ -102,7 +119,8 @@ class ReadingService {
           frequency: data.frequency,
           energy: data.energy,
           timestamp: data.timestamp?.toDate() || new Date(),
-        } as RealtimeReading;
+          applianceReadings: data.applianceReadings || [],
+        } as any;
       });
     } catch (error) {
       console.error('Error getting readings by date range:', error);
