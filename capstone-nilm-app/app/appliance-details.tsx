@@ -50,23 +50,31 @@ export default function ApplianceDetailsScreen() {
   }, [applianceId]);
 
   const loadAppliance = async () => {
-    if (!applianceId || !user) return;
+    if (!applianceId || !user) {
+      console.log('Missing applianceId or user');
+      return;
+    }
 
     try {
       setIsLoading(true);
+      console.log('Loading appliance:', applianceId);
       // We need to load appliances and find the one we want
       // In a real scenario, we'd have a getApplianceById method
       const appliances = await firestoreApplianceService.getUserAppliances(user.id);
+      console.log('Found appliances:', appliances.length);
       const found = appliances.find(a => a.id === applianceId);
       
       if (found) {
+        console.log('Appliance found:', found.name, 'Port:', found.portNumber);
         setAppliance(found);
         setName(found.name);
         setIcon(found.icon);
         setRatedPower(found.ratedPower?.toString() || '0');
         setPortNumber(found.portNumber?.toString() || '1');
         setCategory(found.category);
+        console.log('State updated - isEditing:', isEditing);
       } else {
+        console.log('Appliance not found in list');
         Alert.alert('Error', 'Appliance not found');
         router.back();
       }
@@ -241,7 +249,14 @@ export default function ApplianceDetailsScreen() {
 
         {/* Basic Information */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Basic Information</Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+            <Text style={styles.sectionTitle}>Basic Information</Text>
+            {isEditing && (
+              <Text style={{ color: colors.primary, fontSize: 12, fontWeight: '600' }}>
+                EDIT MODE
+              </Text>
+            )}
+          </View>
 
           <View style={styles.card}>
             <View style={styles.field}>
