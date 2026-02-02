@@ -10,6 +10,8 @@ import { deviceService } from '@/services/deviceService';
 import { firestoreApplianceService } from '@/services/firestoreApplianceService';
 import { alertRuleService } from '@/services/alertRuleService';
 import { alertMonitoringService } from '@/services/alertMonitoringService';
+import { consumptionSummaryService } from '@/services/consumptionSummaryService';
+import { readingService } from '@/services/readingService';
 import { useAuth } from '@/hooks/useAuth';
 
 interface RealtimeDataContextType {
@@ -30,6 +32,7 @@ export function RealtimeDataProvider({ children }: { children: ReactNode }) {
   const [appliances, setAppliances] = useState<ApplianceStatus[]>([]);
   const [isConnected, setIsConnected] = useState(false);
   const [deviceId, setDeviceId] = useState<string | null>(null);
+  const [lastSummaryDate, setLastSummaryDate] = useState<string | null>(null);
 
   useEffect(() => {
     if (user && user.id) {
@@ -108,11 +111,51 @@ export function RealtimeDataProvider({ children }: { children: ReactNode }) {
     await realtimeDataService.start(deviceIdParam, userIdParam);
     setIsConnected(true);
 
+    // Set up daily consumption summary generation
+    const summaryInterval = setInterval(async () => {
+      if (deviceIdParam && userIdParam) {
+        await generateDailySummaryIfNeeded(userIdParam, deviceIdParam);
+      }
+    }, 60000); // Check every minute
+
     // Return cleanup function
     return () => {
       dataUnsubscribe();
       applianceUnsubscribe();
+      clearInterval(summaryInterval);
     };
+  };
+
+  /**
+   * Generate daily consumption summary (once per day)
+   */
+  const generateDailySummaryIfNeeded = async (userId: string, deviceId: string) => {
+    try {
+      const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
+      
+      // Only generate once per day
+      if (lastSummaryDate === today) {
+        return;
+      }
+
+      console.log('📊 Generating daily consumption summary...');
+
+      // Get today's readings
+      const startOfDay = new Date();
+      startOfDay.setHours(0, 0, 0, 0);
+      const endOfDay = new Date();
+      endOfDay.setHours(23, 59, 59, 999);
+
+      const readings = await readingService.getReadingsByDateRange(deviceId, startOfDay, endOfDay);
+
+      if (readings.length > 0) {
+        await consumptionSummaryService.generateDailySummary(userId, deviceId, readings);
+        setLastSummaryDate(today);
+        console.log('✅ Daily consumption summary generated');
+      }
+    } catch (error) {
+      console.error('Error generating daily summary:', error);
+    }
   };
 
   const stopMonitoring = () => {
