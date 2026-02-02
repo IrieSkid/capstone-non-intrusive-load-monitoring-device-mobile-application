@@ -248,6 +248,7 @@ class ReportService {
   async getCostAnalysis(deviceId: string, period: 'daily' | 'weekly' | 'monthly'): Promise<CostAnalysis> {
     let currentKwh = 0;
     let previousKwh = 0;
+    let readings: any[] = [];
     
     try {
       switch (period) {
@@ -255,16 +256,36 @@ class ReportService {
           const dailyReport = await this.getDailyReport(deviceId);
           currentKwh = dailyReport.totalKwh;
           previousKwh = currentKwh * 0.95; // TODO: Get from previous day
+          
+          // Get today's readings for time of day breakdown
+          const startOfDay = new Date();
+          startOfDay.setHours(0, 0, 0, 0);
+          const endOfDay = new Date();
+          endOfDay.setHours(23, 59, 59, 999);
+          readings = await readingService.getReadingsByDateRange(deviceId, startOfDay, endOfDay);
           break;
         case 'weekly':
           const weeklyReport = await this.getWeeklyReport(deviceId);
           currentKwh = weeklyReport.totalKwh;
           previousKwh = currentKwh * 0.90; // TODO: Get from previous week
+          
+          // Get week's readings
+          const now = new Date();
+          const startOfWeek = new Date(now);
+          startOfWeek.setDate(now.getDate() - now.getDay());
+          startOfWeek.setHours(0, 0, 0, 0);
+          readings = await readingService.getReadingsByDateRange(deviceId, startOfWeek, now);
           break;
         case 'monthly':
           const monthlyReport = await this.getMonthlyReport(deviceId);
           currentKwh = monthlyReport.totalKwh;
           previousKwh = currentKwh * 0.85; // TODO: Get from previous month
+          
+          // Get month's readings
+          const startOfMonth = new Date();
+          startOfMonth.setDate(1);
+          startOfMonth.setHours(0, 0, 0, 0);
+          readings = await readingService.getReadingsByDateRange(deviceId, startOfMonth, new Date());
           break;
       }
     } catch (error) {
@@ -273,19 +294,54 @@ class ReportService {
     
     const currentCost = currentKwh * this.costPerKwh;
     const previousCost = previousKwh * this.costPerKwh;
-    const savingsAmount = previousCost - currentCost;
-    const savingsPercentage = previousCost > 0 ? (savingsAmount / previousCost) * 100 : 0;
+    const percentageChange = previousCost > 0 ? ((currentCost - previousCost) / previousCost) * 100 : 0;
+
+    // Calculate cost by time of day
+    const costByTimeOfDay = this.calculateCostByTimeOfDay(readings);
 
     return {
-      period,
-      currentKwh,
-      previousKwh,
-      currentCost,
-      previousCost,
-      savingsAmount,
-      savingsPercentage,
-      costPerKwh: this.costPerKwh,
+      currentPeriodCost: currentCost,
+      previousPeriodCost: previousCost,
+      percentageChange,
+      estimatedNextBill: currentCost * 1.05, // Estimate 5% increase
+      savingsOpportunity: Math.max(0, previousCost - currentCost),
+      costByTimeOfDay,
     };
+  }
+
+  /**
+   * Calculate cost by time of day
+   */
+  private calculateCostByTimeOfDay(readings: any[]): {
+    morning: number;
+    afternoon: number;
+    evening: number;
+    night: number;
+  } {
+    const timeSlots = {
+      morning: 0,   // 6am-12pm
+      afternoon: 0, // 12pm-6pm
+      evening: 0,   // 6pm-12am
+      night: 0,     // 12am-6am
+    };
+
+    readings.forEach(reading => {
+      const hour = new Date(reading.timestamp).getHours();
+      const kwh = (reading.power / 1000) * (30 / 3600); // 30 seconds to kWh
+      const cost = kwh * this.costPerKwh;
+
+      if (hour >= 6 && hour < 12) {
+        timeSlots.morning += cost;
+      } else if (hour >= 12 && hour < 18) {
+        timeSlots.afternoon += cost;
+      } else if (hour >= 18 && hour < 24) {
+        timeSlots.evening += cost;
+      } else {
+        timeSlots.night += cost;
+      }
+    });
+
+    return timeSlots;
   }
 
   // Empty report helpers

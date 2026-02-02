@@ -17,7 +17,12 @@ export function CostAnalysisCard({ analysis }: CostAnalysisCardProps) {
   const { colors } = useTheme();
   const styles = createStyles(colors);
 
-  const isIncrease = analysis.percentageChange > 0;
+  // Safety checks for undefined values
+  if (!analysis || !analysis.costByTimeOfDay) {
+    return null;
+  }
+
+  const isIncrease = (analysis.percentageChange || 0) > 0;
 
   return (
     <View style={styles.container}>
@@ -27,19 +32,19 @@ export function CostAnalysisCard({ analysis }: CostAnalysisCardProps) {
       <View style={styles.comparisonSection}>
         <View style={styles.comparisonItem}>
           <Text style={styles.label}>Current Period</Text>
-          <Text style={styles.currentValue}>₱{analysis.currentPeriodCost.toFixed(2)}</Text>
+          <Text style={styles.currentValue}>₱{(analysis.currentPeriodCost || 0).toFixed(2)}</Text>
         </View>
         
         <View style={styles.comparisonItem}>
           <Text style={styles.label}>Previous Period</Text>
-          <Text style={styles.previousValue}>₱{analysis.previousPeriodCost.toFixed(2)}</Text>
+          <Text style={styles.previousValue}>₱{(analysis.previousPeriodCost || 0).toFixed(2)}</Text>
         </View>
       </View>
 
       {/* Percentage Change */}
       <View style={[styles.changeContainer, isIncrease ? styles.increaseContainer : styles.decreaseContainer]}>
         <Text style={[styles.changeText, isIncrease ? styles.increaseText : styles.decreaseText]}>
-          {isIncrease ? '▲' : '▼'} {Math.abs(analysis.percentageChange).toFixed(1)}%
+          {isIncrease ? '▲' : '▼'} {Math.abs(analysis.percentageChange || 0).toFixed(1)}%
         </Text>
         <Text style={[styles.changeLabel, isIncrease ? styles.increaseText : styles.decreaseText]}>
           {isIncrease ? 'Increase' : 'Decrease'} from last period
@@ -54,25 +59,25 @@ export function CostAnalysisCard({ analysis }: CostAnalysisCardProps) {
           <View style={styles.timeItem}>
             <Text style={styles.timeIcon}>🌅</Text>
             <Text style={styles.timeLabel}>Morning</Text>
-            <Text style={styles.timeValue}>₱{analysis.costByTimeOfDay.morning.toFixed(2)}</Text>
+            <Text style={styles.timeValue}>₱{(analysis.costByTimeOfDay?.morning || 0).toFixed(2)}</Text>
           </View>
           
           <View style={styles.timeItem}>
             <Text style={styles.timeIcon}>☀️</Text>
             <Text style={styles.timeLabel}>Afternoon</Text>
-            <Text style={styles.timeValue}>₱{analysis.costByTimeOfDay.afternoon.toFixed(2)}</Text>
+            <Text style={styles.timeValue}>₱{(analysis.costByTimeOfDay?.afternoon || 0).toFixed(2)}</Text>
           </View>
           
           <View style={styles.timeItem}>
             <Text style={styles.timeIcon}>🌆</Text>
             <Text style={styles.timeLabel}>Evening</Text>
-            <Text style={styles.timeValue}>₱{analysis.costByTimeOfDay.evening.toFixed(2)}</Text>
+            <Text style={styles.timeValue}>₱{(analysis.costByTimeOfDay?.evening || 0).toFixed(2)}</Text>
           </View>
           
           <View style={styles.timeItem}>
             <Text style={styles.timeIcon}>🌙</Text>
             <Text style={styles.timeLabel}>Night</Text>
-            <Text style={styles.timeValue}>₱{analysis.costByTimeOfDay.night.toFixed(2)}</Text>
+            <Text style={styles.timeValue}>₱{(analysis.costByTimeOfDay?.night || 0).toFixed(2)}</Text>
           </View>
         </View>
       </View>
@@ -81,13 +86,13 @@ export function CostAnalysisCard({ analysis }: CostAnalysisCardProps) {
       <View style={styles.insightsSection}>
         <View style={styles.insightItem}>
           <Text style={styles.insightLabel}>Estimated Next Bill</Text>
-          <Text style={styles.insightValue}>₱{analysis.estimatedNextBill.toFixed(2)}</Text>
+          <Text style={styles.insightValue}>₱{(analysis.estimatedNextBill || 0).toFixed(2)}</Text>
         </View>
         
         <View style={styles.insightItem}>
           <Text style={styles.insightLabel}>Potential Savings</Text>
           <Text style={[styles.insightValue, { color: colors.success }]}>
-            ₱{analysis.savingsOpportunity.toFixed(2)}
+            ₱{(analysis.savingsOpportunity || 0).toFixed(2)}
           </Text>
         </View>
       </View>
