@@ -3,11 +3,12 @@
  * Provides options to share and export report data
  */
 
-import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Modal, Alert, Share, Platform } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, Modal, Alert, Share, Platform, ActivityIndicator } from 'react-native';
 import * as Sharing from 'expo-sharing';
 import * as FileSystem from 'expo-file-system/legacy';
 import * as Clipboard from 'expo-clipboard';
+import * as Print from 'expo-print';
 import { useTheme } from '@/contexts/ThemeContext';
 
 interface ExportMenuProps {
@@ -27,8 +28,9 @@ interface ExportMenuProps {
 }
 
 export function ExportMenu({ visible, onClose, reportData }: ExportMenuProps) {
-  const { colors } = useTheme();
+  const { colors, isDark } = useTheme();
   const styles = createStyles(colors);
+  const [isExporting, setIsExporting] = useState(false);
 
   const generateTextReport = (): string => {
     const { period, dateRange, totalKwh, totalCost, appliances } = reportData;
@@ -130,15 +132,218 @@ export function ExportMenu({ visible, onClose, reportData }: ExportMenuProps) {
     }
   };
 
-  const handleExportPDF = () => {
-    Alert.alert(
-      'PDF Export',
-      'PDF export will be available in the next update. For now, you can share as text or take a screenshot.',
-      [
-        { text: 'OK', style: 'cancel' },
-        { text: 'Share as Text', onPress: handleShareText },
-      ]
-    );
+  const generateHTMLReport = (): string => {
+    const { period, dateRange, totalKwh, totalCost, appliances } = reportData;
+    const bgColor = isDark ? '#1C1C1E' : '#FFFFFF';
+    const textColor = isDark ? '#FFFFFF' : '#000000';
+    const secondaryColor = isDark ? '#8E8E93' : '#6C757D';
+    const cardBg = isDark ? '#2C2C2E' : '#F8F9FA';
+    
+    return `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <style>
+          * { margin: 0; padding: 0; box-sizing: border-box; }
+          body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+            background: ${bgColor};
+            color: ${textColor};
+            padding: 40px 20px;
+            line-height: 1.6;
+          }
+          .header {
+            text-align: center;
+            margin-bottom: 30px;
+            border-bottom: 3px solid #007AFF;
+            padding-bottom: 20px;
+          }
+          .header h1 {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 10px;
+            color: #007AFF;
+          }
+          .header p {
+            font-size: 14px;
+            color: ${secondaryColor};
+            margin-bottom: 5px;
+          }
+          .summary {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 30px;
+          }
+          .summary-card {
+            background: ${cardBg};
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+            border: 1px solid ${isDark ? '#3A3A3C' : '#E9ECEF'};
+          }
+          .summary-label {
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: ${secondaryColor};
+            margin-bottom: 8px;
+            font-weight: 600;
+          }
+          .summary-value {
+            font-size: 32px;
+            font-weight: 700;
+            color: #007AFF;
+          }
+          .section-title {
+            font-size: 20px;
+            font-weight: 700;
+            margin: 30px 0 15px;
+            color: ${textColor};
+            border-left: 4px solid #007AFF;
+            padding-left: 12px;
+          }
+          .appliance-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: ${cardBg};
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid ${isDark ? '#3A3A3C' : '#E9ECEF'};
+          }
+          .appliance-table thead {
+            background: #007AFF;
+            color: white;
+          }
+          .appliance-table th,
+          .appliance-table td {
+            padding: 12px 16px;
+            text-align: left;
+            border-bottom: 1px solid ${isDark ? '#3A3A3C' : '#E9ECEF'};
+          }
+          .appliance-table th {
+            font-weight: 600;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+          }
+          .appliance-table tr:last-child td {
+            border-bottom: none;
+          }
+          .appliance-table tbody tr:hover {
+            background: ${isDark ? '#3A3A3C' : '#F1F3F5'};
+          }
+          .text-right {
+            text-align: right;
+          }
+          .footer {
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 2px solid ${isDark ? '#3A3A3C' : '#E9ECEF'};
+            text-align: center;
+            color: ${secondaryColor};
+            font-size: 12px;
+          }
+          .cost-value {
+            color: #34C759;
+            font-weight: 600;
+          }
+          @media print {
+            body { padding: 20px; }
+            .summary { page-break-inside: avoid; }
+          }
+        </style>
+      </head>
+      <body>
+        <div class="header">
+          <h1>⚡ Energy Consumption Report</h1>
+          <p><strong>Period:</strong> ${period}</p>
+          <p><strong>Date Range:</strong> ${dateRange}</p>
+          <p><strong>Generated:</strong> ${new Date().toLocaleString()}</p>
+        </div>
+
+        <div class="summary">
+          <div class="summary-card">
+            <div class="summary-label">Total Consumption</div>
+            <div class="summary-value">${totalKwh.toFixed(1)} <span style="font-size: 18px;">kWh</span></div>
+          </div>
+          <div class="summary-card">
+            <div class="summary-label">Total Cost</div>
+            <div class="summary-value cost-value">₱${totalCost.toFixed(2)}</div>
+          </div>
+        </div>
+
+        <h2 class="section-title">🔌 Appliance Breakdown</h2>
+        <table class="appliance-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Appliance</th>
+              <th class="text-right">Consumption</th>
+              <th class="text-right">Cost</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${appliances.map((appliance, index) => `
+              <tr>
+                <td>${index + 1}</td>
+                <td><strong>${appliance.name}</strong></td>
+                <td class="text-right">${appliance.kwh.toFixed(1)} kWh</td>
+                <td class="text-right cost-value">₱${appliance.cost.toFixed(2)}</td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+
+        <div class="footer">
+          <p><strong>Generated by NILM App</strong></p>
+          <p>Non-Intrusive Load Monitoring System</p>
+          <p>For assistance, contact your system administrator</p>
+        </div>
+      </body>
+      </html>
+    `;
+  };
+
+  const handleExportPDF = async () => {
+    try {
+      setIsExporting(true);
+      const html = generateHTMLReport();
+      const { period, dateRange } = reportData;
+      
+      // Generate filename
+      const timestamp = new Date().toISOString().split('T')[0];
+      const filename = `energy-report-${period}-${timestamp}.pdf`;
+
+      // Create PDF
+      const { uri } = await Print.printToFileAsync({
+        html,
+        base64: false,
+      });
+
+      // Share the PDF
+      if (await Sharing.isAvailableAsync()) {
+        await Sharing.shareAsync(uri, {
+          mimeType: 'application/pdf',
+          dialogTitle: 'Export Energy Report',
+          UTI: 'com.adobe.pdf',
+        });
+        onClose();
+      } else {
+        Alert.alert(
+          'PDF Created',
+          'PDF has been created successfully. Check your downloads folder.',
+          [{ text: 'OK', onPress: onClose }]
+        );
+      }
+    } catch (error) {
+      console.error('Error exporting PDF:', error);
+      Alert.alert('Error', 'Failed to export PDF. Please try again.');
+    } finally {
+      setIsExporting(false);
+    }
   };
 
   return (
@@ -190,15 +395,22 @@ export function ExportMenu({ visible, onClose, reportData }: ExportMenuProps) {
               <Text style={styles.optionArrow}>→</Text>
             </TouchableOpacity>
 
-            <TouchableOpacity style={styles.option} onPress={handleExportPDF}>
+            <TouchableOpacity 
+              style={[styles.option, isExporting && styles.optionDisabled]} 
+              onPress={handleExportPDF}
+              disabled={isExporting}>
               <Text style={styles.optionIcon}>📄</Text>
               <View style={styles.optionContent}>
                 <Text style={styles.optionTitle}>Export as PDF</Text>
                 <Text style={styles.optionDescription}>
-                  Generate printable report
+                  {isExporting ? 'Generating PDF...' : 'Generate printable report'}
                 </Text>
               </View>
-              <Text style={styles.optionBadge}>Coming Soon</Text>
+              {isExporting ? (
+                <ActivityIndicator size="small" color={colors.primary} />
+              ) : (
+                <Text style={styles.optionArrow}>→</Text>
+              )}
             </TouchableOpacity>
           </View>
 
@@ -280,6 +492,9 @@ const createStyles = (colors: any) =>
       paddingVertical: 4,
       borderRadius: 4,
       marginLeft: 12,
+    },
+    optionDisabled: {
+      opacity: 0.5,
     },
     cancelButton: {
       padding: 16,

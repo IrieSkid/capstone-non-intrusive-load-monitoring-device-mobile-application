@@ -6,14 +6,30 @@
 import { DailyReport, WeeklyReport, MonthlyReport, CostAnalysis, ApplianceConsumption } from '@/types/report';
 import { readingService } from './readingService';
 import { firestoreApplianceService } from './firestoreApplianceService';
+import { electricityRateService } from './electricityRateService';
 
 class ReportService {
-  private readonly costPerKwh = 12; // ₱12 per kWh average
+  private readonly defaultCostPerKwh = 12; // ₱12 per kWh fallback
+
+  /**
+   * Get current electricity rate for user, or default
+   */
+  private async getCostPerKwh(userId?: string): Promise<number> {
+    if (!userId) return this.defaultCostPerKwh;
+    
+    try {
+      const rate = await electricityRateService.getCurrentRate(userId);
+      return rate?.ratePerKwh || this.defaultCostPerKwh;
+    } catch (error) {
+      console.error('Error getting electricity rate:', error);
+      return this.defaultCostPerKwh;
+    }
+  }
 
   /**
    * Get today's report from Firestore readings
    */
-  async getDailyReport(deviceId: string): Promise<DailyReport> {
+  async getDailyReport(deviceId: string, userId?: string): Promise<DailyReport> {
     try {
       const startOfDay = new Date();
       startOfDay.setHours(0, 0, 0, 0);
@@ -27,11 +43,14 @@ class ReportService {
         return this.getEmptyDailyReport();
       }
 
+      // Get electricity rate
+      const costPerKwh = await this.getCostPerKwh(userId);
+
       // Calculate metrics from readings
       const totalKwh = this.calculateTotalKwh(readings);
       const avgPower = this.calculateAveragePower(readings);
       const peakPower = Math.max(...readings.map(r => r.power || 0), 0);
-      const totalCost = totalKwh * this.costPerKwh;
+      const totalCost = totalKwh * costPerKwh;
 
       // Calculate hourly data
       const hourlyData = this.calculateHourlyData(readings);
@@ -500,6 +519,166 @@ class ReportService {
       comparisonToPreviousMonth: 0,
       projectedBill: 0,
     };
+  }
+
+  /**
+   * Get daily report for a custom date range
+   */
+  async getDailyReportByDateRange(deviceId: string, startDate: Date, endDate: Date): Promise<DailyReport> {
+    try {
+      const readings = await readingService.getReadingsByDateRange(deviceId, startDate, endDate);
+      
+      if (readings.length === 0) {
+        return this.getEmptyDailyReport();
+      }
+
+      const totalKwh = this.calculateTotalKwh(readings);
+      const avgPower = this.calculateAveragePower(readings);
+      const peakPower = Math.max(...readings.map(r => r.power || 0), 0);
+      const totalCost = totalKwh * this.costPerKwh;
+      const hourlyData = this.calculateHourlyData(readings);
+      const applianceBreakdown = await this.calculateApplianceBreakdown(readings, deviceId);
+
+      return {
+        date: startDate,
+        totalKwh,
+        totalCost,
+        peakPower,
+        averagePower: avgPower,
+        hourlyData,
+        applianceBreakdown,
+        comparisonToYesterday: 0,
+      };
+    } catch (error) {
+      console.error('Error generating daily report by date range:', error);
+      return this.getEmptyDailyReport();
+    }
+  }
+
+  /**
+   * Get weekly report for a custom date range
+   */
+  async getWeeklyReportByDateRange(deviceId: string, startDate: Date, endDate: Date): Promise<WeeklyReport> {
+    try {
+      const readings = await readingService.getReadingsByDateRange(deviceId, startDate, endDate);
+      
+      if (readings.length === 0) {
+        return this.getEmptyWeeklyReport();
+      }
+
+      const totalKwh = this.calculateTotalKwh(readings);
+      const totalCost = totalKwh * this.costPerKwh;
+      const days = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
+      const averageDaily = totalKwh / days;
+      const dailyData = this.calculateDailyData(readings);
+      const applianceBreakdown = await this.calculateApplianceBreakdown(readings, deviceId);
+
+      return {
+        weekStart: startDate,
+        weekEnd: endDate,
+        totalKwh,
+        totalCost,
+        averageDaily,
+        dailyData,
+        applianceBreakdown,
+        comparisonToPreviousWeek: 0,
+      };
+    } catch (error) {
+      console.error('Error generating weekly report by date range:', error);
+      return this.getEmptyWeeklyReport();
+    }
+  }
+
+  /**
+   * Get monthly report for a custom date range
+   */
+  async getMonthlyReportByDateRange(deviceId: string, startDate: Date, endDate: Date): Promise<MonthlyReport> {
+    try {
+      const readings = await readingService.getReadingsByDateRange(deviceId, startDate, endDate);
+      
+      if (readings.length === 0) {
+        return this.getEmptyMonthlyReport();
+      }
+
+      const totalKwh = this.calculateTotalKwh(readings);
+      const totalCost = totalKwh * this.costPerKwh;
+      const days = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
+      const averageDaily = totalKwh / days;
+      const dailyData = this.calculateDailyData(readings);
+      const applianceBreakdown = await this.calculateApplianceBreakdown(readings, deviceId);
+      const projectedBill = (totalKwh / days) * 30 * this.costPerKwh;
+
+      return {
+        month: startDate.toLocaleDateString('en-US', { month: 'long' }),
+        year: startDate.getFullYear(),
+        totalKwh,
+        totalCost,
+        averageDaily,
+        dailyData,
+        weeklyData: [],
+        applianceBreakdown,
+        comparisonToPreviousMonth: 0,
+        projectedBill,
+      };
+    } catch (error) {
+      console.error('Error generating monthly report by date range:', error);
+      return this.getEmptyMonthlyReport();
+    }
+  }
+
+  /**
+   * Get cost analysis for a custom date range
+   */
+  async getCostAnalysisByDateRange(deviceId: string, startDate: Date, endDate: Date): Promise<CostAnalysis> {
+    try {
+      const readings = await readingService.getReadingsByDateRange(deviceId, startDate, endDate);
+      
+      if (readings.length === 0) {
+        return {
+          currentPeriodCost: 0,
+          previousPeriodCost: 0,
+          percentageChange: 0,
+          estimatedNextBill: 0,
+          savingsOpportunity: 0,
+          costByTimeOfDay: {
+            morning: 0,
+            afternoon: 0,
+            evening: 0,
+            night: 0,
+          },
+        };
+      }
+
+      const totalKwh = this.calculateTotalKwh(readings);
+      const currentPeriodCost = totalKwh * this.costPerKwh;
+      const costByTimeOfDay = this.calculateCostByTimeOfDay(readings);
+      const days = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
+      const estimatedNextBill = (totalKwh / days) * 30 * this.costPerKwh;
+
+      return {
+        currentPeriodCost,
+        previousPeriodCost: 0,
+        percentageChange: 0,
+        estimatedNextBill,
+        savingsOpportunity: estimatedNextBill * 0.15,
+        costByTimeOfDay,
+      };
+    } catch (error) {
+      console.error('Error generating cost analysis by date range:', error);
+      return {
+        currentPeriodCost: 0,
+        previousPeriodCost: 0,
+        percentageChange: 0,
+        estimatedNextBill: 0,
+        savingsOpportunity: 0,
+        costByTimeOfDay: {
+          morning: 0,
+          afternoon: 0,
+          evening: 0,
+          night: 0,
+        },
+      };
+    }
   }
 }
 

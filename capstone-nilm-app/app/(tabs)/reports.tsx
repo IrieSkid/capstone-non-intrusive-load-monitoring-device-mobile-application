@@ -63,18 +63,33 @@ export default function ReportsScreen() {
     try {
       setIsLoading(true);
       
-      // Load all reports in parallel
-      const [daily, weekly, monthly, cost] = await Promise.all([
-        reportService.getDailyReport(deviceId),
-        reportService.getWeeklyReport(deviceId),
-        reportService.getMonthlyReport(deviceId),
-        reportService.getCostAnalysis(deviceId, selectedPeriod),
-      ]);
-      
-      setDailyReport(daily);
-      setWeeklyReport(weekly);
-      setMonthlyReport(monthly);
-      setCostAnalysis(cost);
+      // If custom date range is set, fetch filtered data
+      if (customDateRange) {
+        const [daily, weekly, monthly, cost] = await Promise.all([
+          reportService.getDailyReportByDateRange(deviceId, customDateRange.start, customDateRange.end),
+          reportService.getWeeklyReportByDateRange(deviceId, customDateRange.start, customDateRange.end),
+          reportService.getMonthlyReportByDateRange(deviceId, customDateRange.start, customDateRange.end),
+          reportService.getCostAnalysisByDateRange(deviceId, customDateRange.start, customDateRange.end),
+        ]);
+        
+        setDailyReport(daily);
+        setWeeklyReport(weekly);
+        setMonthlyReport(monthly);
+        setCostAnalysis(cost);
+      } else {
+        // Load standard reports (today/this week/this month)
+        const [daily, weekly, monthly, cost] = await Promise.all([
+          reportService.getDailyReport(deviceId),
+          reportService.getWeeklyReport(deviceId),
+          reportService.getMonthlyReport(deviceId),
+          reportService.getCostAnalysis(deviceId, selectedPeriod),
+        ]);
+        
+        setDailyReport(daily);
+        setWeeklyReport(weekly);
+        setMonthlyReport(monthly);
+        setCostAnalysis(cost);
+      }
     } catch (error) {
       console.error('Error loading reports:', error);
     } finally {
@@ -83,10 +98,10 @@ export default function ReportsScreen() {
     }
   };
 
-  // Load reports on mount and when period or deviceId changes
+  // Load reports on mount and when period, deviceId, or date range changes
   useEffect(() => {
     loadReports();
-  }, [selectedPeriod, deviceId]);
+  }, [selectedPeriod, deviceId, customDateRange]);
 
   const onRefresh = useCallback(() => {
     setRefreshing(true);
@@ -137,16 +152,7 @@ export default function ReportsScreen() {
   const handleDateRangeApply = (startDate: Date, endDate: Date) => {
     setCustomDateRange({ start: startDate, end: endDate });
     setShowDatePicker(false);
-    
-    // In a real app, this would fetch filtered data from Firestore
-    // For now, just show a message
-    Alert.alert(
-      'Date Range Applied',
-      `Filtering reports from ${startDate.toLocaleDateString()} to ${endDate.toLocaleDateString()}. 
-      
-Note: This will fetch actual data from Firestore when connected to real hardware.`,
-      [{ text: 'OK' }]
-    );
+    // Data will be fetched automatically via useEffect
   };
 
   // Clear custom date range
