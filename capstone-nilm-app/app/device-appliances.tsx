@@ -167,20 +167,20 @@ export default function DeviceAppliancesScreen() {
                       <View style={styles.applianceInfo}>
                         <Text style={styles.applianceName}>{appliance.name}</Text>
                         <Text style={styles.applianceCategory}>{appliance.category}</Text>
-                        <View style={styles.applianceMeta}>
-                          <Text style={styles.applianceMetaText}>
-                            Rated: {appliance.ratedPower}W
+                      <View style={styles.applianceMeta}>
+                        <Text style={styles.applianceMetaText}>
+                          Port {appliance.portNumber} • Rated: {appliance.ratedPower}W
+                        </Text>
+                        {appliance.currentPower && (
+                          <Text
+                            style={[
+                              styles.applianceMetaText,
+                              { color: getPowerColor(appliance.currentPower) },
+                            ]}>
+                            • Current: {appliance.currentPower.toFixed(0)}W
                           </Text>
-                          {appliance.currentPower && (
-                            <Text
-                              style={[
-                                styles.applianceMetaText,
-                                { color: getPowerColor(appliance.currentPower) },
-                              ]}>
-                              • Current: {appliance.currentPower.toFixed(0)}W
-                            </Text>
-                          )}
-                        </View>
+                        )}
+                      </View>
                       </View>
 
                       <View style={styles.applianceActions}>
@@ -214,7 +214,7 @@ export default function DeviceAppliancesScreen() {
                         <Text style={styles.applianceName}>{appliance.name}</Text>
                         <Text style={styles.applianceCategory}>{appliance.category}</Text>
                         <Text style={styles.applianceMetaText}>
-                          Rated: {appliance.ratedPower}W
+                          Port {appliance.portNumber} • Rated: {appliance.ratedPower}W
                         </Text>
                       </View>
 

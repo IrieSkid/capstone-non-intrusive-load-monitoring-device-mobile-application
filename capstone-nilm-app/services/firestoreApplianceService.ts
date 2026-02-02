@@ -25,6 +25,7 @@ export interface Appliance {
   category: string;
   ratedPower: number;
   icon: string;
+  portNumber: number; // Hardware port (1-8)
   isActive: boolean;
   currentPower?: number;
   usageMinutes?: number;
@@ -193,14 +194,14 @@ class FirestoreApplianceService {
    */
   async createDefaultAppliances(userId: string, deviceId: string): Promise<Appliance[]> {
     const defaultAppliances = [
-      { name: 'Air Conditioner', category: 'cooling', ratedPower: 1500, icon: '❄️' },
-      { name: 'Refrigerator', category: 'cooling', ratedPower: 150, icon: '🧊' },
-      { name: 'Electric Fan', category: 'cooling', ratedPower: 75, icon: '🌀' },
-      { name: 'Television', category: 'entertainment', ratedPower: 100, icon: '📺' },
-      { name: 'Water Heater', category: 'heating', ratedPower: 1200, icon: '🚿' },
-      { name: 'Rice Cooker', category: 'cooking', ratedPower: 400, icon: '🍚' },
-      { name: 'Computer', category: 'electronics', ratedPower: 200, icon: '💻' },
-      { name: 'Lights', category: 'lighting', ratedPower: 60, icon: '💡' },
+      { name: 'Air Conditioner', category: 'cooling', ratedPower: 1500, icon: '❄️', portNumber: 1 },
+      { name: 'Refrigerator', category: 'cooling', ratedPower: 150, icon: '🧊', portNumber: 2 },
+      { name: 'Electric Fan', category: 'cooling', ratedPower: 75, icon: '🌀', portNumber: 3 },
+      { name: 'Television', category: 'entertainment', ratedPower: 100, icon: '📺', portNumber: 4 },
+      { name: 'Water Heater', category: 'heating', ratedPower: 1200, icon: '🚿', portNumber: 5 },
+      { name: 'Rice Cooker', category: 'cooking', ratedPower: 400, icon: '🍚', portNumber: 6 },
+      { name: 'Computer', category: 'electronics', ratedPower: 200, icon: '💻', portNumber: 7 },
+      { name: 'Lights', category: 'lighting', ratedPower: 60, icon: '💡', portNumber: 8 },
     ];
 
     const createdAppliances: Appliance[] = [];

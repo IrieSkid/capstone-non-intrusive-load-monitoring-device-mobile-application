@@ -34,16 +34,16 @@ const APPLIANCE_TYPES = [
 ];
 
 const COMMON_APPLIANCES = [
-  { name: 'Air Conditioner', icon: '❄️', category: 'cooling', ratedPower: 1500 },
-  { name: 'Refrigerator', icon: '🧊', category: 'cooling', ratedPower: 150 },
-  { name: 'Electric Fan', icon: '🌀', category: 'cooling', ratedPower: 75 },
-  { name: 'Television', icon: '📺', category: 'entertainment', ratedPower: 100 },
-  { name: 'Water Heater', icon: '🚿', category: 'heating', ratedPower: 1200 },
-  { name: 'Washing Machine', icon: '🧺', category: 'cleaning', ratedPower: 500 },
-  { name: 'Microwave', icon: '🍲', category: 'cooking', ratedPower: 1000 },
-  { name: 'Rice Cooker', icon: '🍚', category: 'cooking', ratedPower: 400 },
-  { name: 'Computer', icon: '💻', category: 'electronics', ratedPower: 200 },
-  { name: 'LED Lights', icon: '💡', category: 'lighting', ratedPower: 60 },
+  { name: 'Air Conditioner', icon: '❄️', category: 'cooling', ratedPower: 1500, portNumber: 1 },
+  { name: 'Refrigerator', icon: '🧊', category: 'cooling', ratedPower: 150, portNumber: 2 },
+  { name: 'Electric Fan', icon: '🌀', category: 'cooling', ratedPower: 75, portNumber: 3 },
+  { name: 'Television', icon: '📺', category: 'entertainment', ratedPower: 100, portNumber: 4 },
+  { name: 'Water Heater', icon: '🚿', category: 'heating', ratedPower: 1200, portNumber: 5 },
+  { name: 'Washing Machine', icon: '🧺', category: 'cleaning', ratedPower: 500, portNumber: 6 },
+  { name: 'Microwave', icon: '🍲', category: 'cooking', ratedPower: 1000, portNumber: 7 },
+  { name: 'Rice Cooker', icon: '🍚', category: 'cooking', ratedPower: 400, portNumber: 8 },
+  { name: 'Computer', icon: '💻', category: 'electronics', ratedPower: 200, portNumber: 1 },
+  { name: 'LED Lights', icon: '💡', category: 'lighting', ratedPower: 60, portNumber: 2 },
 ];
 
 export default function AddApplianceScreen() {
@@ -56,6 +56,7 @@ export default function AddApplianceScreen() {
   const [selectedCategory, setSelectedCategory] = useState('');
   const [selectedIcon, setSelectedIcon] = useState('');
   const [ratedPower, setRatedPower] = useState('');
+  const [portNumber, setPortNumber] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleQuickAdd = (appliance: typeof COMMON_APPLIANCES[0]) => {
@@ -63,6 +64,7 @@ export default function AddApplianceScreen() {
     setSelectedCategory(appliance.category);
     setSelectedIcon(appliance.icon);
     setRatedPower(appliance.ratedPower.toString());
+    setPortNumber(appliance.portNumber.toString());
   };
 
   const handleSubmit = async () => {
@@ -81,6 +83,10 @@ export default function AddApplianceScreen() {
       Alert.alert('Invalid', 'Please enter a valid rated power (watts)');
       return;
     }
+    if (!portNumber || isNaN(Number(portNumber)) || Number(portNumber) < 1 || Number(portNumber) > 8) {
+      Alert.alert('Invalid', 'Please enter a valid port number (1-8)');
+      return;
+    }
 
     try {
       setIsSubmitting(true);
@@ -92,6 +98,7 @@ export default function AddApplianceScreen() {
         category: selectedCategory,
         icon: selectedIcon || '🔌',
         ratedPower: Number(ratedPower),
+        portNumber: Number(portNumber),
         isActive: false,
         currentPower: 0,
         usageMinutes: 0,
@@ -205,6 +212,23 @@ export default function AddApplianceScreen() {
               </View>
             </View>
           )}
+
+          {/* Port Number */}
+          <View style={styles.section}>
+            <Text style={styles.label}>Port Number (1-8) *</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="e.g., 1"
+              placeholderTextColor={colors.textSecondary}
+              value={portNumber}
+              onChangeText={setPortNumber}
+              keyboardType="numeric"
+              maxLength={1}
+            />
+            <Text style={styles.hint}>
+              Select the port number on the device where this appliance is connected (1-8)
+            </Text>
+          </View>
 
           {/* Rated Power */}
           <View style={styles.section}>

@@ -14,6 +14,7 @@ View and manage all appliances for a specific device.
 - ✅ List appliances by device
 - ✅ Active/Inactive sections with visual separation
 - ✅ Stats summary (Total, Active, Inactive counts)
+- ✅ Port number display for each appliance
 - ✅ Real-time power display for active appliances
 - ✅ Color-coded power indicators (green < 100W, orange < 1000W, red > 1000W)
 - ✅ Empty state with "Add Appliance" CTA
@@ -44,10 +45,11 @@ Smart appliance registration with presets and categories.
 
 **Features**:
 - ✅ Quick Add buttons for 10 common appliances
-- ✅ Auto-fill name, icon, category, and power rating
+- ✅ Auto-fill name, icon, category, port, and power rating
 - ✅ 8 appliance categories with icons
 - ✅ Icon selector (15+ options)
 - ✅ Category-based icon suggestions
+- ✅ Port number selector (1-8) for hardware connection
 - ✅ Rated power input with validation
 - ✅ Field validation before submission
 - ✅ Info box with detection instructions
@@ -90,6 +92,7 @@ Complete appliance configuration and management.
 #### **Basic Information** (Editable)
 - Appliance name
 - Category (read-only)
+- Port number (1-8) - Hardware connection port
 - Rated power (editable)
 - Current power (if active)
 - Total usage time
@@ -177,6 +180,7 @@ interface Appliance {
   name: string;
   category: string;
   icon: string;
+  portNumber: number;      // Hardware port (1-8)
   ratedPower: number;      // Watts
   isActive: boolean;       // Currently ON/OFF
   currentPower?: number;   // Real-time watts
@@ -186,6 +190,9 @@ interface Appliance {
   updatedAt: Date;
 }
 ```
+
+#### Port Number Field
+The `portNumber` field (1-8) indicates which physical port on the IoT device the appliance is connected to. This is critical for the hardware integration and NILM classification, as it allows the system to map sensor readings from specific ports to their corresponding appliances.
 
 ---
 
@@ -294,6 +301,7 @@ User can improve detection by:
 ### Input Validation
 - **Appliance Name**: Required, non-empty
 - **Category**: Required, one of 8 types
+- **Port Number**: Required, 1-8, numeric
 - **Rated Power**: Required, > 0 watts, numeric
 - **Icon**: Optional, defaults to category icon
 

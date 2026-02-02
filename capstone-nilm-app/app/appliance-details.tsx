@@ -37,6 +37,7 @@ export default function ApplianceDetailsScreen() {
   const [name, setName] = useState('');
   const [icon, setIcon] = useState('');
   const [ratedPower, setRatedPower] = useState('');
+  const [portNumber, setPortNumber] = useState('');
   const [category, setCategory] = useState('');
 
   // Classification settings
@@ -61,6 +62,7 @@ export default function ApplianceDetailsScreen() {
         setName(found.name);
         setIcon(found.icon);
         setRatedPower(found.ratedPower.toString());
+        setPortNumber(found.portNumber.toString());
         setCategory(found.category);
       } else {
         Alert.alert('Error', 'Appliance not found');
@@ -86,6 +88,10 @@ export default function ApplianceDetailsScreen() {
       Alert.alert('Invalid', 'Please enter a valid rated power');
       return;
     }
+    if (!portNumber || isNaN(Number(portNumber)) || Number(portNumber) < 1 || Number(portNumber) > 8) {
+      Alert.alert('Invalid', 'Please enter a valid port number (1-8)');
+      return;
+    }
 
     try {
       setIsSaving(true);
@@ -93,10 +99,11 @@ export default function ApplianceDetailsScreen() {
         name,
         icon,
         ratedPower: Number(ratedPower),
+        portNumber: Number(portNumber),
         category,
       });
 
-      setAppliance({ ...appliance, name, icon, ratedPower: Number(ratedPower), category });
+      setAppliance({ ...appliance, name, icon, ratedPower: Number(ratedPower), portNumber: Number(portNumber), category });
       setIsEditing(false);
       Alert.alert('Success', 'Appliance updated successfully');
     } catch (error) {
@@ -250,6 +257,23 @@ export default function ApplianceDetailsScreen() {
             <View style={styles.field}>
               <Text style={styles.fieldLabel}>Category</Text>
               <Text style={styles.fieldValue}>{appliance.category}</Text>
+            </View>
+
+            <View style={styles.field}>
+              <Text style={styles.fieldLabel}>Port Number</Text>
+              {isEditing ? (
+                <TextInput
+                  style={styles.fieldInput}
+                  value={portNumber}
+                  onChangeText={setPortNumber}
+                  placeholder="1-8"
+                  placeholderTextColor={colors.textSecondary}
+                  keyboardType="numeric"
+                  maxLength={1}
+                />
+              ) : (
+                <Text style={styles.fieldValue}>Port {appliance.portNumber}</Text>
+              )}
             </View>
 
             <View style={styles.field}>
