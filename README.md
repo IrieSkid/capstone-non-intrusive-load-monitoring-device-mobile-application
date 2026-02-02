@@ -169,13 +169,13 @@ npx expo start
 ### Running the App
 
 1. **Start the development server:**
-   ```bash
+```bash
    cd capstone-nilm-app
    npm start
-   ```
+```
 
 2. **Open in Expo Go:**
-   ```bash
+```bash
    cd mobile-app
    npm install @react-navigation/native @react-navigation/stack
    npm install react-native-screens react-native-safe-area-context

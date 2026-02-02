@@ -1,6 +1,5 @@
 /**
- * Profile Screen
- * View and edit user profile
+ * Profile Screen - Redesigned to match new theme
  */
 
 import React, { useState } from 'react';
@@ -14,16 +13,17 @@ import {
   Alert,
   ActivityIndicator,
   StatusBar,
+  Switch,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
 import { useAuth } from '@/hooks/useAuth';
-import Colors from '@/constants/Colors';
+import { useTheme } from '@/contexts/ThemeContext';
+import { IconSymbol } from '@/components/ui/icon-symbol';
 
 export default function ProfileScreen() {
   const { user, isLoading, logout, updateProfile } = useAuth();
+  const { themeMode, isDark, setThemeMode, colors } = useTheme();
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [formData, setFormData] = useState({
@@ -33,7 +33,6 @@ export default function ProfileScreen() {
   });
 
   React.useEffect(() => {
-    // Redirect to login if not authenticated
     if (!isLoading && !user) {
       router.replace('/(auth)/login');
     }
@@ -52,126 +51,173 @@ export default function ProfileScreen() {
     }
   };
 
-  const handleLogout = async () => {
-    Alert.alert(
-      'Logout',
-      'Are you sure you want to logout?',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Logout',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              await logout();
-              router.replace('/(auth)/login');
-            } catch (error: any) {
-              Alert.alert('Error', error.message || 'Failed to logout');
-            }
-          },
+  const handleLogout = () => {
+    Alert.alert('Logout', 'Are you sure you want to log out?', [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Logout',
+        style: 'destructive',
+        onPress: async () => {
+          try {
+            await logout();
+            router.replace('/(auth)/login');
+          } catch (error: any) {
+            Alert.alert('Error', error.message || 'Failed to logout');
+          }
         },
-      ]
-    );
+      },
+    ]);
   };
 
   if (isLoading) {
     return (
-      <ThemedView style={styles.loadingContainer}>
-        <ActivityIndicator size="large" />
-        <ThemedText style={styles.loadingText}>Loading profile...</ThemedText>
-      </ThemedView>
+      <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]}>
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color={colors.primary} />
+          <Text style={[styles.loadingText, { color: colors.textSecondary }]}>
+            Loading profile...
+          </Text>
+        </View>
+      </SafeAreaView>
     );
   }
 
   if (!user) {
-    return null; // Will redirect to login
+    return null;
   }
+
+  const styles = createStyles(colors);
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
-      <StatusBar barStyle="dark-content" backgroundColor={Colors.background} />
+      <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} />
       <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: 100 }}>
-        <ThemedView style={styles.content}>
         {/* Header */}
         <View style={styles.header}>
           <View style={styles.avatar}>
-            <ThemedText style={styles.avatarText}>
-              {user.firstName[0]}{user.lastName[0]}
-            </ThemedText>
+            <Text style={styles.avatarText}>
+              {user.firstName[0]}
+              {user.lastName[0]}
+            </Text>
           </View>
-          <ThemedText type="title" style={styles.name}>
+          <Text style={styles.name}>
             {user.firstName} {user.lastName}
-          </ThemedText>
-          <ThemedText style={styles.email}>{user.email}</ThemedText>
+          </Text>
+          <Text style={styles.email}>{user.email}</Text>
           <View style={styles.roleBadge}>
             <Text style={styles.roleText}>{user.role.toUpperCase()}</Text>
           </View>
         </View>
 
-        {/* Profile Details */}
-        <View style={styles.section}>
-          <ThemedText type="subtitle" style={styles.sectionTitle}>
-            Profile Information
-          </ThemedText>
+        {/* Profile Information Card */}
+        <View style={styles.card}>
+          <View style={styles.cardHeader}>
+            <IconSymbol name="person.fill" size={20} color={colors.primary} />
+            <Text style={styles.cardTitle}>Profile Information</Text>
+          </View>
 
           <View style={styles.field}>
-            <ThemedText style={styles.label}>First Name</ThemedText>
+            <Text style={styles.label}>First Name</Text>
             {isEditing ? (
               <TextInput
                 style={styles.input}
                 value={formData.firstName}
                 onChangeText={(text) => setFormData({ ...formData, firstName: text })}
+                placeholderTextColor={colors.textDisabled}
               />
             ) : (
-              <ThemedText style={styles.value}>{user.firstName}</ThemedText>
+              <Text style={styles.value}>{user.firstName}</Text>
             )}
           </View>
 
           <View style={styles.field}>
-            <ThemedText style={styles.label}>Last Name</ThemedText>
+            <Text style={styles.label}>Last Name</Text>
             {isEditing ? (
               <TextInput
                 style={styles.input}
                 value={formData.lastName}
                 onChangeText={(text) => setFormData({ ...formData, lastName: text })}
+                placeholderTextColor={colors.textDisabled}
               />
             ) : (
-              <ThemedText style={styles.value}>{user.lastName}</ThemedText>
+              <Text style={styles.value}>{user.lastName}</Text>
             )}
           </View>
 
           <View style={styles.field}>
-            <ThemedText style={styles.label}>Phone Number</ThemedText>
+            <Text style={styles.label}>Phone Number</Text>
             {isEditing ? (
               <TextInput
                 style={styles.input}
                 value={formData.phoneNumber}
                 onChangeText={(text) => setFormData({ ...formData, phoneNumber: text })}
                 keyboardType="phone-pad"
+                placeholderTextColor={colors.textDisabled}
               />
             ) : (
-              <ThemedText style={styles.value}>
-                {user.phoneNumber || 'Not provided'}
-              </ThemedText>
+              <Text style={styles.value}>{user.phoneNumber || 'Not set'}</Text>
             )}
           </View>
 
           <View style={styles.field}>
-            <ThemedText style={styles.label}>Account Status</ThemedText>
-            <ThemedText style={styles.value}>
-              {user.isActive ? 'Active' : 'Inactive'}
-            </ThemedText>
+            <Text style={styles.label}>Email</Text>
+            <Text style={styles.value}>{user.email}</Text>
           </View>
 
           <View style={styles.field}>
-            <ThemedText style={styles.label}>Member Since</ThemedText>
-            <ThemedText style={styles.value}>
-              {user.createdAt.toLocaleDateString()}
-            </ThemedText>
+            <Text style={styles.label}>Role</Text>
+            <Text style={styles.value}>{user.role}</Text>
           </View>
         </View>
 
-        {/* Action Buttons */}
+        {/* Theme Settings Card */}
+        <View style={styles.card}>
+          <View style={styles.cardHeader}>
+            <IconSymbol name="paintbrush.fill" size={20} color={colors.primary} />
+            <Text style={styles.cardTitle}>Appearance</Text>
+          </View>
+
+          <View style={styles.themeOption}>
+            <View style={styles.themeInfo}>
+              <IconSymbol name="sun.max.fill" size={24} color={colors.textPrimary} />
+              <Text style={styles.themeLabel}>Light Mode</Text>
+            </View>
+            <Switch
+              value={themeMode === 'light'}
+              onValueChange={(value) => setThemeMode(value ? 'light' : 'dark')}
+              trackColor={{ false: colors.divider, true: colors.primary }}
+              thumbColor={colors.surface}
+            />
+          </View>
+
+          <View style={styles.themeOption}>
+            <View style={styles.themeInfo}>
+              <IconSymbol name="moon.fill" size={24} color={colors.textPrimary} />
+              <Text style={styles.themeLabel}>Dark Mode</Text>
+            </View>
+            <Switch
+              value={themeMode === 'dark'}
+              onValueChange={(value) => setThemeMode(value ? 'dark' : 'light')}
+              trackColor={{ false: colors.divider, true: colors.primary }}
+              thumbColor={colors.surface}
+            />
+          </View>
+
+          <View style={styles.themeOption}>
+            <View style={styles.themeInfo}>
+              <IconSymbol name="gear" size={24} color={colors.textPrimary} />
+              <Text style={styles.themeLabel}>Auto (System)</Text>
+            </View>
+            <Switch
+              value={themeMode === 'auto'}
+              onValueChange={(value) => setThemeMode(value ? 'auto' : 'light')}
+              trackColor={{ false: colors.divider, true: colors.primary }}
+              thumbColor={colors.surface}
+            />
+          </View>
+        </View>
+
+        {/* Actions */}
         <View style={styles.actions}>
           {isEditing ? (
             <>
@@ -187,159 +233,189 @@ export default function ProfileScreen() {
               </TouchableOpacity>
               <TouchableOpacity
                 style={[styles.button, styles.cancelButton]}
-                onPress={() => {
-                  setIsEditing(false);
-                  setFormData({
-                    firstName: user.firstName,
-                    lastName: user.lastName,
-                    phoneNumber: user.phoneNumber || '',
-                  });
-                }}
+                onPress={() => setIsEditing(false)}
                 disabled={isSaving}>
-                <ThemedText style={styles.cancelButtonText}>Cancel</ThemedText>
+                <Text style={[styles.buttonText, { color: colors.textPrimary }]}>Cancel</Text>
               </TouchableOpacity>
             </>
           ) : (
             <TouchableOpacity
               style={[styles.button, styles.editButton]}
               onPress={() => setIsEditing(true)}>
+              <IconSymbol name="pencil" size={18} color="#fff" />
               <Text style={styles.buttonText}>Edit Profile</Text>
             </TouchableOpacity>
           )}
 
-          <TouchableOpacity
-            style={[styles.button, styles.logoutButton]}
-            onPress={handleLogout}>
-            <Text style={styles.logoutButtonText}>Logout</Text>
+          <TouchableOpacity style={[styles.button, styles.logoutButton]} onPress={handleLogout}>
+            <IconSymbol name="arrow.right.square" size={18} color="#fff" />
+            <Text style={styles.buttonText}>Logout</Text>
           </TouchableOpacity>
         </View>
-        </ThemedView>
       </ScrollView>
     </SafeAreaView>
   );
 }
 
-const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: Colors.background,
-  },
-  container: {
-    flex: 1,
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  loadingText: {
-    marginTop: 10,
-  },
-  content: {
-    flex: 1,
-    padding: 20,
-  },
-  header: {
-    alignItems: 'center',
-    marginBottom: 30,
-    paddingTop: 20,
-  },
-  avatar: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    backgroundColor: '#007AFF',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 15,
-  },
-  avatarText: {
-    fontSize: 36,
-    fontWeight: 'bold',
-    color: '#fff',
-  },
-  name: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginBottom: 5,
-  },
-  email: {
-    fontSize: 16,
-    opacity: 0.7,
-    marginBottom: 10,
-  },
-  roleBadge: {
-    backgroundColor: '#007AFF',
-    paddingHorizontal: 15,
-    paddingVertical: 5,
-    borderRadius: 15,
-  },
-  roleText: {
-    color: '#fff',
-    fontSize: 12,
-    fontWeight: '600',
-  },
-  section: {
-    marginBottom: 30,
-  },
-  sectionTitle: {
-    fontSize: 20,
-    marginBottom: 15,
-  },
-  field: {
-    marginBottom: 20,
-  },
-  label: {
-    fontSize: 14,
-    opacity: 0.7,
-    marginBottom: 5,
-  },
-  value: {
-    fontSize: 16,
-  },
-  input: {
-    backgroundColor: '#f5f5f5',
-    borderRadius: 8,
-    padding: 12,
-    fontSize: 16,
-    borderWidth: 1,
-    borderColor: '#ddd',
-  },
-  actions: {
-    gap: 15,
-  },
-  button: {
-    borderRadius: 8,
-    padding: 15,
-    alignItems: 'center',
-  },
-  editButton: {
-    backgroundColor: '#007AFF',
-  },
-  saveButton: {
-    backgroundColor: '#34C759',
-  },
-  cancelButton: {
-    backgroundColor: '#f5f5f5',
-    borderWidth: 1,
-    borderColor: '#ddd',
-  },
-  logoutButton: {
-    backgroundColor: '#FF3B30',
-    marginTop: 20,
-  },
-  buttonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  cancelButtonText: {
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  logoutButtonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-});
+const createStyles = (colors: any) =>
+  StyleSheet.create({
+    safeArea: {
+      flex: 1,
+      backgroundColor: colors.background,
+    },
+    container: {
+      flex: 1,
+    },
+    loadingContainer: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    loadingText: {
+      marginTop: 10,
+      fontSize: 14,
+    },
+    header: {
+      alignItems: 'center',
+      padding: 24,
+      backgroundColor: colors.surface,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.divider,
+    },
+    avatar: {
+      width: 80,
+      height: 80,
+      borderRadius: 40,
+      backgroundColor: colors.primary,
+      justifyContent: 'center',
+      alignItems: 'center',
+      marginBottom: 12,
+    },
+    avatarText: {
+      fontSize: 32,
+      fontWeight: '700',
+      color: '#fff',
+    },
+    name: {
+      fontSize: 22,
+      fontWeight: '700',
+      color: colors.textPrimary,
+      marginBottom: 4,
+    },
+    email: {
+      fontSize: 14,
+      color: colors.textSecondary,
+      marginBottom: 12,
+    },
+    roleBadge: {
+      backgroundColor: colors.primary,
+      paddingHorizontal: 12,
+      paddingVertical: 4,
+      borderRadius: 12,
+    },
+    roleText: {
+      color: '#fff',
+      fontSize: 11,
+      fontWeight: '600',
+      letterSpacing: 0.5,
+    },
+    card: {
+      backgroundColor: colors.surface,
+      marginHorizontal: 16,
+      marginTop: 16,
+      borderRadius: 12,
+      padding: 16,
+      borderWidth: 1,
+      borderColor: colors.divider,
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 1 },
+      shadowOpacity: 0.1,
+      shadowRadius: 2,
+      elevation: 2,
+    },
+    cardHeader: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      marginBottom: 16,
+      paddingBottom: 12,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.divider,
+    },
+    cardTitle: {
+      fontSize: 16,
+      fontWeight: '600',
+      color: colors.textPrimary,
+      marginLeft: 8,
+    },
+    field: {
+      marginBottom: 16,
+    },
+    label: {
+      fontSize: 12,
+      color: colors.textSecondary,
+      marginBottom: 6,
+      fontWeight: '500',
+    },
+    value: {
+      fontSize: 16,
+      color: colors.textPrimary,
+      fontWeight: '500',
+    },
+    input: {
+      backgroundColor: colors.background,
+      borderRadius: 8,
+      padding: 12,
+      fontSize: 16,
+      borderWidth: 1,
+      borderColor: colors.border,
+      color: colors.textPrimary,
+    },
+    themeOption: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      paddingVertical: 12,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.divider,
+    },
+    themeInfo: {
+      flexDirection: 'row',
+      alignItems: 'center',
+    },
+    themeLabel: {
+      fontSize: 16,
+      color: colors.textPrimary,
+      marginLeft: 12,
+      fontWeight: '500',
+    },
+    actions: {
+      padding: 16,
+      gap: 12,
+    },
+    button: {
+      flexDirection: 'row',
+      borderRadius: 12,
+      padding: 16,
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 8,
+    },
+    editButton: {
+      backgroundColor: colors.primary,
+    },
+    saveButton: {
+      backgroundColor: colors.success,
+    },
+    cancelButton: {
+      backgroundColor: colors.divider,
+    },
+    logoutButton: {
+      backgroundColor: colors.error,
+      marginTop: 8,
+    },
+    buttonText: {
+      color: '#fff',
+      fontSize: 16,
+      fontWeight: '600',
+    },
+  });
