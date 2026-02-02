@@ -5,6 +5,11 @@
  * Usage: npx ts-node -r tsconfig-paths/register scripts/initializeUserData.ts <userId>
  */
 
+// Use server-side Firebase config
+import * as firebaseServer from '../config/firebase.server';
+// Override firebase imports
+(global as any).firebase = firebaseServer;
+
 import { deviceService } from '../services/deviceService';
 import { firestoreApplianceService } from '../services/firestoreApplianceService';
 import { electricityRateService } from '../services/electricityRateService';

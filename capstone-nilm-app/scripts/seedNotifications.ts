@@ -5,6 +5,10 @@
  * Usage: npx ts-node -r tsconfig-paths/register scripts/seedNotifications.ts <userId> <deviceId>
  */
 
+// Use server-side Firebase config
+import * as firebaseServer from '../config/firebase.server';
+(global as any).firebase = firebaseServer;
+
 import { notificationService } from '../services/notificationService';
 
 // Sample notification data with various types and priorities

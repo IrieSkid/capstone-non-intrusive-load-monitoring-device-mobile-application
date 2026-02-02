@@ -18,14 +18,17 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useAuth } from '@/hooks/useAuth';
+import { useRealtimeData } from '@/contexts/RealtimeDataContext';
 import { notificationService, Notification } from '@/services/notificationService';
 import { getAlertIcon, getAlertColor, getTimeAgo } from '@/utils/mockAlertData';
+import { seedNotificationsInApp } from '@/utils/seedNotificationsInApp';
 
 type FilterType = 'all' | 'alert' | 'warning' | 'info';
 
 export default function AlertsScreen() {
   const { colors, isDark } = useTheme();
   const { user } = useAuth();
+  const { deviceId } = useRealtimeData();
   const styles = createStyles(colors);
 
   const [notifications, setNotifications] = useState<Notification[]>([]);
@@ -33,6 +36,7 @@ export default function AlertsScreen() {
   const [isLoading, setIsLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [filter, setFilter] = useState<FilterType>('all');
+  const [isSeeding, setIsSeeding] = useState(false);
 
   // Load notifications
   const loadNotifications = async () => {
@@ -89,6 +93,38 @@ export default function AlertsScreen() {
     }
   };
 
+  // Seed sample notifications
+  const handleSeedNotifications = async () => {
+    if (!user || !deviceId) {
+      Alert.alert('Error', 'User or device not found');
+      return;
+    }
+
+    Alert.alert(
+      'Create Sample Notifications',
+      'This will create 8 sample notifications for testing. Continue?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Create',
+          onPress: async () => {
+            try {
+              setIsSeeding(true);
+              const count = await seedNotificationsInApp(user.id, deviceId);
+              Alert.alert('Success!', `Created ${count} sample notifications`);
+              loadNotifications(); // Reload to show new notifications
+            } catch (error) {
+              console.error('Error seeding notifications:', error);
+              Alert.alert('Error', 'Failed to create notifications');
+            } finally {
+              setIsSeeding(false);
+            }
+          },
+        },
+      ]
+    );
+  };
+
   if (isLoading && notifications.length === 0) {
     return (
       <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
@@ -112,10 +148,22 @@ export default function AlertsScreen() {
         
         {/* Header */}
         <View style={styles.header}>
-          <Text style={styles.title}>🔔 Notifications</Text>
-          <Text style={styles.subtitle}>
-            {filteredNotifications.length} {filter !== 'all' ? filter : ''} notification{filteredNotifications.length !== 1 ? 's' : ''}
-          </Text>
+          <View>
+            <Text style={styles.title}>🔔 Notifications</Text>
+            <Text style={styles.subtitle}>
+              {filteredNotifications.length} {filter !== 'all' ? filter : ''} notification{filteredNotifications.length !== 1 ? 's' : ''}
+            </Text>
+          </View>
+          {notifications.length === 0 && !isLoading && (
+            <TouchableOpacity
+              style={styles.seedButton}
+              onPress={handleSeedNotifications}
+              disabled={isSeeding}>
+              <Text style={styles.seedButtonText}>
+                {isSeeding ? '...' : '+ Sample'}
+              </Text>
+            </TouchableOpacity>
+          )}
         </View>
 
         {/* Filter Tabs */}
