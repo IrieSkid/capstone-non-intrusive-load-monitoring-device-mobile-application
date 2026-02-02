@@ -14,10 +14,12 @@ import {
   Alert,
   ActivityIndicator,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { useAuth } from '@/hooks/useAuth';
+import Colors from '@/constants/Colors';
 
 export default function ProfileScreen() {
   const { user, isLoading, logout, updateProfile } = useAuth();
@@ -85,8 +87,9 @@ export default function ProfileScreen() {
   }
 
   return (
-    <ScrollView style={styles.container}>
-      <ThemedView style={styles.content}>
+    <SafeAreaView style={styles.safeArea} edges={['top']}>
+      <ScrollView style={styles.container}>
+        <ThemedView style={styles.content}>
         {/* Header */}
         <View style={styles.header}>
           <View style={styles.avatar}>
@@ -208,12 +211,17 @@ export default function ProfileScreen() {
             <Text style={styles.logoutButtonText}>Logout</Text>
           </TouchableOpacity>
         </View>
-      </ThemedView>
-    </ScrollView>
+        </ThemedView>
+      </ScrollView>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: Colors.background,
+  },
   container: {
     flex: 1,
   },

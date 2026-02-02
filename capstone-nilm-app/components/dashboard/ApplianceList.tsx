@@ -5,8 +5,6 @@
 
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
 import Colors from '@/constants/Colors';
 
 interface Appliance {
@@ -47,9 +45,9 @@ const mockAppliances: Appliance[] = [
 
 export function ApplianceList() {
   return (
-    <ThemedView style={styles.container}>
+    <View style={styles.container}>
       <View style={styles.header}>
-        <ThemedText style={styles.title}>Active Appliances ({mockAppliances.length})</ThemedText>
+        <Text style={styles.title}>Active Appliances ({mockAppliances.length})</Text>
         <TouchableOpacity>
           <Text style={styles.viewAll}>View All →</Text>
         </TouchableOpacity>
@@ -71,19 +69,21 @@ export function ApplianceList() {
           <Text style={styles.appliancePower}>{appliance.power} W</Text>
         </View>
       ))}
-    </ThemedView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     marginBottom: 16,
+    backgroundColor: 'transparent',
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 12,
+    backgroundColor: 'transparent',
   },
   title: {
     fontSize: 16,
@@ -98,12 +98,17 @@ const styles = StyleSheet.create({
   applianceItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: Colors.surface,
+    backgroundColor: '#FFFFFF', // Explicit white background
     borderRadius: 8,
     padding: 12,
     marginBottom: 8,
     borderWidth: 1,
     borderColor: Colors.divider,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 2,
   },
   applianceIcon: {
     width: 48,

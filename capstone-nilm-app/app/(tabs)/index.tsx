@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { StyleSheet, ActivityIndicator, ScrollView, RefreshControl, View, Text } from 'react-native';
 import { router } from 'expo-router';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
@@ -59,54 +60,60 @@ export default function HomeScreen() {
   };
 
   return (
-    <ScrollView
-      style={styles.container}
-      contentContainerStyle={styles.scrollContent}
-      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}>
-      {/* Greeting Section */}
-      <View style={styles.greeting}>
-        <Text style={styles.greetingText}>{getGreeting()}</Text>
-        <Text style={styles.greetingName}>{user.firstName} {user.lastName}</Text>
-      </View>
+    <SafeAreaView style={styles.safeArea} edges={['top']}>
+      <ScrollView
+        style={styles.container}
+        contentContainerStyle={styles.scrollContent}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}>
+        {/* Greeting Section */}
+        <View style={styles.greeting}>
+          <Text style={styles.greetingText}>{getGreeting()}</Text>
+          <Text style={styles.greetingName}>{user.firstName} {user.lastName}</Text>
+        </View>
 
-      {/* Gradient Power Card */}
-      <View style={styles.section}>
-        <GradientPowerCard deviceId={mockDevice.id} />
-      </View>
+        {/* Gradient Power Card */}
+        <View style={styles.section}>
+          <GradientPowerCard deviceId={mockDevice.id} />
+        </View>
 
-      {/* Electrical Parameters Grid */}
-      <View style={styles.section}>
-        <ParametersGrid deviceId={mockDevice.id} />
-      </View>
+        {/* Electrical Parameters Grid */}
+        <View style={styles.section}>
+          <ParametersGrid deviceId={mockDevice.id} />
+        </View>
 
-      {/* Today's Consumption Chart */}
-      <View style={styles.section}>
-        <ConsumptionChart />
-      </View>
+        {/* Today's Consumption Chart */}
+        <View style={styles.section}>
+          <ConsumptionChart />
+        </View>
 
-      {/* Active Appliances */}
-      <View style={styles.section}>
-        <ApplianceList />
-      </View>
+        {/* Active Appliances */}
+        <View style={styles.section}>
+          <ApplianceList />
+        </View>
 
-      {/* Info Note */}
-      <View style={styles.infoNote}>
-        <Text style={styles.infoText}>
-          ℹ️ This dashboard is displaying mock data for testing. When the hardware is ready, it
-          will show real-time readings from your IoT device.
-        </Text>
-      </View>
-    </ScrollView>
+        {/* Info Note */}
+        <View style={styles.infoNote}>
+          <Text style={styles.infoText}>
+            ℹ️ This dashboard is displaying mock data for testing. When the hardware is ready, it
+            will show real-time readings from your IoT device.
+          </Text>
+        </View>
+      </ScrollView>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: Colors.surface,
+  },
   container: {
     flex: 1,
     backgroundColor: Colors.background,
   },
   scrollContent: {
-    paddingBottom: 100, // Space for bottom nav
+    paddingBottom: 20, // Space for bottom nav
   },
   loadingContainer: {
     flex: 1,

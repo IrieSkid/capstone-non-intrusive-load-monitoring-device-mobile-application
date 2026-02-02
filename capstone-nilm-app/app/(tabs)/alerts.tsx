@@ -4,16 +4,18 @@
 
 import React from 'react';
 import { View, StyleSheet, ScrollView } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import Colors from '@/constants/Colors';
 
 export default function AlertsScreen() {
   return (
-    <ScrollView style={styles.container}>
-      <ThemedView style={styles.header}>
-        <ThemedText type="title">Alerts & Notifications</ThemedText>
-      </ThemedView>
+    <SafeAreaView style={styles.safeArea} edges={['top']}>
+      <ScrollView style={styles.container}>
+        <ThemedView style={styles.header}>
+          <ThemedText type="title">Alerts & Notifications</ThemedText>
+        </ThemedView>
 
       <View style={styles.content}>
         <ThemedView style={styles.placeholder}>
@@ -23,19 +25,23 @@ export default function AlertsScreen() {
             Custom alerts and notifications will be available in Phase 5
           </ThemedText>
         </ThemedView>
-      </View>
-    </ScrollView>
+        </View>
+      </ScrollView>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: Colors.surface,
+  },
   container: {
     flex: 1,
     backgroundColor: Colors.background,
   },
   header: {
     padding: 16,
-    paddingTop: 60,
     backgroundColor: Colors.surface,
   },
   content: {
