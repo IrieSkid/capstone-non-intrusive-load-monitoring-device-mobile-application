@@ -3,25 +3,25 @@
  * Displays alerts and notifications for energy monitoring
  */
 
-import React, { useState, useEffect, useCallback } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  StatusBar,
-  TouchableOpacity,
-  ActivityIndicator,
-  RefreshControl,
-  Alert,
-} from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { useRealtimeData } from '@/contexts/RealtimeDataContext';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useAuth } from '@/hooks/useAuth';
-import { useRealtimeData } from '@/contexts/RealtimeDataContext';
-import { notificationService, Notification } from '@/services/notificationService';
-import { getAlertIcon, getAlertColor, getTimeAgo } from '@/utils/mockAlertData';
+import { Notification, notificationService } from '@/services/notificationService';
+import { getAlertColor, getAlertIcon, getTimeAgo } from '@/utils/mockAlertData';
 import { seedNotificationsInApp } from '@/utils/seedNotificationsInApp';
+import React, { useCallback, useEffect, useState } from 'react';
+import {
+  ActivityIndicator,
+  Alert,
+  RefreshControl,
+  ScrollView,
+  StatusBar,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 type FilterType = 'all' | 'alert' | 'warning' | 'info';
 
@@ -149,7 +149,7 @@ export default function AlertsScreen() {
         {/* Header */}
         <View style={styles.header}>
           <View>
-            <Text style={styles.title}>🔔 Notifications</Text>
+            <Text style={styles.title}>Notifications</Text>
             <Text style={styles.subtitle}>
               {filteredNotifications.length} {filter !== 'all' ? filter : ''} notification{filteredNotifications.length !== 1 ? 's' : ''}
             </Text>

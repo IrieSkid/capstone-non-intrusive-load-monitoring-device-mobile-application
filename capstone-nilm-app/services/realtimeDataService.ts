@@ -2,14 +2,10 @@
  * Real-Time Data Service
  * Simulates WebSocket connection with live data updates
  * Now with Firestore persistence and real appliance data! 🔥
- * 
- * ⚠️ DEPLOYMENT NOTE:
- * Configure DEVELOPMENT_MODE in config/environment.ts before deployment
  */
 
 import { readingService } from './readingService';
-import { firestoreApplianceService, Appliance } from './firestoreApplianceService';
-import { ENV, logConfig } from '@/config/environment';
+import { applianceService, firestoreApplianceService, Appliance } from './applianceService';
 
 export interface RealtimeReading {
   timestamp: Date;
@@ -97,7 +93,7 @@ class RealtimeDataService {
   async loadAppliances(userId: string, deviceId: string): Promise<void> {
     try {
       console.log('📱 Loading appliances from Firestore...');
-      const firestoreAppliances = await firestoreApplianceService.getDeviceAppliances(deviceId);
+      const firestoreAppliances = await applianceService.getDeviceAppliances(deviceId);
       
       // Convert to ApplianceStatus format
       this.appliances = firestoreAppliances.map(app => ({
@@ -222,7 +218,7 @@ class RealtimeDataService {
         updateData.lastDetected = now;
       }
 
-      await firestoreApplianceService.updateAppliance(applianceId, updateData);
+      await applianceService.updateAppliance(applianceId, updateData);
       console.log(`🔄 Toggled ${appliance.name}: ${newIsOn ? 'ON' : 'OFF'}`);
     } catch (error) {
       console.error('Failed to update appliance in Firestore:', error);
@@ -257,15 +253,12 @@ class RealtimeDataService {
     }
     
     console.log('🔌 Real-time data service started', deviceId ? `for device ${deviceId}` : '');
-    console.log('⚙️  UI Update Interval:', ENV.UI_UPDATE_INTERVAL / 1000, 'seconds');
-    console.log('💾 Persistence Interval:', ENV.PERSISTENCE_INTERVAL / 1000, 'seconds');
 
-    // Update UI at configured interval (3 seconds for smooth UI)
+    // Update every 3 seconds
     this.interval = setInterval(() => {
       // Update energy (cumulative)
       const appliancePower = this.calculateTotalPower();
-      const intervalSeconds = ENV.UI_UPDATE_INTERVAL / 1000;
-      this.totalEnergy += (appliancePower / 1000) * (intervalSeconds / 3600); // Convert to kWh
+      this.totalEnergy += (appliancePower / 1000) * (3 / 3600); // Convert to kWh for 3 seconds
 
       // Generate new reading based on appliances
       this.currentReading = {
@@ -274,27 +267,24 @@ class RealtimeDataService {
         energy: this.totalEnergy,
       };
 
-      // Notify data callbacks (UI updates)
+      // Notify data callbacks
       this.dataCallbacks.forEach(callback => callback({ ...this.currentReading }));
 
       // Update appliances every cycle (update durations)
       this.updateAppliances();
 
-      // Increment persistence counter
-      this.persistenceCounter += ENV.UI_UPDATE_INTERVAL;
-
-      // Save to Firestore at configured persistence interval
-      // In development: Every 30 seconds
-      // In production: Every 3 seconds
-      if (this.persistenceCounter >= ENV.PERSISTENCE_INTERVAL && this.deviceId) {
+      // Save to Firestore every 10 cycles (30 seconds)
+      this.saveInterval++;
+      if (this.saveInterval >= 10 && this.deviceId) {
         this.saveToFirestore(); // This now also updates appliance usage
-        this.persistenceCounter = 0;
-        
-        if (ENV.DEVELOPMENT_MODE) {
-          console.log('💾 [DEV MODE] Saved reading (reduced frequency to save quota)');
-        }
+        this.saveInterval = 0;
       }
-    }, ENV.UI_UPDATE_INTERVAL); // Configurable UI update rate
+      
+      // Also update appliance usage more frequently (every 20 cycles = 60 seconds)
+      if (this.saveInterval % 20 === 0 && this.deviceId) {
+        this.updateApplianceUsageInFirestore();
+      }
+    }, 3000); // Every 3 seconds
   }
 
   /**
@@ -326,7 +316,7 @@ class RealtimeDataService {
       if (appliance.isOn) {
         // Update usage time, electrical parameters, and last detected for active appliances
         try {
-          await firestoreApplianceService.updateAppliance(appliance.id, {
+          await applianceService.updateAppliance(appliance.id, {
             usageMinutes: Math.round(appliance.duration), // Round to nearest minute
             lastDetected: now,
             currentPower: appliance.power,

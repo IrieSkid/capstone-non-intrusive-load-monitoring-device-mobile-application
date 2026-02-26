@@ -3,23 +3,23 @@
  * View and manage all IoT devices
  */
 
-import React, { useState, useEffect, useCallback } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  TouchableOpacity,
-  ActivityIndicator,
-  RefreshControl,
-  StatusBar,
-  Alert,
-} from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { router } from 'expo-router';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useAuth } from '@/hooks/useAuth';
-import { deviceService, Device } from '@/services/deviceService';
+import { Device, deviceService } from '@/services/deviceService';
+import { router } from 'expo-router';
+import React, { useCallback, useEffect, useState } from 'react';
+import {
+  ActivityIndicator,
+  Alert,
+  RefreshControl,
+  ScrollView,
+  StatusBar,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function DevicesScreen() {
   const { colors, isDark } = useTheme();
@@ -114,7 +114,7 @@ export default function DevicesScreen() {
         {/* Header */}
         <View style={styles.header}>
           <View>
-            <Text style={styles.title}>🔌 Devices</Text>
+            <Text style={styles.title}>Devices</Text>
             <Text style={styles.subtitle}>
               {devices.length} device{devices.length !== 1 ? 's' : ''} registered
             </Text>

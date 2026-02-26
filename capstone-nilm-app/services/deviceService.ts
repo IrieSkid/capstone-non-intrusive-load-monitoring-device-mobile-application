@@ -1,21 +1,9 @@
 /**
- * Device Service
- * Manages IoT devices in Firestore
+ * Device Service (client)
+ * Calls the Node/Express backend API which talks to MySQL.
  */
 
-import { firestore } from '@/config/firebase';
-import { 
-  collection, 
-  doc, 
-  setDoc, 
-  getDoc, 
-  getDocs, 
-  updateDoc, 
-  deleteDoc,
-  query,
-  where,
-  Timestamp 
-} from 'firebase/firestore';
+import { apiFetch } from '@/config/api';
 
 export interface Device {
   id: string;
@@ -33,159 +21,69 @@ export interface Device {
 }
 
 class DeviceService {
-  private collectionName = 'devices';
-
-  /**
-   * Register a new device
-   */
-  async registerDevice(userId: string, deviceData: Omit<Device, 'id' | 'userId' | 'createdAt' | 'updatedAt'>): Promise<Device> {
-    try {
-      const deviceRef = doc(collection(firestore, this.collectionName));
-      const now = new Date();
-
-      const device: Device = {
-        id: deviceRef.id,
-        userId,
-        ...deviceData,
-        createdAt: now,
-        updatedAt: now,
-      };
-
-      await setDoc(deviceRef, {
-        ...device,
-        createdAt: Timestamp.fromDate(device.createdAt),
-        updatedAt: Timestamp.fromDate(device.updatedAt),
-        lastSeen: Timestamp.fromDate(device.lastSeen),
-      });
-
-      return device;
-    } catch (error) {
-      console.error('Error registering device:', error);
-      throw error;
-    }
+  async registerDevice(
+    userId: string,
+    deviceData: Omit<Device, 'id' | 'userId' | 'createdAt' | 'updatedAt'>
+  ): Promise<Device> {
+    const resp = await apiFetch<{ device: any }>(`/users/${userId}/devices`, {
+      method: 'POST',
+      body: JSON.stringify({ name: deviceData.name, macAddress: deviceData.macAddress }),
+    });
+    return this.mapDeviceFromApi(resp.device, userId);
   }
 
-  /**
-   * Get all devices for a user
-   */
   async getUserDevices(userId: string): Promise<Device[]> {
-    try {
-      const q = query(
-        collection(firestore, this.collectionName),
-        where('userId', '==', userId)
-      );
-
-      const snapshot = await getDocs(q);
-      return snapshot.docs.map(doc => {
-        const data = doc.data();
-        return {
-          ...data,
-          id: doc.id,
-          createdAt: data.createdAt?.toDate() || new Date(),
-          updatedAt: data.updatedAt?.toDate() || new Date(),
-          lastSeen: data.lastSeen?.toDate() || new Date(),
-        } as Device;
-      });
-    } catch (error) {
-      console.error('Error getting user devices:', error);
-      throw error;
-    }
+    const resp = await apiFetch<{ devices: any[] }>(`/users/${userId}/devices`, { method: 'GET' });
+    return (resp.devices || []).map((d) => this.mapDeviceFromApi(d, userId));
   }
 
-  /**
-   * Get a single device
-   */
   async getDevice(deviceId: string): Promise<Device | null> {
     try {
-      const deviceRef = doc(firestore, this.collectionName, deviceId);
-      const snapshot = await getDoc(deviceRef);
-
-      if (!snapshot.exists()) {
-        return null;
-      }
-
-      const data = snapshot.data();
-      return {
-        ...data,
-        id: snapshot.id,
-        createdAt: data.createdAt?.toDate() || new Date(),
-        updatedAt: data.updatedAt?.toDate() || new Date(),
-        lastSeen: data.lastSeen?.toDate() || new Date(),
-      } as Device;
-    } catch (error) {
-      console.error('Error getting device:', error);
-      throw error;
+      const resp = await apiFetch<{ device: any }>(`/devices/${deviceId}`, { method: 'GET' });
+      return this.mapDeviceFromApi(resp.device);
+    } catch {
+      return null;
     }
   }
 
-  /**
-   * Update device status
-   */
   async updateDeviceStatus(deviceId: string, isOnline: boolean): Promise<void> {
-    try {
-      const deviceRef = doc(firestore, this.collectionName, deviceId);
-      await updateDoc(deviceRef, {
-        isOnline,
-        lastSeen: Timestamp.fromDate(new Date()),
-        updatedAt: Timestamp.fromDate(new Date()),
-      });
-    } catch (error) {
-      console.error('Error updating device status:', error);
-      throw error;
-    }
+    await apiFetch(`/devices/${deviceId}`, { method: 'PATCH', body: JSON.stringify({ isOnline }) });
   }
 
-  /**
-   * Update device info
-   */
   async updateDevice(deviceId: string, updates: Partial<Device>): Promise<void> {
-    try {
-      const deviceRef = doc(firestore, this.collectionName, deviceId);
-      const updateData: any = {
-        ...updates,
-        updatedAt: Timestamp.fromDate(new Date()),
-      };
-
-      // Remove fields that shouldn't be updated
-      delete updateData.id;
-      delete updateData.userId;
-      delete updateData.createdAt;
-
-      await updateDoc(deviceRef, updateData);
-    } catch (error) {
-      console.error('Error updating device:', error);
-      throw error;
-    }
-  }
-
-  /**
-   * Delete a device
-   */
-  async deleteDevice(deviceId: string): Promise<void> {
-    try {
-      const deviceRef = doc(firestore, this.collectionName, deviceId);
-      await deleteDoc(deviceRef);
-    } catch (error) {
-      console.error('Error deleting device:', error);
-      throw error;
-    }
-  }
-
-  /**
-   * Create mock device for testing
-   */
-  async createMockDevice(userId: string): Promise<Device> {
-    return this.registerDevice(userId, {
-      name: 'Smart Energy Monitor',
-      type: 'energy_monitor',
-      macAddress: 'AA:BB:CC:DD:EE:FF',
-      ipAddress: '192.168.1.100',
-      firmwareVersion: '1.0.0',
-      isOnline: true,
-      lastSeen: new Date(),
-      location: 'Main Breaker',
+    await apiFetch(`/devices/${deviceId}`, {
+      method: 'PATCH',
+      body: JSON.stringify({
+        name: updates.name,
+        macAddress: updates.macAddress,
+        isOnline: updates.isOnline,
+      }),
     });
+  }
+
+  async deleteDevice(deviceId: string): Promise<void> {
+    await apiFetch(`/devices/${deviceId}`, { method: 'DELETE' });
+  }
+
+  async createMockDevice(userId: string): Promise<Device> {
+    const resp = await apiFetch<{ device: any }>(`/users/${userId}/devices/mock`, { method: 'POST' });
+    return this.mapDeviceFromApi(resp.device, userId);
+  }
+
+  private mapDeviceFromApi(row: any, fallbackUserId: string = ''): Device {
+    return {
+      id: (row.device_id ?? row.id)?.toString(),
+      userId: (row.user_id ?? fallbackUserId)?.toString() || '',
+      name: row.device_name ?? row.name,
+      type: 'energy_monitor',
+      macAddress: row.device_identifier ?? row.macAddress,
+      isOnline: (row.device_status ?? row.status) === 'online' || row.isOnline === true,
+      lastSeen: row.device_last_seen ? new Date(row.device_last_seen) : new Date(),
+      createdAt: row.created_at ? new Date(row.created_at) : new Date(),
+      updatedAt: row.device_last_seen ? new Date(row.device_last_seen) : row.created_at ? new Date(row.created_at) : new Date(),
+    };
   }
 }
 
 export const deviceService = new DeviceService();
+

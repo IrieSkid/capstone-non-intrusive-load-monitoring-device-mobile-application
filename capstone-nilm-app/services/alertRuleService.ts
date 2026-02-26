@@ -1,22 +1,12 @@
 /**
  * Alert Rule Service
- * Manages user-configurable alert rules/thresholds
- * Based on schema: alertRules collection
+ * Manages user-configurable alert rules/thresholds (in-memory implementation)
+ *
+ * NOTE: This implementation keeps alert rules in memory only and does NOT persist
+ * them to MySQL yet. It replaces the previous Firestore-based version so the
+ * app can run without Firebase. For production, a proper MySQL table should be
+ * used instead.
  */
-
-import { firestore } from '@/config/firebase';
-import { 
-  collection, 
-  doc, 
-  setDoc,
-  getDoc,
-  getDocs, 
-  updateDoc,
-  deleteDoc,
-  query,
-  where,
-  Timestamp 
-} from 'firebase/firestore';
 
 export interface AlertRule {
   id: string;
@@ -37,28 +27,26 @@ export interface AlertRule {
 }
 
 class AlertRuleService {
-  private collectionName = 'alertRules';
+  // In-memory storage for rules keyed by rule ID
+  private rules: Map<string, AlertRule> = new Map();
 
   /**
    * Create a new alert rule
    */
   async createRule(rule: Omit<AlertRule, 'id' | 'createdAt' | 'updatedAt'>): Promise<AlertRule> {
     try {
-      const ruleRef = doc(collection(firestore, this.collectionName));
       const now = new Date();
+
+      const id = `rule_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
 
       const newRule: AlertRule = {
         ...rule,
-        id: ruleRef.id,
+        id,
         createdAt: now,
         updatedAt: now,
       };
 
-      await setDoc(ruleRef, {
-        ...newRule,
-        createdAt: Timestamp.fromDate(now),
-        updatedAt: Timestamp.fromDate(now),
-      });
+      this.rules.set(newRule.id, newRule);
 
       return newRule;
     } catch (error) {
@@ -72,21 +60,7 @@ class AlertRuleService {
    */
   async getUserRules(userId: string): Promise<AlertRule[]> {
     try {
-      const q = query(
-        collection(firestore, this.collectionName),
-        where('userId', '==', userId)
-      );
-
-      const snapshot = await getDocs(q);
-      return snapshot.docs.map(doc => {
-        const data = doc.data();
-        return {
-          ...data,
-          id: doc.id,
-          createdAt: data.createdAt?.toDate() || new Date(),
-          updatedAt: data.updatedAt?.toDate() || new Date(),
-        } as AlertRule;
-      });
+      return Array.from(this.rules.values()).filter(rule => rule.userId === userId);
     } catch (error) {
       console.error('Error getting user rules:', error);
       return [];
@@ -98,22 +72,9 @@ class AlertRuleService {
    */
   async getActiveRules(userId: string): Promise<AlertRule[]> {
     try {
-      const q = query(
-        collection(firestore, this.collectionName),
-        where('userId', '==', userId),
-        where('isActive', '==', true)
+      return Array.from(this.rules.values()).filter(
+        rule => rule.userId === userId && rule.isActive
       );
-
-      const snapshot = await getDocs(q);
-      return snapshot.docs.map(doc => {
-        const data = doc.data();
-        return {
-          ...data,
-          id: doc.id,
-          createdAt: data.createdAt?.toDate() || new Date(),
-          updatedAt: data.updatedAt?.toDate() || new Date(),
-        } as AlertRule;
-      });
     } catch (error) {
       console.error('Error getting active rules:', error);
       return [];
@@ -125,20 +86,7 @@ class AlertRuleService {
    */
   async getRule(ruleId: string): Promise<AlertRule | null> {
     try {
-      const ruleRef = doc(firestore, this.collectionName, ruleId);
-      const snapshot = await getDoc(ruleRef);
-
-      if (!snapshot.exists()) {
-        return null;
-      }
-
-      const data = snapshot.data();
-      return {
-        ...data,
-        id: snapshot.id,
-        createdAt: data.createdAt?.toDate() || new Date(),
-        updatedAt: data.updatedAt?.toDate() || new Date(),
-      } as AlertRule;
+      return this.rules.get(ruleId) || null;
     } catch (error) {
       console.error('Error getting rule:', error);
       return null;
@@ -150,18 +98,19 @@ class AlertRuleService {
    */
   async updateRule(ruleId: string, updates: Partial<AlertRule>): Promise<void> {
     try {
-      const ruleRef = doc(firestore, this.collectionName, ruleId);
-      const updateData: any = {
+      const existing = this.rules.get(ruleId);
+      if (!existing) return;
+
+      const updated: AlertRule = {
+        ...existing,
         ...updates,
-        updatedAt: Timestamp.fromDate(new Date()),
+        id: existing.id,
+        userId: existing.userId,
+        createdAt: existing.createdAt,
+        updatedAt: new Date(),
       };
 
-      // Remove fields that shouldn't be updated
-      delete updateData.id;
-      delete updateData.userId;
-      delete updateData.createdAt;
-
-      await updateDoc(ruleRef, updateData);
+      this.rules.set(ruleId, updated);
     } catch (error) {
       console.error('Error updating rule:', error);
       throw error;
@@ -185,8 +134,7 @@ class AlertRuleService {
    */
   async deleteRule(ruleId: string): Promise<void> {
     try {
-      const ruleRef = doc(firestore, this.collectionName, ruleId);
-      await deleteDoc(ruleRef);
+      this.rules.delete(ruleId);
     } catch (error) {
       console.error('Error deleting rule:', error);
       throw error;

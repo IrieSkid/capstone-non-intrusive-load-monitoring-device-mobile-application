@@ -20,7 +20,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useAuth } from '@/hooks/useAuth';
-import { firestoreApplianceService } from '@/services/firestoreApplianceService';
+import { applianceService } from '@/services/applianceService';
 
 const APPLIANCE_TYPES = [
   { category: 'cooling', icon: '❄️', label: 'Cooling', examples: ['Air Conditioner', 'Fan', 'Refrigerator'] },
@@ -91,7 +91,7 @@ export default function AddApplianceScreen() {
     try {
       setIsSubmitting(true);
 
-      await firestoreApplianceService.addAppliance({
+      await applianceService.addAppliance({
         userId: user.id,
         deviceId,
         name: name.trim(),

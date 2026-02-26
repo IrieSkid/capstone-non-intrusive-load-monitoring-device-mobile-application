@@ -16,7 +16,7 @@ import {
   Switch,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { router } from 'expo-router';
+import { Link, router } from 'expo-router';
 import { useAuth } from '@/hooks/useAuth';
 import { useTheme } from '@/contexts/ThemeContext';
 import { IconSymbol } from '@/components/ui/icon-symbol';
@@ -232,6 +232,22 @@ export default function ProfileScreen() {
             <Text style={styles.buttonText}>Logout</Text>
           </TouchableOpacity>
         </View>
+
+        {/* Admin Tools */}
+        {user.role === 'admin' && (
+          <View style={styles.card}>
+            <View style={styles.cardHeader}>
+              <IconSymbol name="lock.shield.fill" size={20} color={colors.primary} />
+              <Text style={styles.cardTitle}>Admin Tools</Text>
+            </View>
+            <Link href="/admin-users" asChild>
+              <TouchableOpacity style={[styles.button, { marginTop: 12 }]}>
+                <IconSymbol name="person.3.fill" size={18} color="#fff" />
+                <Text style={styles.buttonText}>Manage Users</Text>
+              </TouchableOpacity>
+            </Link>
+          </View>
+        )}
       </ScrollView>
     </SafeAreaView>
   );

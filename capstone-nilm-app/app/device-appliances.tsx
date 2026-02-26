@@ -18,7 +18,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useAuth } from '@/hooks/useAuth';
-import { firestoreApplianceService, Appliance } from '@/services/firestoreApplianceService';
+import { applianceService, Appliance } from '@/services/applianceService';
 import { deviceService, Device } from '@/services/deviceService';
 
 export default function DeviceAppliancesScreen() {
@@ -43,7 +43,7 @@ export default function DeviceAppliancesScreen() {
       setIsLoading(true);
       const [deviceData, appliancesData] = await Promise.all([
         deviceService.getDevice(deviceId),
-        firestoreApplianceService.getDeviceAppliances(deviceId),
+        applianceService.getDeviceAppliances(deviceId),
       ]);
 
       setDevice(deviceData);

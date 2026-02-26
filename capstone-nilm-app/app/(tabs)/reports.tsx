@@ -3,31 +3,29 @@
  * Comprehensive energy consumption reports with charts and insights
  */
 
-import React, { useState, useEffect, useCallback } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  Platform,
-  StatusBar,
-  ScrollView,
-  ActivityIndicator,
-  RefreshControl,
-  TouchableOpacity,
-  Alert,
-} from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { useTheme } from '@/contexts/ThemeContext';
-import { useRealtimeData } from '@/contexts/RealtimeDataContext';
-import { useAuth } from '@/hooks/useAuth';
-import { reportService } from '@/services/reportService';
-import { DailyReport, WeeklyReport, MonthlyReport, CostAnalysis } from '@/types/report';
-import { PeriodTabs } from '@/components/reports/PeriodTabs';
+import { ApplianceBreakdown } from '@/components/reports/ApplianceBreakdown';
 import { ConsumptionChartComponent } from '@/components/reports/ConsumptionChart';
 import { CostAnalysisCard } from '@/components/reports/CostAnalysisCard';
-import { ApplianceBreakdown } from '@/components/reports/ApplianceBreakdown';
 import { DateRangePicker } from '@/components/reports/DateRangePicker';
 import { ExportMenu } from '@/components/reports/ExportMenu';
+import { PeriodTabs } from '@/components/reports/PeriodTabs';
+import { useRealtimeData } from '@/contexts/RealtimeDataContext';
+import { useTheme } from '@/contexts/ThemeContext';
+import { useAuth } from '@/hooks/useAuth';
+import { reportService } from '@/services/reportService';
+import { CostAnalysis, DailyReport, MonthlyReport, WeeklyReport } from '@/types/report';
+import React, { useCallback, useEffect, useState } from 'react';
+import {
+  ActivityIndicator,
+  RefreshControl,
+  ScrollView,
+  StatusBar,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View
+} from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 type Period = 'daily' | 'weekly' | 'monthly';
 
@@ -187,7 +185,7 @@ export default function ReportsScreen() {
         {/* Header */}
         <View style={styles.header}>
           <View style={{ flex: 1 }}>
-            <Text style={styles.title}>📊 Reports</Text>
+            <Text style={styles.title}>Reports</Text>
             <Text style={styles.dateRange}>{getDateRange()}</Text>
             {customDateRange && (
               <TouchableOpacity onPress={handleClearDateRange} style={styles.clearFilterButton}>

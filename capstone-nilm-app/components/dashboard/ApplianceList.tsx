@@ -3,10 +3,10 @@
  * Shows all appliances with toggle controls for simulation (Real-Time)
  */
 
-import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Switch } from 'react-native';
-import { useTheme } from '@/contexts/ThemeContext';
 import { useRealtimeData } from '@/contexts/RealtimeDataContext';
+import { useTheme } from '@/contexts/ThemeContext';
+import React from 'react';
+import { StyleSheet, Switch, Text, View } from 'react-native';
 
 export function ApplianceList() {
   const { colors } = useTheme();
@@ -76,7 +76,7 @@ export function ApplianceList() {
 
       <View style={styles.sectionNote}>
         <Text style={styles.sectionNoteText}>
-          🎮 Toggle appliances to simulate real-time power consumption
+          Toggle appliances to simulate real-time power consumption
         </Text>
       </View>
 

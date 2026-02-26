@@ -1,160 +1,78 @@
 /**
- * Reading Service
- * Manages real-time sensor readings in Firestore
+ * Reading Service (client)
+ * Calls the Node/Express backend API which talks to MySQL.
  */
 
-import { firestore } from '@/config/firebase';
-import { 
-  collection, 
-  doc, 
-  setDoc, 
-  updateDoc,
-  query,
-  where,
-  orderBy,
-  limit,
-  getDocs,
-  Timestamp 
-} from 'firebase/firestore';
+import { apiFetch } from '@/config/api';
 import { RealtimeReading, ApplianceStatus } from './realtimeDataService';
 
 class ReadingService {
-  private collectionName = 'realTimeReadings';
-
-  /**
-   * Save a reading to Firestore with appliance-level data
-   */
-  async saveReading(
-    deviceId: string, 
-    reading: RealtimeReading, 
-    appliances: ApplianceStatus[]
-  ): Promise<void> {
+  async saveReading(deviceId: string, reading: RealtimeReading, appliances: ApplianceStatus[]): Promise<void> {
     try {
-      const readingRef = doc(collection(firestore, this.collectionName));
-      
-      // Map appliances to reading format with electrical parameters
-      const applianceReadings = appliances.map(app => ({
-        applianceId: app.id,
-        applianceName: app.name,
-        category: app.category,
-        power: app.power,
-        voltage: app.voltage,
-        current: app.current,
-        powerFactor: app.powerFactor,
-        isActive: app.isOn,
-        runtime: app.duration,
-      }));
-
-      await setDoc(readingRef, {
-        deviceId,
-        // Device-level readings
-        voltage: reading.voltage,
-        current: reading.current,
-        power: reading.power,
-        powerFactor: reading.powerFactor,
-        frequency: reading.frequency,
-        energy: reading.energy,
-        timestamp: Timestamp.fromDate(reading.timestamp),
-        // Per-appliance readings
-        applianceReadings,
+      await apiFetch(`/devices/${deviceId}/readings`, {
+        method: 'POST',
+        body: JSON.stringify({ reading, appliances }),
       });
-
-      // Update device lastSeen timestamp for online status tracking
-      try {
-        const deviceRef = doc(firestore, 'devices', deviceId);
-        await updateDoc(deviceRef, {
-          lastSeen: Timestamp.now(),
-        });
-      } catch (error) {
-        // Device might not exist yet, that's okay
-        console.log('Could not update device lastSeen:', error);
-      }
     } catch (error) {
       console.error('Error saving reading:', error);
-      // Don't throw - we don't want to break the app if Firestore fails
     }
   }
 
-  /**
-   * Get recent readings for a device
-   */
   async getRecentReadings(deviceId: string, limitCount: number = 100): Promise<RealtimeReading[]> {
     try {
-      const q = query(
-        collection(firestore, this.collectionName),
-        where('deviceId', '==', deviceId),
-        orderBy('timestamp', 'desc'),
-        limit(limitCount)
+      const resp = await apiFetch<{ readings: any[] }>(
+        `/devices/${deviceId}/readings/recent?limit=${encodeURIComponent(String(limitCount))}`,
+        { method: 'GET' }
       );
 
-      const snapshot = await getDocs(q);
-      return snapshot.docs.map(doc => {
-        const data = doc.data();
-        return {
-          voltage: data.voltage,
-          current: data.current,
-          power: data.power,
-          powerFactor: data.powerFactor,
-          frequency: data.frequency,
-          energy: data.energy,
-          timestamp: data.timestamp?.toDate() || new Date(),
-          applianceReadings: data.applianceReadings || [],
-        } as any;
-      });
+      return (resp.readings || []).map((row) => ({
+        voltage: parseFloat(row.reading_detail_voltage) || 0,
+        current: parseFloat(row.reading_detail_current) || 0,
+        power: parseFloat(row.reading_detail_power_w) || 0,
+        powerFactor: parseFloat(row.reading_detail_power_factor) || 0,
+        frequency: parseFloat(row.reading_detail_frequency) || 60,
+        energy: parseFloat(row.reading_detail_energy_kwh) || 0,
+        timestamp: new Date(row.timestamp),
+        applianceReadings: [],
+      })) as any;
     } catch (error) {
       console.error('Error getting readings:', error);
       return [];
     }
   }
 
-  /**
-   * Get readings for a date range
-   */
-  async getReadingsByDateRange(
-    deviceId: string,
-    startDate: Date,
-    endDate: Date
-  ): Promise<RealtimeReading[]> {
+  async getReadingsByDateRange(deviceId: string, startDate: Date, endDate: Date): Promise<RealtimeReading[]> {
     try {
-      const q = query(
-        collection(firestore, this.collectionName),
-        where('deviceId', '==', deviceId),
-        where('timestamp', '>=', Timestamp.fromDate(startDate)),
-        where('timestamp', '<=', Timestamp.fromDate(endDate)),
-        orderBy('timestamp', 'asc')
+      const resp = await apiFetch<{ readings: any[] }>(
+        `/devices/${deviceId}/readings?start=${encodeURIComponent(startDate.toISOString())}&end=${encodeURIComponent(
+          endDate.toISOString()
+        )}`,
+        { method: 'GET' }
       );
 
-      const snapshot = await getDocs(q);
-      return snapshot.docs.map(doc => {
-        const data = doc.data();
-        return {
-          voltage: data.voltage,
-          current: data.current,
-          power: data.power,
-          powerFactor: data.powerFactor,
-          frequency: data.frequency,
-          energy: data.energy,
-          timestamp: data.timestamp?.toDate() || new Date(),
-          applianceReadings: data.applianceReadings || [],
-        } as any;
-      });
+      return (resp.readings || []).map((row) => ({
+        voltage: parseFloat(row.reading_detail_voltage) || 0,
+        current: parseFloat(row.reading_detail_current) || 0,
+        power: parseFloat(row.reading_detail_power_w) || 0,
+        powerFactor: parseFloat(row.reading_detail_power_factor) || 0,
+        frequency: parseFloat(row.reading_detail_frequency) || 60,
+        energy: parseFloat(row.reading_detail_energy_kwh) || 0,
+        timestamp: new Date(row.timestamp),
+        applianceReadings: [],
+      })) as any;
     } catch (error) {
       console.error('Error getting readings by date range:', error);
       return [];
     }
   }
 
-  /**
-   * Calculate average power for a period
-   */
   async getAveragePower(deviceId: string, startDate: Date, endDate: Date): Promise<number> {
-    const readings = await this.getReadingsByDateRange(deviceId, startDate, endDate);
-    
+    const readings: any[] = await this.getReadingsByDateRange(deviceId, startDate, endDate);
     if (readings.length === 0) return 0;
-
-    const sum = readings.reduce((acc, reading) => acc + reading.power, 0);
+    const sum = readings.reduce((acc, r) => acc + (r.power || 0), 0);
     return sum / readings.length;
   }
 }
 
 export const readingService = new ReadingService();
+

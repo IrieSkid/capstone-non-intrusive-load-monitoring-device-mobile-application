@@ -7,7 +7,7 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { realtimeDataService, RealtimeReading, ApplianceStatus } from '@/services/realtimeDataService';
 import { deviceService } from '@/services/deviceService';
-import { firestoreApplianceService } from '@/services/firestoreApplianceService';
+import { applianceService } from '@/services/applianceService';
 import { alertRuleService } from '@/services/alertRuleService';
 import { alertMonitoringService } from '@/services/alertMonitoringService';
 import { consumptionSummaryService } from '@/services/consumptionSummaryService';
@@ -63,7 +63,7 @@ export function RealtimeDataProvider({ children }: { children: ReactNode }) {
         devices = [mockDevice];
 
         // Also create default appliances
-        await firestoreApplianceService.createDefaultAppliances(user.id, mockDevice.id);
+        await applianceService.createDefaultAppliances(user.id, mockDevice.id);
       }
 
       // Use the first device

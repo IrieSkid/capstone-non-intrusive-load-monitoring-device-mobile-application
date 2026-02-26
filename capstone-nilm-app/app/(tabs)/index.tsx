@@ -3,29 +3,32 @@ import { StyleSheet, ActivityIndicator, ScrollView, RefreshControl, View, Text, 
 import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { ThemedText } from '@/components/themed-text';
+import { ThemedView } from '@/components/themed-view';
 import { useAuth } from '@/hooks/useAuth';
-import { useRBAC } from '@/contexts/RBACContext';
 import { useTheme } from '@/contexts/ThemeContext';
-import { TenantDashboard } from '@/components/dashboard/TenantDashboard';
-import { LandlordDashboard } from '@/components/dashboard/LandlordDashboard';
-import { AdminDashboard } from '@/components/dashboard/AdminDashboard';
-import { calculateTodayStats } from '@/utils/mockData';
+import { GradientPowerCard } from '@/components/dashboard/GradientPowerCard';
+import { ParametersGrid } from '@/components/dashboard/ParametersGrid';
+import { ConsumptionChart } from '@/components/dashboard/ConsumptionChart';
+import { ApplianceList } from '@/components/dashboard/ApplianceList';
+import {
+  generateMockDevice,
+  calculateTodayStats,
+} from '@/utils/mockData';
 
 export default function HomeScreen() {
-  const { user, isLoading: authLoading } = useAuth();
-  const { role, isLoading: rbacLoading } = useRBAC();
+  const { user, isLoading } = useAuth();
   const { colors, isDark } = useTheme();
   const [refreshing, setRefreshing] = useState(false);
+  const [mockDevice] = useState(generateMockDevice(user?.id || 'mock-user'));
   const [todayStats, setTodayStats] = useState(calculateTodayStats());
-
-  const isLoading = authLoading || rbacLoading;
 
   useEffect(() => {
     // Redirect to login if not authenticated
-    if (!authLoading && !user) {
+    if (!isLoading && !user) {
       router.replace('/(auth)/login');
     }
-  }, [authLoading, user]);
+  }, [isLoading, user]);
 
   const onRefresh = React.useCallback(() => {
     setRefreshing(true);
@@ -59,26 +62,47 @@ export default function HomeScreen() {
     return null; // Will redirect to login
   }
 
-  // Render role-specific dashboard
   return (
     <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
       <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} backgroundColor={colors.surface} />
-      
-      {/* Greeting Section */}
-      <View style={styles.greeting}>
-        <Text style={styles.greetingText}>{getGreeting()}</Text>
-        <Text style={styles.greetingName}>{user.firstName} {user.lastName}</Text>
-      </View>
-
       <ScrollView
         style={styles.container}
         contentContainerStyle={styles.scrollContent}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
-      >
-        {/* Route to appropriate dashboard based on role */}
-        {role === 'tenant' && <TenantDashboard />}
-        {role === 'landlord' && <LandlordDashboard />}
-        {role === 'admin' && <AdminDashboard />}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}>
+        {/* Greeting Section */}
+        <View style={styles.greeting}>
+          <Text style={styles.greetingText}>{getGreeting()}</Text>
+          <Text style={styles.greetingName}>{user.firstName} {user.lastName}</Text>
+        </View>
+
+        {/* Gradient Power Card */}
+        <View style={styles.section}>
+          <GradientPowerCard deviceId={mockDevice.id} />
+        </View>
+
+        {/* Electrical Parameters Grid */}
+        <View style={styles.section}>
+          <ParametersGrid deviceId={mockDevice.id} />
+        </View>
+
+        {/* Today's Consumption Chart */}
+        <View style={styles.section}>
+          <ConsumptionChart />
+        </View>
+
+        {/* Active Appliances */}
+        <View style={styles.section}>
+          <ApplianceList />
+        </View>
+
+        {/* Info Note */}
+        <View style={styles.infoNote}>
+          <Text style={styles.infoText}>
+            ℹ️ This dashboard shows simulated readings based on your actual registered appliances. 
+            Toggle appliances on/off to see real-time power consumption changes. When hardware is 
+            connected, the system will automatically detect appliance states.
+          </Text>
+        </View>
       </ScrollView>
     </SafeAreaView>
   );
@@ -107,8 +131,6 @@ const createStyles = (colors: any) => StyleSheet.create({
   greeting: {
     padding: 16,
     backgroundColor: colors.surface,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
   },
   greetingText: {
     fontSize: 14,
@@ -119,5 +141,23 @@ const createStyles = (colors: any) => StyleSheet.create({
     fontSize: 20,
     fontWeight: '600',
     color: colors.textPrimary,
+  },
+  section: {
+    paddingHorizontal: 16,
+    marginTop: 16,
+  },
+  infoNote: {
+    margin: 16,
+    marginTop: 24,
+    padding: 16,
+    borderRadius: 12,
+    backgroundColor: colors.primaryLight + '30',
+    borderLeftWidth: 4,
+    borderLeftColor: colors.primary,
+  },
+  infoText: {
+    fontSize: 13,
+    color: colors.textPrimary,
+    lineHeight: 20,
   },
 });

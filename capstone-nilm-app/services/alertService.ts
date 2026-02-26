@@ -1,65 +1,41 @@
 /**
- * Alert Service
- * Handles alert management and threshold checking
+ * Alert Service (client)
+ * Calls the Node/Express backend API which talks to MySQL.
  */
 
-import { Alert, AlertThreshold, AlertConfiguration } from '@/types/alert';
-import { generateMockAlerts } from '@/utils/mockAlertData';
+import { apiFetch } from '@/config/api';
+import { Alert, AlertConfiguration } from '@/types/alert';
 
 class AlertService {
-  /**
-   * Get all alerts for user
-   */
   async getAlerts(userId: string): Promise<Alert[]> {
-    // Simulate network delay
-    await new Promise(resolve => setTimeout(resolve, 500));
-    
-    // Return mock alerts
-    return generateMockAlerts(15, userId);
+    try {
+      const resp = await apiFetch<{ alerts: any[] }>(`/users/${userId}/alerts`, { method: 'GET' });
+      return (resp.alerts || []).map((row) => this.mapAlertFromDb(row));
+    } catch (error) {
+      console.error('Error getting alerts:', error);
+      return [];
+    }
   }
 
-  /**
-   * Get unread alert count
-   */
   async getUnreadCount(userId: string): Promise<number> {
     const alerts = await this.getAlerts(userId);
-    return alerts.filter(a => a.status === 'active').length;
+    return alerts.filter((a) => a.status === 'active').length;
   }
 
-  /**
-   * Acknowledge alert
-   */
   async acknowledgeAlert(alertId: string): Promise<void> {
-    await new Promise(resolve => setTimeout(resolve, 300));
-    // TODO: Update alert status in Firestore
-    console.log('Alert acknowledged:', alertId);
+    await apiFetch(`/alerts/${alertId}/acknowledge`, { method: 'POST' });
   }
 
-  /**
-   * Dismiss alert
-   */
   async dismissAlert(alertId: string): Promise<void> {
-    await new Promise(resolve => setTimeout(resolve, 300));
-    // TODO: Update alert status in Firestore
-    console.log('Alert dismissed:', alertId);
+    await apiFetch(`/alerts/${alertId}/dismiss`, { method: 'POST' });
   }
 
-  /**
-   * Resolve alert
-   */
   async resolveAlert(alertId: string): Promise<void> {
-    await new Promise(resolve => setTimeout(resolve, 300));
-    // TODO: Update alert status in Firestore
-    console.log('Alert resolved:', alertId);
+    await apiFetch(`/alerts/${alertId}/resolve`, { method: 'POST' });
   }
 
-  /**
-   * Get alert configuration
-   */
   async getConfiguration(userId: string): Promise<AlertConfiguration> {
-    await new Promise(resolve => setTimeout(resolve, 300));
-    
-    // Return mock configuration
+    // Placeholder defaults (server-side config can be added later)
     return {
       userId,
       enablePushNotifications: true,
@@ -67,79 +43,59 @@ class AlertService {
       quietHoursEnabled: true,
       quietHoursStart: '22:00',
       quietHoursEnd: '07:00',
-      thresholds: [
-        {
-          id: 'threshold-1',
-          userId,
-          type: 'high_consumption',
-          enabled: true,
-          threshold: 50,
-          unit: 'kWh',
-          period: 'daily',
-          notifyPush: true,
-          notifyEmail: false,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        },
-        {
-          id: 'threshold-2',
-          userId,
-          type: 'budget_exceeded',
-          enabled: true,
-          threshold: 2000,
-          unit: 'PHP',
-          period: 'monthly',
-          notifyPush: true,
-          notifyEmail: false,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        },
-      ],
+      thresholds: [],
     };
   }
 
-  /**
-   * Update alert configuration
-   */
-  async updateConfiguration(config: Partial<AlertConfiguration>): Promise<void> {
-    await new Promise(resolve => setTimeout(resolve, 500));
-    // TODO: Save to Firestore
-    console.log('Configuration updated:', config);
+  async updateConfiguration(_config: Partial<AlertConfiguration>): Promise<void> {
+    // Not implemented yet.
   }
 
-  /**
-   * Check thresholds and generate alerts (called by background task)
-   */
-  async checkThresholds(userId: string, currentData: {
-    dailyConsumption: number;
-    monthlyCost: number;
-  }): Promise<Alert[]> {
-    const config = await this.getConfiguration(userId);
-    const alerts: Alert[] = [];
+  private mapAlertFromDb(row: any): Alert {
+    const dbType = (row.alert_type || '').toString();
+    const type = this.mapAlertType(dbType);
+    return {
+      id: row.alert_id?.toString() ?? row.id?.toString(),
+      userId: '', // could be joined via rooms
+      type,
+      priority: this.getPriority(dbType),
+      status: row.alert_status === 'new' ? 'active' : 'resolved',
+      title: this.getTitle(dbType),
+      message: row.alert_message || '',
+      timestamp: row.created_at ? new Date(row.created_at) : new Date(),
+    };
+  }
 
-    // Check each threshold
-    for (const threshold of config.thresholds) {
-      if (!threshold.enabled) continue;
+  private mapAlertType(dbType: string): Alert['type'] {
+    const map: Record<string, Alert['type']> = {
+      HIGH_POWER: 'high_consumption',
+      HIGH_THD: 'unusual_pattern',
+      HIGH_CONSUMPTION: 'high_consumption',
+      BUDGET_EXCEEDED: 'budget_exceeded',
+    };
+    return map[dbType] || 'unusual_pattern';
+  }
 
-      let shouldAlert = false;
-      let value = 0;
+  private getTitle(dbType: string): string {
+    const titles: Record<string, string> = {
+      HIGH_POWER: 'High Power Consumption',
+      HIGH_THD: 'High Harmonic Distortion',
+      HIGH_CONSUMPTION: 'High Energy Consumption',
+      BUDGET_EXCEEDED: 'Budget Exceeded',
+    };
+    return titles[dbType] || 'Alert';
+  }
 
-      if (threshold.type === 'high_consumption' && threshold.period === 'daily') {
-        value = currentData.dailyConsumption;
-        shouldAlert = value > threshold.threshold;
-      } else if (threshold.type === 'budget_exceeded' && threshold.period === 'monthly') {
-        value = currentData.monthlyCost;
-        shouldAlert = value > threshold.threshold;
-      }
-
-      if (shouldAlert) {
-        // Would create alert in Firestore and trigger notification
-        console.log(`Threshold exceeded: ${threshold.type} - ${value} > ${threshold.threshold}`);
-      }
-    }
-
-    return alerts;
+  private getPriority(dbType: string): Alert['priority'] {
+    const priorities: Record<string, Alert['priority']> = {
+      HIGH_POWER: 'high',
+      HIGH_THD: 'medium',
+      HIGH_CONSUMPTION: 'high',
+      BUDGET_EXCEEDED: 'critical',
+    };
+    return priorities[dbType] || 'medium';
   }
 }
 
 export const alertService = new AlertService();
+

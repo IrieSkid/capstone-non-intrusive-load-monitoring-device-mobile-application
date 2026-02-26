@@ -1,11 +1,10 @@
 /**
  * Authentication Context
- * Provides global authentication state and methods
+ * Provides global authentication state and methods using MySQL
  */
 
 import React, { createContext, useState, useEffect, ReactNode } from 'react';
-import { onAuthStateChanged } from 'firebase/auth';
-import { auth } from '@/config/firebase';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { User, AuthState, UserRegistrationData, UserUpdateData } from '@/types/user.types';
 import {
   registerUser,
@@ -14,18 +13,12 @@ import {
   resetPassword,
   getCurrentUserData,
   updateUserProfile,
+  verifyToken,
 } from '@/services/auth.service';
 
 interface AuthContextType extends AuthState {
   login: (email: string, password: string) => Promise<void>;
-  register: (
-    email: string,
-    password: string,
-    firstName: string,
-    lastName: string,
-    role?: 'tenant' | 'landlord' | 'admin',
-    phoneNumber?: string
-  ) => Promise<void>;
+  register: (data: UserRegistrationData) => Promise<void>;
   logout: () => Promise<void>;
   sendPasswordReset: (email: string) => Promise<void>;
   updateProfile: (data: UserUpdateData) => Promise<void>;
@@ -33,6 +26,9 @@ interface AuthContextType extends AuthState {
 }
 
 export const AuthContext = createContext<AuthContextType | undefined>(undefined);
+
+const TOKEN_KEY = '@auth_token';
+const USER_ID_KEY = '@user_id';
 
 interface AuthProviderProps {
   children: ReactNode;
@@ -46,43 +42,53 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   });
 
   useEffect(() => {
-    // Listen for authentication state changes
-    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-      if (firebaseUser) {
-        // User is signed in, fetch user data from Firestore
-        const userData = await getCurrentUserData(firebaseUser.uid);
-        if (userData) {
+    // Check for stored token on mount
+    checkStoredAuth();
+  }, []);
+
+  const checkStoredAuth = async () => {
+    try {
+      const token = await AsyncStorage.getItem(TOKEN_KEY);
+      const userId = await AsyncStorage.getItem(USER_ID_KEY);
+
+      if (token && userId) {
+        // Verify token and get user
+        const user = await verifyToken(token);
+        if (user) {
           setAuthState({
-            user: userData,
+            user,
             isLoading: false,
             isAuthenticated: true,
           });
-        } else {
-          // User data not found in Firestore
-          setAuthState({
-            user: null,
-            isLoading: false,
-            isAuthenticated: false,
-          });
+          return;
         }
-      } else {
-        // User is signed out
-        setAuthState({
-          user: null,
-          isLoading: false,
-          isAuthenticated: false,
-        });
       }
-    });
 
-    // Cleanup subscription
-    return () => unsubscribe();
-  }, []);
+      // No valid token found
+      setAuthState({
+        user: null,
+        isLoading: false,
+        isAuthenticated: false,
+      });
+    } catch (error) {
+      console.error('Error checking stored auth:', error);
+      setAuthState({
+        user: null,
+        isLoading: false,
+        isAuthenticated: false,
+      });
+    }
+  };
 
   const login = async (email: string, password: string): Promise<void> => {
     try {
       setAuthState((prev) => ({ ...prev, isLoading: true }));
-      const user = await loginUser(email, password);
+      const { user, token } = await loginUser(email, password);
+      
+      // Store token and user ID
+      await AsyncStorage.setItem(TOKEN_KEY, token);
+      await AsyncStorage.setItem(USER_ID_KEY, user.id);
+
       setAuthState({
         user,
         isLoading: false,
@@ -98,25 +104,17 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
-  const register = async (
-    email: string,
-    password: string,
-    firstName: string,
-    lastName: string,
-    role?: 'tenant' | 'landlord' | 'admin',
-    phoneNumber?: string
-  ): Promise<void> => {
+  const register = async (data: UserRegistrationData): Promise<void> => {
     try {
       setAuthState((prev) => ({ ...prev, isLoading: true }));
-      const data: UserRegistrationData = {
-        email,
-        password,
-        firstName,
-        lastName,
-        role: role || 'tenant',
-        phoneNumber,
-      };
       const user = await registerUser(data);
+      
+      // Auto-login after registration
+      const { token } = await loginUser(data.email, data.password);
+      
+      await AsyncStorage.setItem(TOKEN_KEY, token);
+      await AsyncStorage.setItem(USER_ID_KEY, user.id);
+
       setAuthState({
         user,
         isLoading: false,
@@ -135,6 +133,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const logout = async (): Promise<void> => {
     try {
       await logoutUser();
+      await AsyncStorage.removeItem(TOKEN_KEY);
+      await AsyncStorage.removeItem(USER_ID_KEY);
       setAuthState({
         user: null,
         isLoading: false,
@@ -164,14 +164,20 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   };
 
   const refreshUser = async (): Promise<void> => {
-    if (auth.currentUser) {
-      const userData = await getCurrentUserData(auth.currentUser.uid);
+    if (!authState.user) {
+      return;
+    }
+
+    try {
+      const userData = await getCurrentUserData(authState.user.id);
       if (userData) {
         setAuthState((prev) => ({
           ...prev,
           user: userData,
         }));
       }
+    } catch (error) {
+      console.error('Error refreshing user:', error);
     }
   };
 

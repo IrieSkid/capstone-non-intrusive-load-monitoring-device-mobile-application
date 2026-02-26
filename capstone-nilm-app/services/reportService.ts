@@ -1,18 +1,13 @@
 /**
  * Report Service
  * Handles data aggregation and report generation from Firestore
- * 
- * ⚠️ DEPLOYMENT NOTE:
- * Caching is configured in config/environment.ts
- * Can be kept enabled in production for better performance
  */
 
 import { DailyReport, WeeklyReport, MonthlyReport, CostAnalysis, ApplianceConsumption } from '@/types/report';
 import { readingService } from './readingService';
-import { firestoreApplianceService } from './firestoreApplianceService';
+import { applianceService } from './applianceService';
 import { electricityRateService } from './electricityRateService';
 import { consumptionSummaryService } from './consumptionSummaryService';
-import { cache, generateCacheKey } from '@/utils/cache';
 
 class ReportService {
   private readonly defaultCostPerKwh = 12; // ₱12 per kWh fallback
@@ -43,11 +38,6 @@ class ReportService {
    * Get today's report from Firestore readings
    */
   async getDailyReport(deviceId: string, userId?: string): Promise<DailyReport> {
-    // Check cache first
-    const cacheKey = generateCacheKey('daily-report', deviceId, userId, new Date().toDateString());
-    const cached = cache.get<DailyReport>(cacheKey);
-    if (cached) return cached;
-
     try {
       const startOfDay = new Date();
       startOfDay.setHours(0, 0, 0, 0);
@@ -76,7 +66,7 @@ class ReportService {
       // Get appliance breakdown
       const applianceBreakdown = await this.calculateApplianceBreakdown(readings, deviceId, costPerKwh);
 
-      const report = {
+      return {
         date: new Date(),
         totalKwh: this.fmt(totalKwh),
         totalCost: this.fmt(totalCost),
@@ -86,11 +76,6 @@ class ReportService {
         applianceBreakdown,
         comparisonToYesterday: 0,
       };
-
-      // Cache the result
-      cache.set(cacheKey, report);
-      
-      return report;
     } catch (error) {
       console.error('Error generating daily report:', error);
       return this.getEmptyDailyReport();
@@ -219,7 +204,7 @@ class ReportService {
   private async calculateApplianceBreakdown(readings: any[], deviceId: string, costPerKwh: number): Promise<ApplianceConsumption[]> {
     try {
       // Get all appliances for this device
-      const appliances = await firestoreApplianceService.getDeviceAppliances(deviceId);
+      const appliances = await applianceService.getDeviceAppliances(deviceId);
       
       if (appliances.length === 0) {
         return [];
@@ -712,7 +697,7 @@ class ReportService {
       const currentPeriodCost = totalKwh * costPerKwh;
       const costByTimeOfDay = this.calculateCostByTimeOfDay(readings, costPerKwh);
       const days = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
-      const estimatedNextBill = (totalKwh / days) * 30 * this.costPerKwh;
+      const estimatedNextBill = (totalKwh / days) * 30 * costPerKwh;
 
       return {
         currentPeriodCost: this.fmt(currentPeriodCost),

@@ -1,23 +1,13 @@
 /**
  * Notification Service
  * Manages notifications (actual notification instances sent to users)
- * Based on schema: notifications collection
+ *
+ * NOTE: This is an in-memory implementation that replaces the previous
+ * Firestore-based version so the app can run without Firebase. Notifications
+ * are NOT persisted across app restarts. For production, store them in MySQL
+ * or a dedicated backend service.
  */
 
-import { firestore } from '@/config/firebase';
-import { 
-  collection, 
-  doc, 
-  setDoc,
-  getDoc,
-  getDocs, 
-  updateDoc,
-  query,
-  where,
-  orderBy,
-  limit,
-  Timestamp 
-} from 'firebase/firestore';
 
 export interface Notification {
   id: string;
@@ -37,7 +27,8 @@ export interface Notification {
 }
 
 class NotificationService {
-  private collectionName = 'notifications';
+  // In-memory storage for notifications keyed by notification ID
+  private notifications: Map<string, Notification> = new Map();
 
   /**
    * Create a new notification
@@ -46,21 +37,16 @@ class NotificationService {
     notification: Omit<Notification, 'id' | 'createdAt'> & { createdAt?: Date }
   ): Promise<Notification> {
     try {
-      const notificationRef = doc(collection(firestore, this.collectionName));
       const now = new Date();
+      const id = `notif_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
       
       const newNotification: Notification = {
         ...notification,
-        id: notificationRef.id,
+        id,
         createdAt: notification.createdAt || now,
       };
 
-      await setDoc(notificationRef, {
-        ...newNotification,
-        createdAt: Timestamp.fromDate(newNotification.createdAt),
-        readAt: notification.readAt ? Timestamp.fromDate(notification.readAt) : null,
-        expiresAt: notification.expiresAt ? Timestamp.fromDate(notification.expiresAt) : null,
-      });
+      this.notifications.set(id, newNotification);
 
       return newNotification;
     } catch (error) {
@@ -74,24 +60,10 @@ class NotificationService {
    */
   async getNotifications(userId: string, limitCount: number = 50): Promise<Notification[]> {
     try {
-      const q = query(
-        collection(firestore, this.collectionName),
-        where('userId', '==', userId),
-        orderBy('createdAt', 'desc'),
-        limit(limitCount)
-      );
-
-      const snapshot = await getDocs(q);
-      return snapshot.docs.map(doc => {
-        const data = doc.data();
-        return {
-          ...data,
-          id: doc.id,
-          createdAt: data.createdAt?.toDate() || new Date(),
-          readAt: data.readAt?.toDate(),
-          expiresAt: data.expiresAt?.toDate(),
-        } as Notification;
-      });
+      return Array.from(this.notifications.values())
+        .filter(n => n.userId === userId)
+        .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
+        .slice(0, limitCount);
     } catch (error) {
       console.error('Error getting notifications:', error);
       throw error;
@@ -103,14 +75,9 @@ class NotificationService {
    */
   async getUnreadCount(userId: string): Promise<number> {
     try {
-      const q = query(
-        collection(firestore, this.collectionName),
-        where('userId', '==', userId),
-        where('isRead', '==', false)
-      );
-
-      const snapshot = await getDocs(q);
-      return snapshot.size;
+      return Array.from(this.notifications.values()).filter(
+        n => n.userId === userId && !n.isRead
+      ).length;
     } catch (error) {
       console.error('Error getting unread count:', error);
       return 0;
@@ -122,10 +89,13 @@ class NotificationService {
    */
   async markAsRead(notificationId: string): Promise<void> {
     try {
-      const notificationRef = doc(firestore, this.collectionName, notificationId);
-      await updateDoc(notificationRef, {
+      const existing = this.notifications.get(notificationId);
+      if (!existing) return;
+
+      this.notifications.set(notificationId, {
+        ...existing,
         isRead: true,
-        readAt: Timestamp.fromDate(new Date()),
+        readAt: new Date(),
       });
     } catch (error) {
       console.error('Error marking notification as read:', error);
@@ -138,21 +108,16 @@ class NotificationService {
    */
   async markAllAsRead(userId: string): Promise<void> {
     try {
-      const q = query(
-        collection(firestore, this.collectionName),
-        where('userId', '==', userId),
-        where('isRead', '==', false)
-      );
-
-      const snapshot = await getDocs(q);
-      const updates = snapshot.docs.map(doc => 
-        updateDoc(doc.ref, {
-          isRead: true,
-          readAt: Timestamp.fromDate(new Date()),
-        })
-      );
-
-      await Promise.all(updates);
+      const now = new Date();
+      this.notifications.forEach((n, id) => {
+        if (n.userId === userId && !n.isRead) {
+          this.notifications.set(id, {
+            ...n,
+            isRead: true,
+            readAt: now,
+          });
+        }
+      });
     } catch (error) {
       console.error('Error marking all as read:', error);
       throw error;
@@ -164,11 +129,7 @@ class NotificationService {
    */
   async deleteNotification(notificationId: string): Promise<void> {
     try {
-      const notificationRef = doc(firestore, this.collectionName, notificationId);
-      await updateDoc(notificationRef, {
-        isRead: true,
-        readAt: Timestamp.fromDate(new Date()),
-      });
+      this.notifications.delete(notificationId);
     } catch (error) {
       console.error('Error deleting notification:', error);
       throw error;
@@ -183,24 +144,9 @@ class NotificationService {
     type: 'alert' | 'info' | 'warning' | 'error'
   ): Promise<Notification[]> {
     try {
-      const q = query(
-        collection(firestore, this.collectionName),
-        where('userId', '==', userId),
-        where('type', '==', type),
-        orderBy('createdAt', 'desc')
-      );
-
-      const snapshot = await getDocs(q);
-      return snapshot.docs.map(doc => {
-        const data = doc.data();
-        return {
-          ...data,
-          id: doc.id,
-          createdAt: data.createdAt?.toDate() || new Date(),
-          readAt: data.readAt?.toDate(),
-          expiresAt: data.expiresAt?.toDate(),
-        } as Notification;
-      });
+      return Array.from(this.notifications.values())
+        .filter(n => n.userId === userId && n.type === type)
+        .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
     } catch (error) {
       console.error('Error getting notifications by type:', error);
       return [];

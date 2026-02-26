@@ -20,7 +20,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useAuth } from '@/hooks/useAuth';
-import { firestoreApplianceService, Appliance } from '@/services/firestoreApplianceService';
+import { applianceService, Appliance } from '@/services/applianceService';
 
 const ICONS = ['❄️', '🧊', '🌀', '🔥', '🚿', '🍳', '🍲', '🍚', '🧺', '📺', '💡', '💻', '🔌', '⚡', '🔋'];
 
@@ -60,7 +60,7 @@ export default function ApplianceDetailsScreen() {
       console.log('Loading appliance:', applianceId);
       // We need to load appliances and find the one we want
       // In a real scenario, we'd have a getApplianceById method
-      const appliances = await firestoreApplianceService.getUserAppliances(user.id);
+      const appliances = await applianceService.getUserAppliances(user.id);
       console.log('Found appliances:', appliances.length);
       const found = appliances.find(a => a.id === applianceId);
       
@@ -105,7 +105,7 @@ export default function ApplianceDetailsScreen() {
 
     try {
       setIsSaving(true);
-      await firestoreApplianceService.updateAppliance(appliance.id, {
+      await applianceService.updateAppliance(appliance.id, {
         name,
         icon,
         ratedPower: Number(ratedPower),
@@ -136,7 +136,7 @@ export default function ApplianceDetailsScreen() {
           onPress: async () => {
             try {
               if (appliance) {
-                await firestoreApplianceService.deleteAppliance(appliance.id);
+                await applianceService.deleteAppliance(appliance.id);
                 Alert.alert('Success', 'Appliance deleted successfully', [
                   { text: 'OK', onPress: () => router.back() },
                 ]);

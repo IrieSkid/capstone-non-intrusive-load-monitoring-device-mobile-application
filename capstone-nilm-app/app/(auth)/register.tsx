@@ -173,7 +173,7 @@ export default function RegisterScreen() {
             {/* Role Selection */}
             <Text style={styles.roleLabel}>Select Role:</Text>
             <View style={styles.roleContainer}>
-              {(['tenant', 'landlord'] as const).map((roleOption) => (
+              {(['tenant', 'landlord', 'admin'] as const).map((roleOption) => (
                 <TouchableOpacity
                   key={roleOption}
                   style={[

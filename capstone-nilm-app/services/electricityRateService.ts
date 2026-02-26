@@ -1,20 +1,9 @@
 /**
- * Electricity Rate Service
- * Manages electricity rates in Firestore
+ * Electricity Rate Service (client)
+ * Calls the Node/Express backend API which talks to MySQL.
  */
 
-import { firestore } from '@/config/firebase';
-import { 
-  collection, 
-  doc, 
-  setDoc, 
-  getDocs,
-  query,
-  where,
-  orderBy,
-  limit,
-  Timestamp 
-} from 'firebase/firestore';
+import { apiFetch } from '@/config/api';
 
 export interface ElectricityRate {
   id: string;
@@ -29,128 +18,60 @@ export interface ElectricityRate {
 }
 
 class ElectricityRateService {
-  private collectionName = 'electricityRates';
-
-  /**
-   * Add a new electricity rate
-   */
-  async addRate(userId: string, rateData: Omit<ElectricityRate, 'id' | 'userId' | 'createdAt'>): Promise<ElectricityRate> {
+  async getCurrentRate(userId?: string): Promise<ElectricityRate | null> {
     try {
-      const rateRef = doc(collection(firestore, this.collectionName));
-      
-      const rate: ElectricityRate = {
-        id: rateRef.id,
+      if (!userId) {
+        return {
+          id: 'default-rate',
+          userId: '',
+          ratePerKwh: 12.0,
+          currency: 'PHP',
+          effectiveDate: new Date(),
+          createdAt: new Date(),
+        };
+      }
+
+      const resp = await apiFetch<{ ratePerKwh: number; currency: string }>(`/users/${userId}/rate`, { method: 'GET' });
+      return {
+        id: 'room-rate',
         userId,
-        ...rateData,
+        ratePerKwh: resp.ratePerKwh,
+        currency: resp.currency || 'PHP',
+        effectiveDate: new Date(),
         createdAt: new Date(),
       };
-
-      await setDoc(rateRef, {
-        ...rate,
-        effectiveDate: Timestamp.fromDate(rate.effectiveDate),
-        endDate: rate.endDate ? Timestamp.fromDate(rate.endDate) : null,
-        createdAt: Timestamp.fromDate(rate.createdAt),
-      });
-
-      return rate;
-    } catch (error) {
-      console.error('Error adding rate:', error);
-      throw error;
-    }
-  }
-
-  /**
-   * Get current rate for user
-   */
-  async getCurrentRate(userId: string): Promise<ElectricityRate | null> {
-    try {
-      const now = new Date();
-      
-      // Simple query without composite index
-      const q = query(
-        collection(firestore, this.collectionName),
-        where('userId', '==', userId)
-      );
-
-      const snapshot = await getDocs(q);
-      
-      if (snapshot.empty) {
-        // Return default rate if none exists
-        return this.createDefaultRate(userId);
-      }
-
-      // Filter and sort in memory to avoid composite index
-      const rates = snapshot.docs
-        .map(doc => {
-          const data = doc.data();
-          return {
-            ...data,
-            id: doc.id,
-            effectiveDate: data.effectiveDate?.toDate() || new Date(),
-            endDate: data.endDate?.toDate(),
-            createdAt: data.createdAt?.toDate() || new Date(),
-          } as ElectricityRate;
-        })
-        .filter(rate => rate.effectiveDate <= now)
-        .sort((a, b) => b.effectiveDate.getTime() - a.effectiveDate.getTime());
-
-      if (rates.length === 0) {
-        return this.createDefaultRate(userId);
-      }
-
-      return rates[0];
     } catch (error) {
       console.error('Error getting current rate:', error);
-      return null;
+      return {
+        id: 'fallback-rate',
+        userId: userId || '',
+        ratePerKwh: 12.0,
+        currency: 'PHP',
+        effectiveDate: new Date(),
+        createdAt: new Date(),
+      };
     }
   }
 
-  /**
-   * Get all rates for user
-   */
-  async getAllRates(userId: string): Promise<ElectricityRate[]> {
-    try {
-      // Simple query without composite index
-      const q = query(
-        collection(firestore, this.collectionName),
-        where('userId', '==', userId)
-      );
+  async addRate(userId: string, rateData: Omit<ElectricityRate, 'id' | 'userId' | 'createdAt'>): Promise<ElectricityRate> {
+    await apiFetch(`/users/${userId}/rate`, {
+      method: 'POST',
+      body: JSON.stringify({ ratePerKwh: rateData.ratePerKwh }),
+    });
 
-      const snapshot = await getDocs(q);
-      
-      // Sort in memory to avoid composite index
-      return snapshot.docs
-        .map(doc => {
-          const data = doc.data();
-          return {
-            ...data,
-            id: doc.id,
-            effectiveDate: data.effectiveDate?.toDate() || new Date(),
-            endDate: data.endDate?.toDate(),
-            createdAt: data.createdAt?.toDate() || new Date(),
-          } as ElectricityRate;
-        })
-        .sort((a, b) => b.effectiveDate.getTime() - a.effectiveDate.getTime());
-    } catch (error) {
-      console.error('Error getting rates:', error);
-      return [];
-    }
-  }
-
-  /**
-   * Create default rate for user
-   */
-  private async createDefaultRate(userId: string): Promise<ElectricityRate> {
-    const defaultRate = {
-      ratePerKwh: 10.5,
-      currency: 'PHP',
-      effectiveDate: new Date(),
-      distributor: 'Default Provider',
-      notes: 'Default electricity rate',
+    return {
+      id: 'room-rate',
+      userId,
+      ...rateData,
+      createdAt: new Date(),
     };
+  }
 
-    return this.addRate(userId, defaultRate);
+  async getAllRates(userId: string): Promise<ElectricityRate[]> {
+    const r = await this.getCurrentRate(userId);
+    return r ? [r] : [];
   }
 }
 
 export const electricityRateService = new ElectricityRateService();
+
